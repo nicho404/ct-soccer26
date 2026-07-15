@@ -1,0 +1,267 @@
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { db } from '../db/db'
+import { RUOLI, PIEDI, TESSERAMENTO, STATI_ATTIVITA, PORTA, CALCI_FISSI } from '../db/constants'
+
+const EMPTY = {
+  nome: '',
+  soprannome: '',
+  numero: '',
+  ruoloNaturale: '',
+  ruoliAdattati: [],
+  piede: 'destro',
+  altezza: '',
+  statoAttivita: 'sicuro',
+  acciaccato: false,
+  condizione: '',
+  tesseramento: 'da_verificare',
+  porta: 'no',
+  calciFissi: [],
+  note: '',
+}
+
+export default function PlayerFormPage() {
+  const navigate = useNavigate()
+  const { id } = useParams()
+  const editing = Boolean(id)
+  const [form, setForm] = useState(EMPTY)
+  const [loaded, setLoaded] = useState(!editing)
+
+  useEffect(() => {
+    if (!editing) return
+    db.players.get(Number(id)).then((p) => {
+      if (p) setForm({ ...EMPTY, ...p })
+      setLoaded(true)
+    })
+  }, [id, editing])
+
+  const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
+
+  const toggleInList = (key, value) =>
+    setForm((f) => ({
+      ...f,
+      [key]: f[key].includes(value) ? f[key].filter((v) => v !== value) : [...f[key], value],
+    }))
+
+  const save = async () => {
+    if (!form.nome.trim()) {
+      alert('Il nome è obbligatorio')
+      return
+    }
+    const data = {
+      ...form,
+      nome: form.nome.trim(),
+      soprannome: form.soprannome.trim(),
+      numero: form.numero === '' ? '' : Number(form.numero),
+      altezza: form.altezza === '' ? '' : Number(form.altezza),
+    }
+    if (editing) {
+      await db.players.update(Number(id), data)
+      navigate(`/rosa/${id}`)
+    } else {
+      const newId = await db.players.add(data)
+      navigate(`/rosa/${newId}`, { replace: true })
+    }
+  }
+
+  if (!loaded) return null
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
+        <h1>{editing ? 'Modifica giocatore' : 'Nuovo giocatore'}</h1>
+      </div>
+
+      <div className="field">
+        <label>Nome *</label>
+        <input
+          className="input"
+          value={form.nome}
+          onChange={(e) => set('nome', e.target.value)}
+          placeholder="Nome e cognome"
+        />
+      </div>
+
+      <div className="row" style={{ alignItems: 'flex-start' }}>
+        <div className="field" style={{ flex: 1 }}>
+          <label>Soprannome</label>
+          <input
+            className="input"
+            value={form.soprannome}
+            onChange={(e) => set('soprannome', e.target.value)}
+            placeholder="In campo"
+          />
+        </div>
+        <div className="field" style={{ width: 90 }}>
+          <label>Maglia</label>
+          <input
+            className="input"
+            type="number"
+            inputMode="numeric"
+            min="1"
+            max="99"
+            value={form.numero}
+            onChange={(e) => set('numero', e.target.value)}
+            placeholder="N°"
+          />
+        </div>
+      </div>
+
+      <div className="field">
+        <label>Ruolo naturale</label>
+        <div className="chip-row">
+          {RUOLI.map((r) => (
+            <button
+              key={r.value}
+              className={`chip ${form.ruoloNaturale === r.value ? 'selected' : ''}`}
+              onClick={() => set('ruoloNaturale', r.value)}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="field">
+        <label>Ruoli adattati (dove può giocare all'occorrenza)</label>
+        <div className="chip-row">
+          {RUOLI.filter((r) => r.value !== form.ruoloNaturale).map((r) => (
+            <button
+              key={r.value}
+              className={`chip ${form.ruoliAdattati.includes(r.value) ? 'selected' : ''}`}
+              onClick={() => toggleInList('ruoliAdattati', r.value)}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="row" style={{ alignItems: 'flex-start' }}>
+        <div className="field" style={{ flex: 1 }}>
+          <label>Piede preferito</label>
+          <div className="chip-row">
+            {PIEDI.map((p) => (
+              <button
+                key={p.value}
+                className={`chip chip-sm ${form.piede === p.value ? 'selected' : ''}`}
+                onClick={() => set('piede', p.value)}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="field" style={{ width: 110 }}>
+          <label>Altezza (cm)</label>
+          <input
+            className="input"
+            type="number"
+            inputMode="numeric"
+            min="100"
+            max="230"
+            value={form.altezza}
+            onChange={(e) => set('altezza', e.target.value)}
+            placeholder="cm"
+          />
+        </div>
+      </div>
+
+      <div className="field">
+        <label>Stato attività (rosa attiva vs allargata)</label>
+        <div className="chip-row">
+          {STATI_ATTIVITA.map((s) => (
+            <button
+              key={s.value}
+              className={`chip chip-sm ${form.statoAttivita === s.value ? 'selected' : ''}`}
+              onClick={() => set('statoAttivita', s.value)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="field">
+        <label>Disponibile in porta</label>
+        <div className="chip-row">
+          {PORTA.map((p) => (
+            <button
+              key={p.value}
+              className={`chip chip-sm ${form.porta === p.value ? 'selected' : ''}`}
+              onClick={() => set('porta', p.value)}
+            >
+              🧤 {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="field">
+        <label>Calci fissi (incaricato di)</label>
+        <div className="chip-row">
+          {CALCI_FISSI.map((c) => (
+            <button
+              key={c.key}
+              className={`chip chip-sm ${form.calciFissi.includes(c.key) ? 'selected' : ''}`}
+              onClick={() => toggleInList('calciFissi', c.key)}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="field">
+        <div className="switch-row">
+          <span className="label">🩹 Acciaccato</span>
+          <button
+            className={`toggle ${form.acciaccato ? 'on' : ''}`}
+            aria-label="Acciaccato"
+            onClick={() => set('acciaccato', !form.acciaccato)}
+          />
+        </div>
+      </div>
+
+      <div className="field">
+        <label>Condizione fisica (note)</label>
+        <textarea
+          className="textarea"
+          value={form.condizione}
+          onChange={(e) => set('condizione', e.target.value)}
+          placeholder="Es. fastidio al polpaccio, rientra la prossima settimana…"
+        />
+      </div>
+
+      <div className="field">
+        <label>Tesseramento CSI</label>
+        <div className="chip-row">
+          {TESSERAMENTO.map((t) => (
+            <button
+              key={t.value}
+              className={`chip chip-sm ${form.tesseramento === t.value ? 'selected' : ''}`}
+              onClick={() => set('tesseramento', t.value)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="field">
+        <label>Note libere</label>
+        <textarea
+          className="textarea"
+          value={form.note}
+          onChange={(e) => set('note', e.target.value)}
+          placeholder="Caratteristiche, storia, cose da ricordare…"
+        />
+      </div>
+
+      <button className="btn btn-primary btn-block" onClick={save}>
+        {editing ? 'Salva modifiche' : 'Aggiungi alla rosa'}
+      </button>
+    </div>
+  )
+}
