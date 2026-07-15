@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { db } from '../db/db'
 import {
-  RUOLI, RUOLI_TATTICI, FAMIGLIE, ruoloLabel, famigliaRuolo, famigliaRuoloTattico,
+  RUOLI, RUOLI_TATTICI, ruoloLabel, famigliaRuolo, famigliaRuoloTattico, ruoloTatticoInfo,
   PIEDI, TESSERAMENTO, STATI_ATTIVITA, PORTA, CALCI_FISSI,
 } from '../db/constants'
 
@@ -30,6 +30,7 @@ export default function PlayerFormPage() {
   const editing = Boolean(id)
   const [form, setForm] = useState(EMPTY)
   const [loaded, setLoaded] = useState(!editing)
+  const [infoRuolo, setInfoRuolo] = useState(null)
 
   useEffect(() => {
     if (!editing) return
@@ -47,16 +48,22 @@ export default function PlayerFormPage() {
       [key]: f[key].includes(value) ? f[key].filter((v) => v !== value) : [...f[key], value],
     }))
 
-  // Reparti del giocatore (naturale + coperture) + reparti di ruoli tattici
-  // già selezionati, così restano deselezionabili se cambia posizione
-  const famiglieVisibili = [
-    ...new Set(
-      [
-        ...[form.ruoloNaturale, ...form.ruoliAdattati].filter(Boolean).map(famigliaRuolo),
-        ...form.ruoliTattici.map(famigliaRuoloTattico),
-      ].filter(Boolean)
-    ),
-  ]
+  // Ruoli tattici raggruppati per posizione del giocatore (naturale + coperture),
+  // come su FC26. Un ruolo condiviso tra più posizioni appare solo nel primo gruppo.
+  const posizioniGiocatore = [form.ruoloNaturale, ...form.ruoliAdattati].filter(Boolean)
+  const gruppiTattici = []
+  const ruoliVisti = new Set()
+  for (const pos of posizioniGiocatore) {
+    const ruoli = RUOLI_TATTICI.filter(
+      (r) => r.posizioni.includes(pos) && !ruoliVisti.has(r.value)
+    )
+    if (ruoli.length === 0) continue
+    ruoli.forEach((r) => ruoliVisti.add(r.value))
+    gruppiTattici.push({ pos, ruoli })
+  }
+  // Ruoli selezionati che non appartengono più alle posizioni attuali:
+  // restano visibili per poterli togliere
+  const ruoliOrfani = form.ruoliTattici.filter((v) => !ruoliVisti.has(v))
 
   const save = async () => {
     if (!form.nome.trim()) {
@@ -166,29 +173,69 @@ export default function PlayerFormPage() {
       </div>
 
       <div className="field">
-        <label>Ruoli tattici (stile FC26, anche più di uno)</label>
-        {famiglieVisibili.length === 0 ? (
+        <label>Ruoli tattici FC26 (anche più di uno)</label>
+        {gruppiTattici.length === 0 && ruoliOrfani.length === 0 ? (
           <p className="muted small" style={{ margin: 0 }}>
-            Scegli prima la posizione naturale: qui compariranno i ruoli tattici del suo reparto
-            (e dei reparti che può coprire).
+            Scegli prima la posizione naturale: qui compariranno i ruoli tattici di quella
+            posizione (e di quelle che può coprire).
           </p>
         ) : (
-          FAMIGLIE.filter((f) => famiglieVisibili.includes(f.value)).map((f) => (
-            <div key={f.value} style={{ marginBottom: 8 }}>
-              <div className="muted small" style={{ marginBottom: 4 }}>{f.label}</div>
-              <div className="chip-row">
-                {RUOLI_TATTICI.filter((r) => r.famiglia === f.value).map((r) => (
-                  <button
-                    key={r.value}
-                    className={`chip chip-sm pos-${r.famiglia} ${form.ruoliTattici.includes(r.value) ? 'selected' : ''}`}
-                    onClick={() => toggleInList('ruoliTattici', r.value)}
-                  >
-                    {form.ruoliTattici.includes(r.value) ? '✓ ' : ''}{r.value}
-                  </button>
-                ))}
+          <>
+            {gruppiTattici.map(({ pos, ruoli }) => (
+              <div key={pos} style={{ marginBottom: 10 }}>
+                <div className="muted small" style={{ marginBottom: 4 }}>
+                  <strong>{pos}</strong> — {ruoloLabel(pos)}
+                </div>
+                <div className="chip-row">
+                  {ruoli.map((r) => (
+                    <button
+                      key={r.value}
+                      className={`chip chip-sm pos-${famigliaRuolo(pos)} ${form.ruoliTattici.includes(r.value) ? 'selected' : ''}`}
+                      onClick={() => toggleInList('ruoliTattici', r.value)}
+                    >
+                      {form.ruoliTattici.includes(r.value) ? '✓ ' : ''}{r.value}
+                      <span
+                        className="chip-info"
+                        role="button"
+                        aria-label={`Info su ${r.value}`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setInfoRuolo((v) => (v === r.value ? null : r.value))
+                        }}
+                      >
+                        ?
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                {infoRuolo && ruoli.some((r) => r.value === infoRuolo) && (
+                  <div className="info-pop" onClick={() => setInfoRuolo(null)}>
+                    <strong>{infoRuolo}</strong>{' '}
+                    <span className="en">({ruoloTatticoInfo(infoRuolo)?.en})</span>
+                    <p>{ruoloTatticoInfo(infoRuolo)?.descrizione}</p>
+                  </div>
+                )}
               </div>
-            </div>
-          ))
+            ))}
+            {ruoliOrfani.length > 0 && (
+              <div style={{ marginBottom: 10 }}>
+                <div className="muted small" style={{ marginBottom: 4 }}>
+                  Fuori dalle posizioni attuali (tocca per rimuovere)
+                </div>
+                <div className="chip-row">
+                  {ruoliOrfani.map((v) => (
+                    <button
+                      key={v}
+                      className={`chip chip-sm pos-${famigliaRuoloTattico(v)} selected`}
+                      onClick={() => toggleInList('ruoliTattici', v)}
+                    >
+                      ✓ {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 

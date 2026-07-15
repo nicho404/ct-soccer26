@@ -68,3 +68,29 @@ db.version(4)
       delete p.ruoloTattico
     })
   )
+
+// Nomi provvisori dei ruoli tattici → nomi ufficiali FC26
+const RUOLI_FC26 = {
+  'Portiere moderno': 'Portiere libero',
+  'Portiere di posizione': 'Portiere',
+  'Marcatore': 'Difensore',
+  'Terzino di spinta': 'Fluidificante offensivo',
+  'Terzino bloccato': 'Terzino',
+  'Mediano incontrista': 'Mediano',
+  'Trequartista': 'Classico 10',
+  'Ala tornante': 'Esterno di centrocampo',
+  'Ala offensiva': 'Ala',
+  'Punta centrale': 'Attaccante avanzato',
+  'Seconda punta': 'Attaccante ombra',
+  "Rapace d'area": 'Opportunista',
+}
+
+db.version(5)
+  .stores({})
+  .upgrade((tx) =>
+    tx.table('players').toCollection().modify((p) => {
+      p.ruoliTattici = [
+        ...new Set((p.ruoliTattici ?? []).map((r) => RUOLI_FC26[r] ?? r)),
+      ]
+    })
+  )
