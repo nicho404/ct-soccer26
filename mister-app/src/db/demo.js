@@ -41,6 +41,19 @@ const DEMO_INTESE = [
   { idx: [4, 8], tipo: 'potenziale', descrizione: 'Entrambi mancini sulla stessa fascia, da provare in partitella', fonte: 'osservazione' },
 ]
 
+// Osservazioni demo: una sessione di partitella con data = oggi,
+// così la tabella comparativa è subito piena. idx come sopra.
+const DEMO_OBSERVATIONS = [
+  { idx: 0, voti: { lettura: 4, pressione: 4, leadership: 3, posizione: 4 }, notaGenerale: 'Sicuro tra i pali, comanda la difesa' },
+  { idx: 1, voti: { lettura: 4, piedeForte: 4, piedeDebole: 2, pressione: 3, intensita: 3, leadership: 3, posizione: 5 }, noteCriteri: { piedeDebole: 'Evita sempre il sinistro' }, notaGenerale: 'Ordinato, mai in affanno' },
+  { idx: 3, voti: { lettura: 3, piedeForte: 4, piedeDebole: 3, pressione: 4, intensita: 5, leadership: 2, posizione: 2 }, noteCriteri: { posizione: 'Si accentra troppo, lascia la fascia scoperta' }, notaGenerale: 'Devastante in campo aperto' },
+  { idx: 4, voti: { lettura: 3, piedeForte: 3, piedeDebole: 2, pressione: 3, intensita: 4, posizione: 3 }, notaGenerale: '' },
+  { idx: 5, voti: { lettura: 5, piedeForte: 4, piedeDebole: 4, pressione: 5, intensita: 3, leadership: 5, posizione: 4 }, notaGenerale: 'Il faro: quando ha palla lui la squadra respira' },
+  { idx: 6, voti: { lettura: 4, piedeForte: 3, piedeDebole: 3, pressione: 4, intensita: 4, leadership: 3, posizione: 5 }, notaGenerale: 'Equilibratore silenzioso' },
+  { idx: 7, voti: { lettura: 3, piedeForte: 5, piedeDebole: 2, pressione: 3, intensita: 2, leadership: 2, posizione: 3 }, noteCriteri: { intensita: 'Non rientra mai in copertura' }, notaGenerale: 'Se la palla arriva in area, la butta dentro' },
+  { idx: 9, voti: { lettura: 2, piedeForte: 3, piedeDebole: 2, pressione: 2, intensita: 4, posizione: 3 }, notaGenerale: 'Prima volta che lo vedo: generoso ma confusionario' },
+]
+
 const DEMO_COMPETITIONS = [
   { nome: 'CSI Invernale 2026/27', tipo: 'campionato', inizio: '2026-10-01', fine: '2027-03-31' },
   { nome: 'Amichevoli estive 2026', tipo: 'amichevoli', inizio: '2026-07-01', fine: '2026-09-15' },
@@ -64,6 +77,17 @@ export async function seedDemoData() {
     }))
   )
   await db.competitions.bulkAdd(DEMO_COMPETITIONS.map((c) => ({ ...c, demo: true })))
+  const oggi = new Date().toISOString().slice(0, 10)
+  await db.observations.bulkAdd(
+    DEMO_OBSERVATIONS.map(({ idx, ...o }) => ({
+      ...o,
+      noteCriteri: o.noteCriteri ?? {},
+      playerId: playerIds[idx],
+      data: oggi,
+      contesto: 'partitella',
+      demo: true,
+    }))
+  )
 }
 
 export async function clearDemoData() {

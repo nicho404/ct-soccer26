@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 
 const VOCI = [
-  { to: '/osservazione', icon: '🔍', label: 'Osservazione', desc: 'Voti e note da bordo campo', milestone: 'M2' },
+  { to: '/osservazione', icon: '🔍', label: 'Osservazione', desc: 'Voti e note da bordo campo', milestone: null },
+  { to: '/intese', icon: '🔗', label: 'Intese', desc: 'Coppie e catene che si capiscono', milestone: null },
   { to: '/storico', icon: '📊', label: 'Storico', desc: 'Formazioni reali, azioni, marcatori', milestone: 'M6' },
   { to: '/presenze', icon: '🏃', label: 'Presenze e sedute', desc: 'Appello, meritocrazia, allenamenti', milestone: 'M5' },
   { to: '/avversari', icon: '🎯', label: 'Avversari', desc: 'Scouting squadre del girone', milestone: 'M7' },

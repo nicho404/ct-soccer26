@@ -132,15 +132,21 @@ export const CALCI_FISSI = [
   { key: 'rigori', label: 'Rigori' },
 ]
 
-// Criteri fissi di osservazione (modulo M2)
+// Criteri fissi di osservazione. `short` = intestazione tabella comparativa.
 export const CRITERI_OSSERVAZIONE = [
-  { key: 'lettura', label: 'Lettura del gioco', hint: 'Si smarca, legge prima di ricevere' },
-  { key: 'piedeForte', label: 'Tecnica piede forte', hint: '' },
-  { key: 'piedeDebole', label: 'Piede debole', hint: '' },
-  { key: 'pressione', label: 'Sotto pressione', hint: 'Si nasconde o si propone' },
-  { key: 'intensita', label: 'Intensità / corsa', hint: '' },
-  { key: 'leadership', label: 'Leadership', hint: 'Parla, organizza, viene ascoltato' },
-  { key: 'posizione', label: 'Disciplina posizionale', hint: '' },
+  { key: 'lettura', label: 'Lettura del gioco', short: 'LET', hint: 'Si smarca, legge prima di ricevere' },
+  { key: 'piedeForte', label: 'Tecnica piede forte', short: 'PF', hint: '' },
+  { key: 'piedeDebole', label: 'Piede debole', short: 'PD', hint: '' },
+  { key: 'pressione', label: 'Sotto pressione', short: 'PRESS', hint: 'Si nasconde o si propone' },
+  { key: 'intensita', label: 'Intensità / corsa', short: 'INT', hint: '' },
+  { key: 'leadership', label: 'Leadership', short: 'LEAD', hint: 'Parla, organizza, viene ascoltato' },
+  { key: 'posizione', label: 'Disciplina posizionale', short: 'POS', hint: '' },
+]
+
+export const CONTESTI_OSSERVAZIONE = [
+  { value: 'partitella', label: 'Partitella' },
+  { value: 'allenamento', label: 'Allenamento' },
+  { value: 'partita', label: 'Partita' },
 ]
 
 export const STATI_PRESENZA = [

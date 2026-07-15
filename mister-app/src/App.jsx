@@ -7,6 +7,9 @@ import PlayerDetailPage from './pages/PlayerDetailPage'
 import PlaceholderPage from './pages/PlaceholderPage'
 import AltroPage from './pages/AltroPage'
 import ImpostazioniPage from './pages/ImpostazioniPage'
+import ObservationPage from './pages/ObservationPage'
+import IntesePage from './pages/IntesePage'
+import IntesaFormPage from './pages/IntesaFormPage'
 
 export default function App() {
   return (
@@ -19,7 +22,10 @@ export default function App() {
           <Route path="/rosa/nuovo" element={<PlayerFormPage />} />
           <Route path="/rosa/:id" element={<PlayerDetailPage />} />
           <Route path="/rosa/:id/modifica" element={<PlayerFormPage />} />
-          <Route path="/osservazione" element={<PlaceholderPage title="Osservazione" icon="🔍" milestone="M2" />} />
+          <Route path="/osservazione" element={<ObservationPage />} />
+          <Route path="/intese" element={<IntesePage />} />
+          <Route path="/intese/nuova" element={<IntesaFormPage />} />
+          <Route path="/intese/:id" element={<IntesaFormPage />} />
           <Route path="/partite" element={<PlaceholderPage title="Partite e calendario" icon="📅" milestone="M3" />} />
           <Route path="/modulo" element={<PlaceholderPage title="Modulo" icon="⚽" milestone="M4" />} />
           <Route path="/presenze" element={<PlaceholderPage title="Presenze e sedute" icon="🏃" milestone="M5" />} />

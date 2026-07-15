@@ -170,16 +170,29 @@ export default function PlayerDetailPage() {
         </InfoRow>
       </div>
 
-      <div className="section-title">Intese ({intese.length})</div>
+      <div className="section-title row">
+        <span style={{ flex: 1 }}>Intese ({intese.length})</span>
+        <button
+          className="btn btn-sm"
+          onClick={() => navigate(`/intese/nuova?player=${playerId}`)}
+        >
+          + Nuova
+        </button>
+      </div>
       {intese.length === 0 ? (
         <div className="card muted small">
-          Nessuna intesa registrata. Le creerai dal modulo Osservazione (M2).
+          Nessuna intesa registrata: quando vedi che si capisce con qualcuno, creala da qui.
         </div>
       ) : (
         intese.map((i) => {
           const tipo = TIPI_INTESA.find((t) => t.value === i.tipo)
           return (
-            <div className="card" key={i.id}>
+            <div
+              className="card tappable"
+              key={i.id}
+              onClick={() => navigate(`/intese/${i.id}`)}
+              style={{ cursor: 'pointer' }}
+            >
               <div className="row">
                 <span className="role-dot" style={{ background: tipo?.colore }} />
                 <strong className="small">
@@ -211,12 +224,17 @@ export default function PlayerDetailPage() {
             </div>
             <div className="row" style={{ flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
               {CRITERI_OSSERVAZIONE.filter((c) => o.voti?.[c.key]).map((c) => (
-                <span className="badge" key={c.key}>
+                <span className={`badge vote-cell-${o.voti[c.key]}`} key={c.key}>
                   {c.label}: {o.voti[c.key]}
                 </span>
               ))}
             </div>
-            {o.notaGenerale && <p className="small muted" style={{ margin: '8px 0 0' }}>{o.notaGenerale}</p>}
+            {CRITERI_OSSERVAZIONE.filter((c) => o.noteCriteri?.[c.key]).map((c) => (
+              <p className="small muted" style={{ margin: '6px 0 0' }} key={c.key}>
+                <strong>{c.label}:</strong> {o.noteCriteri[c.key]}
+              </p>
+            ))}
+            {o.notaGenerale && <p className="small" style={{ margin: '8px 0 0' }}>{o.notaGenerale}</p>}
           </div>
         ))
       )}

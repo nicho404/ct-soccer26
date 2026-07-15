@@ -452,6 +452,129 @@ a.card {
   background: #fff;
 }
 
+/* ---------- Osservazione ---------- */
+
+.crit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.crit-row:last-child {
+  border-bottom: none;
+}
+
+.crit-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.crit-label .hint {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.vote-row {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.vote-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.vote-btn.on {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+  color: #fff;
+}
+
+.note-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+}
+
+.note-btn.on {
+  color: var(--accent);
+  border-color: var(--accent-dark);
+}
+
+/* Tabella comparativa */
+.obs-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.obs-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.obs-table th,
+.obs-table td {
+  padding: 9px 10px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.obs-table th {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  user-select: none;
+}
+
+.obs-table th.sorted {
+  color: var(--accent);
+}
+
+.obs-table th:first-child,
+.obs-table td:first-child {
+  position: sticky;
+  left: 0;
+  background: var(--surface);
+  text-align: left;
+  z-index: 1;
+}
+
+.obs-table tr:last-child td {
+  border-bottom: none;
+}
+
+.vote-cell-1, .vote-cell-2 { color: var(--danger); font-weight: 700; }
+.vote-cell-3 { color: var(--warn); font-weight: 700; }
+.vote-cell-4, .vote-cell-5 { color: var(--ok); font-weight: 700; }
+
 /* ---------- Home ---------- */
 
 .stat-grid {
