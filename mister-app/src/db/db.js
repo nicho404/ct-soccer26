@@ -56,3 +56,15 @@ db.version(3)
       if (p.ruoloTattico === undefined) p.ruoloTattico = ''
     })
   )
+
+// Ruolo tattico singolo (testo libero) → più ruoli tattici a spunta
+db.version(4)
+  .stores({})
+  .upgrade((tx) =>
+    tx.table('players').toCollection().modify((p) => {
+      if (!Array.isArray(p.ruoliTattici)) {
+        p.ruoliTattici = p.ruoloTattico ? [p.ruoloTattico] : []
+      }
+      delete p.ruoloTattico
+    })
+  )

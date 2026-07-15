@@ -2,7 +2,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import {
-  ruoloLabel, famigliaRuolo, tesseramentoInfo, statoAttivitaInfo, portaInfo, isAttivo,
+  ruoloLabel, famigliaRuolo, famigliaRuoloTattico, tesseramentoInfo, statoAttivitaInfo,
+  portaInfo, isAttivo,
   PIEDI, STATI_ATTIVITA, CALCI_FISSI, CRITERI_OSSERVAZIONE, TIPI_INTESA,
 } from '../db/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
@@ -124,8 +125,18 @@ export default function PlayerDetailPage() {
               ))
             : '—'}
         </InfoRow>
-        <InfoRow label="Ruolo tattico">
-          {player.ruoloTattico || '—'}
+        <InfoRow label="Ruoli tattici">
+          {player.ruoliTattici?.length
+            ? player.ruoliTattici.map((r) => (
+                <span
+                  key={r}
+                  className={`badge badge-role-${famigliaRuoloTattico(r) || 'none'}`}
+                  style={{ marginRight: 4 }}
+                >
+                  {r}
+                </span>
+              ))
+            : '—'}
         </InfoRow>
         <InfoRow label="Piede">
           {PIEDI.find((p) => p.value === player.piede)?.label ?? '—'}

@@ -27,14 +27,38 @@ export const ruoloOrdine = (value) => {
   return i === -1 ? RUOLI.length : i
 }
 
-// Suggerimenti per il ruolo tattico stile FC26 (campo libero)
-export const RUOLI_TATTICI = [
-  'Portiere moderno', 'Portiere di posizione',
-  'Stopper', 'Marcatore', 'Difensore costruttore', 'Terzino di spinta', 'Terzino bloccato',
-  'Regista', 'Mediano incontrista', 'Box-to-box', 'Mezzala', 'Trequartista',
-  'Ala tornante', 'Ala offensiva',
-  'Punta centrale', 'Falso 9', 'Seconda punta', 'Rapace d\'area',
+// Famiglie di reparto, per raggruppare posizioni e ruoli tattici
+export const FAMIGLIE = [
+  { value: 'por', label: 'Portiere' },
+  { value: 'dif', label: 'Difesa' },
+  { value: 'cen', label: 'Centrocampo' },
+  { value: 'att', label: 'Attacco' },
 ]
+
+// Ruoli tattici stile FC26, selezionabili in base al reparto del giocatore
+export const RUOLI_TATTICI = [
+  { value: 'Portiere moderno', famiglia: 'por' },
+  { value: 'Portiere di posizione', famiglia: 'por' },
+  { value: 'Stopper', famiglia: 'dif' },
+  { value: 'Marcatore', famiglia: 'dif' },
+  { value: 'Difensore costruttore', famiglia: 'dif' },
+  { value: 'Terzino di spinta', famiglia: 'dif' },
+  { value: 'Terzino bloccato', famiglia: 'dif' },
+  { value: 'Regista', famiglia: 'cen' },
+  { value: 'Mediano incontrista', famiglia: 'cen' },
+  { value: 'Box-to-box', famiglia: 'cen' },
+  { value: 'Mezzala', famiglia: 'cen' },
+  { value: 'Trequartista', famiglia: 'cen' },
+  { value: 'Ala tornante', famiglia: 'cen' },
+  { value: 'Ala offensiva', famiglia: 'att' },
+  { value: 'Punta centrale', famiglia: 'att' },
+  { value: 'Falso 9', famiglia: 'att' },
+  { value: 'Seconda punta', famiglia: 'att' },
+  { value: 'Rapace d\'area', famiglia: 'att' },
+]
+
+export const famigliaRuoloTattico = (value) =>
+  RUOLI_TATTICI.find((r) => r.value === value)?.famiglia ?? ''
 
 export const PIEDI = [
   { value: 'destro', label: 'Destro' },

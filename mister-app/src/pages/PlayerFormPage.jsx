@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { db } from '../db/db'
 import {
-  RUOLI, RUOLI_TATTICI, ruoloLabel,
+  RUOLI, RUOLI_TATTICI, FAMIGLIE, ruoloLabel, famigliaRuolo, famigliaRuoloTattico,
   PIEDI, TESSERAMENTO, STATI_ATTIVITA, PORTA, CALCI_FISSI,
 } from '../db/constants'
 
@@ -12,7 +12,7 @@ const EMPTY = {
   numero: '',
   ruoloNaturale: '',
   ruoliAdattati: [],
-  ruoloTattico: '',
+  ruoliTattici: [],
   piede: 'destro',
   altezza: '',
   statoAttivita: 'sicuro',
@@ -46,6 +46,17 @@ export default function PlayerFormPage() {
       ...f,
       [key]: f[key].includes(value) ? f[key].filter((v) => v !== value) : [...f[key], value],
     }))
+
+  // Reparti del giocatore (naturale + coperture) + reparti di ruoli tattici
+  // già selezionati, così restano deselezionabili se cambia posizione
+  const famiglieVisibili = [
+    ...new Set(
+      [
+        ...[form.ruoloNaturale, ...form.ruoliAdattati].filter(Boolean).map(famigliaRuolo),
+        ...form.ruoliTattici.map(famigliaRuoloTattico),
+      ].filter(Boolean)
+    ),
+  ]
 
   const save = async () => {
     if (!form.nome.trim()) {
@@ -155,19 +166,30 @@ export default function PlayerFormPage() {
       </div>
 
       <div className="field">
-        <label>Ruolo tattico (stile FC26)</label>
-        <input
-          className="input"
-          list="ruoli-tattici"
-          value={form.ruoloTattico}
-          onChange={(e) => set('ruoloTattico', e.target.value)}
-          placeholder="Es. Regista, Box-to-box, Falso 9…"
-        />
-        <datalist id="ruoli-tattici">
-          {RUOLI_TATTICI.map((r) => (
-            <option key={r} value={r} />
-          ))}
-        </datalist>
+        <label>Ruoli tattici (stile FC26, anche più di uno)</label>
+        {famiglieVisibili.length === 0 ? (
+          <p className="muted small" style={{ margin: 0 }}>
+            Scegli prima la posizione naturale: qui compariranno i ruoli tattici del suo reparto
+            (e dei reparti che può coprire).
+          </p>
+        ) : (
+          FAMIGLIE.filter((f) => famiglieVisibili.includes(f.value)).map((f) => (
+            <div key={f.value} style={{ marginBottom: 8 }}>
+              <div className="muted small" style={{ marginBottom: 4 }}>{f.label}</div>
+              <div className="chip-row">
+                {RUOLI_TATTICI.filter((r) => r.famiglia === f.value).map((r) => (
+                  <button
+                    key={r.value}
+                    className={`chip chip-sm pos-${r.famiglia} ${form.ruoliTattici.includes(r.value) ? 'selected' : ''}`}
+                    onClick={() => toggleInList('ruoliTattici', r.value)}
+                  >
+                    {form.ruoliTattici.includes(r.value) ? '✓ ' : ''}{r.value}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       <div className="row" style={{ alignItems: 'flex-start' }}>

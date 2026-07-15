@@ -4,7 +4,7 @@ import { db } from './db'
 // così lo svuotamento tocca solo i dati demo, mai quelli reali.
 const base = {
   ruoliAdattati: [],
-  ruoloTattico: '',
+  ruoliTattici: [],
   piede: 'destro',
   altezza: '',
   statoAttivita: 'sicuro',
@@ -17,20 +17,20 @@ const base = {
 }
 
 const DEMO_PLAYERS = [
-  { ...base, nome: 'Luca Ferrari', soprannome: 'Fera', numero: 1, ruoloNaturale: 'POR', ruoloTattico: 'Portiere moderno', porta: 'si', altezza: 185, note: 'Buona uscita bassa, rilancio corto' },
-  { ...base, nome: 'Marco Colombo', soprannome: 'Colo', numero: 4, ruoloNaturale: 'DC', ruoliAdattati: ['CDC'], ruoloTattico: 'Difensore costruttore', altezza: 180, calciFissi: ['punizioni'] },
-  { ...base, nome: 'Andrea Bianchi', soprannome: '', numero: 5, ruoloNaturale: 'DC', ruoloTattico: 'Stopper', piede: 'sinistro', statoAttivita: 'infortunato', acciaccato: true, condizione: 'Fastidio al polpaccio sx, da valutare' },
-  { ...base, nome: 'Davide Rossi', soprannome: 'Dado', numero: 7, ruoloNaturale: 'ED', ruoliAdattati: ['AD', 'ATT'], ruoloTattico: 'Ala offensiva', altezza: 173, note: 'Il più veloce della rosa' },
-  { ...base, nome: 'Simone Galli', soprannome: '', numero: 3, ruoloNaturale: 'ES', ruoliAdattati: ['TS'], ruoloTattico: 'Ala tornante', piede: 'sinistro', tesseramento: 'da_verificare', calciFissi: ['angoliSx'], note: 'Documenti CSI da consegnare' },
-  { ...base, nome: 'Matteo Villa', soprannome: 'Teo', numero: 8, ruoloNaturale: 'CC', ruoliAdattati: ['COC'], ruoloTattico: 'Regista', altezza: 178, calciFissi: ['rigori'], note: 'Capitano, organizza il gruppo' },
-  { ...base, nome: 'Alessio Riva', soprannome: '', numero: 6, ruoloNaturale: 'CDC', ruoliAdattati: ['CC', 'DC'], ruoloTattico: 'Mediano incontrista', piede: 'ambidestro', porta: 'emergenza' },
-  { ...base, nome: 'Federico Sala', soprannome: 'Fede', numero: 9, ruoloNaturale: 'ATT', ruoloTattico: 'Rapace d\'area', altezza: 182, calciFissi: ['angoliDx'], note: 'Bomber, ma non rientra mai' },
-  { ...base, nome: 'Giorgio Monti', soprannome: 'Gio', numero: 11, ruoloNaturale: 'AS', ruoliAdattati: ['ATT', 'ES'], ruoloTattico: 'Seconda punta', piede: 'sinistro', acciaccato: true, condizione: 'Caviglia dolorante dopo ultima partita' },
+  { ...base, nome: 'Luca Ferrari', soprannome: 'Fera', numero: 1, ruoloNaturale: 'POR', ruoliTattici: ['Portiere moderno'], porta: 'si', altezza: 185, note: 'Buona uscita bassa, rilancio corto' },
+  { ...base, nome: 'Marco Colombo', soprannome: 'Colo', numero: 4, ruoloNaturale: 'DC', ruoliAdattati: ['CDC'], ruoliTattici: ['Difensore costruttore'], altezza: 180, calciFissi: ['punizioni'] },
+  { ...base, nome: 'Andrea Bianchi', soprannome: '', numero: 5, ruoloNaturale: 'DC', ruoliTattici: ['Stopper'], piede: 'sinistro', statoAttivita: 'infortunato', acciaccato: true, condizione: 'Fastidio al polpaccio sx, da valutare' },
+  { ...base, nome: 'Davide Rossi', soprannome: 'Dado', numero: 7, ruoloNaturale: 'ED', ruoliAdattati: ['AD', 'ATT'], ruoliTattici: ['Ala tornante', 'Ala offensiva'], altezza: 173, note: 'Il più veloce della rosa' },
+  { ...base, nome: 'Simone Galli', soprannome: '', numero: 3, ruoloNaturale: 'ES', ruoliAdattati: ['TS'], ruoliTattici: ['Ala tornante'], piede: 'sinistro', tesseramento: 'da_verificare', calciFissi: ['angoliSx'], note: 'Documenti CSI da consegnare' },
+  { ...base, nome: 'Matteo Villa', soprannome: 'Teo', numero: 8, ruoloNaturale: 'CC', ruoliAdattati: ['COC'], ruoliTattici: ['Regista', 'Mezzala'], altezza: 178, calciFissi: ['rigori'], note: 'Capitano, organizza il gruppo' },
+  { ...base, nome: 'Alessio Riva', soprannome: '', numero: 6, ruoloNaturale: 'CDC', ruoliAdattati: ['CC', 'DC'], ruoliTattici: ['Mediano incontrista'], piede: 'ambidestro', porta: 'emergenza' },
+  { ...base, nome: 'Federico Sala', soprannome: 'Fede', numero: 9, ruoloNaturale: 'ATT', ruoliTattici: ['Rapace d\'area', 'Punta centrale'], altezza: 182, calciFissi: ['angoliDx'], note: 'Bomber, ma non rientra mai' },
+  { ...base, nome: 'Giorgio Monti', soprannome: 'Gio', numero: 11, ruoloNaturale: 'AS', ruoliAdattati: ['ATT', 'ES'], ruoliTattici: ['Seconda punta', 'Ala offensiva'], piede: 'sinistro', acciaccato: true, condizione: 'Caviglia dolorante dopo ultima partita' },
   { ...base, nome: 'Stefano Corti', soprannome: '', numero: 2, ruoloNaturale: 'DC', ruoliAdattati: ['TD'], statoAttivita: 'condizionale', note: 'Mai visto giocare, da osservare' },
-  { ...base, nome: 'Paolo Greco', soprannome: '', numero: 10, ruoloNaturale: 'CC', ruoliAdattati: ['CDC'], ruoloTattico: 'Box-to-box', tesseramento: 'non_tesserabile', note: 'Già tesserato FIGC, non tesserabile CSI' },
+  { ...base, nome: 'Paolo Greco', soprannome: '', numero: 10, ruoloNaturale: 'CC', ruoliAdattati: ['CDC'], ruoliTattici: ['Box-to-box'], tesseramento: 'non_tesserabile', note: 'Già tesserato FIGC, non tesserabile CSI' },
   { ...base, nome: 'Nicola Fontana', soprannome: 'Nico', numero: 14, ruoloNaturale: 'ED', ruoliAdattati: ['ES'], statoAttivita: 'tiepido', tesseramento: 'da_verificare', note: 'Risponde una volta su tre in chat' },
   { ...base, nome: 'Roberto Longhi', soprannome: 'Robi', numero: 12, ruoloNaturale: 'POR', ruoliAdattati: ['DC'], porta: 'si', statoAttivita: 'inattivo', note: 'Si è trasferito, forse torna a primavera' },
-  { ...base, nome: 'Emanuele Riva', soprannome: 'Lele', numero: 17, ruoloNaturale: 'ATT', ruoliAdattati: ['COC'], ruoloTattico: 'Falso 9', statoAttivita: 'condizionale', porta: 'emergenza', note: 'Fratello di Alessio, viene quando può' },
+  { ...base, nome: 'Emanuele Riva', soprannome: 'Lele', numero: 17, ruoloNaturale: 'ATT', ruoliAdattati: ['COC'], ruoliTattici: ['Falso 9', 'Trequartista'], statoAttivita: 'condizionale', porta: 'emergenza', note: 'Fratello di Alessio, viene quando può' },
 ]
 
 // Intese demo: indici riferiti a DEMO_PLAYERS (risolti in id al seed)
