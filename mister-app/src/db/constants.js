@@ -50,8 +50,8 @@ export const RUOLI_TATTICI = [
   // Terzini (TD/TS)
   { value: 'Terzino', en: 'Fullback', posizioni: ['TD', 'TS'], descrizione: 'Difensore di fascia che dà priorità alla protezione della propria porta.' },
   { value: 'Falso terzino', en: 'Falseback', posizioni: ['TD', 'TS'], descrizione: 'Evoluzione moderna del terzino: in possesso stringe in mezzo al campo come mediano aggiunto.' },
-  { value: 'Fluidificante', en: 'Wingback', posizioni: ['TD', 'TS'], descrizione: 'Corsa e resistenza al servizio della fascia: spinge per supportare l\'attacco e rientra a coprire.' },
-  { value: 'Fluidificante offensivo', en: 'Attacking Wingback', posizioni: ['TD', 'TS'], descrizione: 'Tecnicamente un difensore, ma pensa soprattutto ad attaccare la fascia.' },
+  { value: 'Tornante', en: 'Wingback', posizioni: ['TD', 'TS'], descrizione: 'Corsa e resistenza al servizio della fascia: spinge per supportare l\'attacco e rientra a coprire.' },
+  { value: 'Tornante offensivo', en: 'Attacking Wingback', posizioni: ['TD', 'TS'], descrizione: 'Tecnicamente un difensore, ma pensa soprattutto ad attaccare la fascia.' },
   { value: 'Terzino invertito', en: 'Inverted Wingback', posizioni: ['TD', 'TS'], descrizione: 'In possesso avanza e stringe verso il centro per dare superiorità in mezzo al campo.' },
   // Centrocampista difensivo (CDC)
   { value: 'Mediano', en: 'Holding', posizioni: ['CDC', 'CC'], descrizione: 'Centrocampista difensivo dedicato a proteggere la linea arretrata e schermare le linee di passaggio.' },

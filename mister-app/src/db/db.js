@@ -74,7 +74,7 @@ const RUOLI_FC26 = {
   'Portiere moderno': 'Portiere libero',
   'Portiere di posizione': 'Portiere',
   'Marcatore': 'Difensore',
-  'Terzino di spinta': 'Fluidificante offensivo',
+  'Terzino di spinta': 'Tornante offensivo',
   'Terzino bloccato': 'Terzino',
   'Mediano incontrista': 'Mediano',
   'Trequartista': 'Classico 10',
@@ -91,6 +91,22 @@ db.version(5)
     tx.table('players').toCollection().modify((p) => {
       p.ruoliTattici = [
         ...new Set((p.ruoliTattici ?? []).map((r) => RUOLI_FC26[r] ?? r)),
+      ]
+    })
+  )
+
+// Nome italiano corretto dei ruoli da terzino: Tornante, non Fluidificante
+const RINOMINE_TERZINO = {
+  'Fluidificante': 'Tornante',
+  'Fluidificante offensivo': 'Tornante offensivo',
+}
+
+db.version(6)
+  .stores({})
+  .upgrade((tx) =>
+    tx.table('players').toCollection().modify((p) => {
+      p.ruoliTattici = [
+        ...new Set((p.ruoliTattici ?? []).map((r) => RINOMINE_TERZINO[r] ?? r)),
       ]
     })
   )
