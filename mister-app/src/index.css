@@ -575,6 +575,24 @@ a.card {
 .vote-cell-3 { color: var(--warn); font-weight: 700; }
 .vote-cell-4, .vote-cell-5 { color: var(--ok); font-weight: 700; }
 
+/* ---------- Campo (Modulo) ---------- */
+
+.pitch-wrap {
+  background: radial-gradient(ellipse at 50% 0%, #101623 0%, #07070b 70%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 2px;
+  overflow: hidden;
+}
+
+.pitch-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 /* ---------- Home ---------- */
 
 .stat-grid {

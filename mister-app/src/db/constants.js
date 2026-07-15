@@ -21,6 +21,14 @@ export const ruoloLabel = (value) =>
 export const famigliaRuolo = (value) =>
   RUOLI.find((r) => r.value === value)?.famiglia ?? ''
 
+// Colori famiglia (uguali alle variabili CSS) per l'uso dentro gli SVG
+export const COLORI_FAMIGLIA = {
+  por: '#facc15',
+  dif: '#4ade80',
+  cen: '#60a5fa',
+  att: '#f87171',
+}
+
 // Ordine di presentazione della rosa (POR → ATT)
 export const ruoloOrdine = (value) => {
   const i = RUOLI.findIndex((r) => r.value === value)
