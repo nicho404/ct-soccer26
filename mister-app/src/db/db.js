@@ -42,3 +42,17 @@ db.version(2)
       if (p.altezza === undefined) p.altezza = ''
     })
   )
+
+// Sigle posizione stile FC26 al posto dei 5 ruoli generici.
+// EST era senza lato: diventa ED, correggibile dalla scheda giocatore.
+const SIGLE_FC = { DIF: 'DC', EST: 'ED', CEN: 'CC' }
+
+db.version(3)
+  .stores({})
+  .upgrade((tx) =>
+    tx.table('players').toCollection().modify((p) => {
+      p.ruoloNaturale = SIGLE_FC[p.ruoloNaturale] ?? p.ruoloNaturale
+      p.ruoliAdattati = (p.ruoliAdattati ?? []).map((r) => SIGLE_FC[r] ?? r)
+      if (p.ruoloTattico === undefined) p.ruoloTattico = ''
+    })
+  )

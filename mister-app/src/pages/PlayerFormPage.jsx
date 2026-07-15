@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { db } from '../db/db'
-import { RUOLI, PIEDI, TESSERAMENTO, STATI_ATTIVITA, PORTA, CALCI_FISSI } from '../db/constants'
+import {
+  RUOLI, RUOLI_TATTICI, ruoloLabel,
+  PIEDI, TESSERAMENTO, STATI_ATTIVITA, PORTA, CALCI_FISSI,
+} from '../db/constants'
 
 const EMPTY = {
   nome: '',
@@ -9,6 +12,7 @@ const EMPTY = {
   numero: '',
   ruoloNaturale: '',
   ruoliAdattati: [],
+  ruoloTattico: '',
   piede: 'destro',
   altezza: '',
   statoAttivita: 'sicuro',
@@ -109,33 +113,61 @@ export default function PlayerFormPage() {
       </div>
 
       <div className="field">
-        <label>Ruolo naturale</label>
+        <label>Posizione naturale</label>
         <div className="chip-row">
           {RUOLI.map((r) => (
             <button
               key={r.value}
-              className={`chip ${form.ruoloNaturale === r.value ? 'selected' : ''}`}
+              title={r.label}
+              className={`chip chip-sm pos-sigla pos-${r.famiglia} ${form.ruoloNaturale === r.value ? 'selected' : ''}`}
               onClick={() => set('ruoloNaturale', r.value)}
             >
-              {r.label}
+              {r.value}
             </button>
           ))}
         </div>
+        {form.ruoloNaturale && (
+          <p className="muted small" style={{ margin: '6px 0 0' }}>
+            {form.ruoloNaturale} — {ruoloLabel(form.ruoloNaturale)}
+          </p>
+        )}
       </div>
 
       <div className="field">
-        <label>Ruoli adattati (dove può giocare all'occorrenza)</label>
+        <label>Può coprire (posizioni all'occorrenza)</label>
         <div className="chip-row">
           {RUOLI.filter((r) => r.value !== form.ruoloNaturale).map((r) => (
             <button
               key={r.value}
-              className={`chip ${form.ruoliAdattati.includes(r.value) ? 'selected' : ''}`}
+              title={r.label}
+              className={`chip chip-sm pos-sigla pos-${r.famiglia} ${form.ruoliAdattati.includes(r.value) ? 'selected' : ''}`}
               onClick={() => toggleInList('ruoliAdattati', r.value)}
             >
-              {r.label}
+              {r.value}
             </button>
           ))}
         </div>
+        {form.ruoliAdattati.length > 0 && (
+          <p className="muted small" style={{ margin: '6px 0 0' }}>
+            {form.ruoliAdattati.map((v) => `${v} — ${ruoloLabel(v)}`).join(' · ')}
+          </p>
+        )}
+      </div>
+
+      <div className="field">
+        <label>Ruolo tattico (stile FC26)</label>
+        <input
+          className="input"
+          list="ruoli-tattici"
+          value={form.ruoloTattico}
+          onChange={(e) => set('ruoloTattico', e.target.value)}
+          placeholder="Es. Regista, Box-to-box, Falso 9…"
+        />
+        <datalist id="ruoli-tattici">
+          {RUOLI_TATTICI.map((r) => (
+            <option key={r} value={r} />
+          ))}
+        </datalist>
       </div>
 
       <div className="row" style={{ alignItems: 'flex-start' }}>

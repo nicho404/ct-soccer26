@@ -241,12 +241,11 @@ a.card {
 .badge-danger { background: rgba(248, 113, 113, 0.15); color: var(--danger); }
 .badge-accent { background: rgba(167, 139, 250, 0.15); color: var(--accent); }
 
-/* Badge ruolo con colori dedicati */
-.badge-role-POR { background: rgba(250, 204, 21, 0.15); color: var(--ruolo-por); }
-.badge-role-DIF { background: rgba(74, 222, 128, 0.15); color: var(--ruolo-dif); }
-.badge-role-EST,
-.badge-role-CEN { background: rgba(96, 165, 250, 0.15); color: var(--ruolo-cen); }
-.badge-role-ATT { background: rgba(248, 113, 113, 0.15); color: var(--ruolo-att); }
+/* Badge ruolo con colori per famiglia (por/dif/cen/att) */
+.badge-role-por { background: rgba(250, 204, 21, 0.15); color: var(--ruolo-por); }
+.badge-role-dif { background: rgba(74, 222, 128, 0.15); color: var(--ruolo-dif); }
+.badge-role-cen { background: rgba(96, 165, 250, 0.15); color: var(--ruolo-cen); }
+.badge-role-att { background: rgba(248, 113, 113, 0.15); color: var(--ruolo-att); }
 
 .role-dot {
   width: 10px;
@@ -256,11 +255,30 @@ a.card {
   background: var(--muted);
 }
 
-.role-dot.POR { background: var(--ruolo-por); }
-.role-dot.DIF { background: var(--ruolo-dif); }
-.role-dot.EST,
-.role-dot.CEN { background: var(--ruolo-cen); }
-.role-dot.ATT { background: var(--ruolo-att); }
+.role-dot.por { background: var(--ruolo-por); }
+.role-dot.dif { background: var(--ruolo-dif); }
+.role-dot.cen { background: var(--ruolo-cen); }
+.role-dot.att { background: var(--ruolo-att); }
+
+/* Chip posizione con sigla FC: colore famiglia sul bordo/testo */
+.chip.pos-por { color: var(--ruolo-por); }
+.chip.pos-dif { color: var(--ruolo-dif); }
+.chip.pos-cen { color: var(--ruolo-cen); }
+.chip.pos-att { color: var(--ruolo-att); }
+
+.chip.pos-por.selected { background: rgba(250, 204, 21, 0.18); border-color: var(--ruolo-por); }
+.chip.pos-dif.selected { background: rgba(74, 222, 128, 0.18); border-color: var(--ruolo-dif); }
+.chip.pos-cen.selected { background: rgba(96, 165, 250, 0.18); border-color: var(--ruolo-cen); }
+.chip.pos-att.selected { background: rgba(248, 113, 113, 0.18); border-color: var(--ruolo-att); }
+
+.chip.pos-sigla {
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  min-width: 56px;
+  justify-content: center;
+  display: inline-flex;
+  align-items: center;
+}
 
 .shirt-number {
   display: inline-flex;

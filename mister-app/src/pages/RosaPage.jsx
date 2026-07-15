@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import {
-  ruoloLabel, ruoloOrdine, tesseramentoInfo, statoAttivitaInfo, isAttivo,
+  ruoloLabel, ruoloOrdine, famigliaRuolo, tesseramentoInfo, statoAttivitaInfo, isAttivo,
 } from '../db/constants'
 import { presenzaPct } from '../lib/stats'
 import EmptyState from '../components/EmptyState'
@@ -15,7 +15,7 @@ function PlayerCard({ player, trainings }) {
   return (
     <Link to={`/rosa/${player.id}`} className="card tappable">
       <div className="row">
-        <span className={`role-dot ${player.ruoloNaturale || ''}`} />
+        <span className={`role-dot ${famigliaRuolo(player.ruoloNaturale)}`} />
         {player.numero !== '' && player.numero != null && (
           <span className="shirt-number">{player.numero}</span>
         )}
@@ -24,8 +24,16 @@ function PlayerCard({ player, trainings }) {
           {player.soprannome ? <span className="muted"> “{player.soprannome}”</span> : null}
         </strong>
         <span className="spacer" />
-        <span className={`badge badge-role-${player.ruoloNaturale || 'none'}`}>
-          {ruoloLabel(player.ruoloNaturale)}
+        <span
+          className={`badge badge-role-${famigliaRuolo(player.ruoloNaturale) || 'none'}`}
+          title={ruoloLabel(player.ruoloNaturale)}
+        >
+          {player.ruoloNaturale || '—'}
+          {player.ruoliAdattati?.length ? (
+            <span style={{ opacity: 0.65, fontWeight: 500 }}>
+              {' '}· {player.ruoliAdattati.join(' ')}
+            </span>
+          ) : null}
         </span>
       </div>
       <div className="row" style={{ marginTop: 8, flexWrap: 'wrap', gap: 6 }}>

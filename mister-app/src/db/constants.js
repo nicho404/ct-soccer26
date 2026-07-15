@@ -1,21 +1,40 @@
-// Ruoli per calcio a 7.
-// Colori: giallo portiere, verde difesa, blu centrocampo, rosso attacco.
+// Posizioni con le sigle stile FC26.
+// Colori per famiglia: giallo portiere, verde difesa, blu centrocampo, rosso attacco.
 export const RUOLI = [
-  { value: 'POR', label: 'Portiere' },
-  { value: 'DIF', label: 'Difensore' },
-  { value: 'EST', label: 'Esterno' },
-  { value: 'CEN', label: 'Centrale' },
-  { value: 'ATT', label: 'Attaccante' },
+  { value: 'POR', label: 'Portiere', famiglia: 'por' },
+  { value: 'DC', label: 'Difensore centrale', famiglia: 'dif' },
+  { value: 'TD', label: 'Terzino destro', famiglia: 'dif' },
+  { value: 'TS', label: 'Terzino sinistro', famiglia: 'dif' },
+  { value: 'CDC', label: 'Centrocampista difensivo', famiglia: 'cen' },
+  { value: 'CC', label: 'Centrocampista centrale', famiglia: 'cen' },
+  { value: 'COC', label: 'Centrocampista offensivo', famiglia: 'cen' },
+  { value: 'ED', label: 'Esterno destro', famiglia: 'cen' },
+  { value: 'ES', label: 'Esterno sinistro', famiglia: 'cen' },
+  { value: 'AD', label: 'Ala destra', famiglia: 'att' },
+  { value: 'AS', label: 'Ala sinistra', famiglia: 'att' },
+  { value: 'ATT', label: 'Attaccante', famiglia: 'att' },
 ]
 
 export const ruoloLabel = (value) =>
   RUOLI.find((r) => r.value === value)?.label ?? value ?? '—'
+
+export const famigliaRuolo = (value) =>
+  RUOLI.find((r) => r.value === value)?.famiglia ?? ''
 
 // Ordine di presentazione della rosa (POR → ATT)
 export const ruoloOrdine = (value) => {
   const i = RUOLI.findIndex((r) => r.value === value)
   return i === -1 ? RUOLI.length : i
 }
+
+// Suggerimenti per il ruolo tattico stile FC26 (campo libero)
+export const RUOLI_TATTICI = [
+  'Portiere moderno', 'Portiere di posizione',
+  'Stopper', 'Marcatore', 'Difensore costruttore', 'Terzino di spinta', 'Terzino bloccato',
+  'Regista', 'Mediano incontrista', 'Box-to-box', 'Mezzala', 'Trequartista',
+  'Ala tornante', 'Ala offensiva',
+  'Punta centrale', 'Falso 9', 'Seconda punta', 'Rapace d\'area',
+]
 
 export const PIEDI = [
   { value: 'destro', label: 'Destro' },

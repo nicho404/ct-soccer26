@@ -2,7 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import {
-  ruoloLabel, tesseramentoInfo, statoAttivitaInfo, portaInfo, isAttivo,
+  ruoloLabel, famigliaRuolo, tesseramentoInfo, statoAttivitaInfo, portaInfo, isAttivo,
   PIEDI, STATI_ATTIVITA, CALCI_FISSI, CRITERI_OSSERVAZIONE, TIPI_INTESA,
 } from '../db/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
@@ -81,7 +81,7 @@ export default function PlayerDetailPage() {
     <div className="page">
       <div className="page-header">
         <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/rosa')}>‹</button>
-        <span className={`role-dot ${player.ruoloNaturale || ''}`} />
+        <span className={`role-dot ${famigliaRuolo(player.ruoloNaturale)}`} />
         <h1>
           {player.numero !== '' && player.numero != null ? `${player.numero} · ` : ''}
           {player.nome}
@@ -102,13 +102,30 @@ export default function PlayerDetailPage() {
       </div>
 
       <div className="card">
-        <InfoRow label="Ruolo naturale">
-          <span className={`badge badge-role-${player.ruoloNaturale || 'none'}`}>
-            {ruoloLabel(player.ruoloNaturale)}
+        <InfoRow label="Posizione naturale">
+          <span className={`badge badge-role-${famigliaRuolo(player.ruoloNaturale) || 'none'}`}>
+            {player.ruoloNaturale || '—'}
           </span>
+          {player.ruoloNaturale && (
+            <span className="muted small"> {ruoloLabel(player.ruoloNaturale)}</span>
+          )}
         </InfoRow>
-        <InfoRow label="Ruoli adattati">
-          {player.ruoliAdattati?.length ? player.ruoliAdattati.map(ruoloLabel).join(', ') : '—'}
+        <InfoRow label="Può coprire">
+          {player.ruoliAdattati?.length
+            ? player.ruoliAdattati.map((r) => (
+                <span
+                  key={r}
+                  className={`badge badge-role-${famigliaRuolo(r) || 'none'}`}
+                  title={ruoloLabel(r)}
+                  style={{ marginRight: 4 }}
+                >
+                  {r}
+                </span>
+              ))
+            : '—'}
+        </InfoRow>
+        <InfoRow label="Ruolo tattico">
+          {player.ruoloTattico || '—'}
         </InfoRow>
         <InfoRow label="Piede">
           {PIEDI.find((p) => p.value === player.piede)?.label ?? '—'}
