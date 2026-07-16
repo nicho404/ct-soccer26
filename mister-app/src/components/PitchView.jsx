@@ -1,11 +1,11 @@
 import { COLORI_FAMIGLIA, famigliaRuolo, TIPI_INTESA } from '../db/constants'
-import { ruoloSlot } from '../lib/formazioni'
+import { ruoloSlot, IMPOSTAZIONI } from '../lib/formazioni'
 
 // Proiezione prospettica a un punto di fuga (vista da dietro la nostra porta).
 // t = 0 nostra linea di porta (vicina, larga), t = 1 porta avversaria (lontana, stretta).
-const ZF = 2.4
-const YN = 588
-const YF = 108
+const ZF = 2.1
+const YN = 467
+const YF = 72
 const C = (YN - YF) / (1 - 1 / ZF)
 const YH = YN - C
 const HW = 188
@@ -61,8 +61,11 @@ export default function PitchView({
   const crx = (pt(0.58, 0.5)[0] - pt(0.42, 0.5)[0]) / 2
   const cry = (pt(0.5, 0.44)[1] - pt(0.5, 0.56)[1]) / 2
 
+  const imp = IMPOSTAZIONI.find((i) => i.value === impostazione)
+  const badgeW = imp ? 46 + imp.label.length * 6.3 : 0
+
   return (
-    <svg viewBox="0 0 400 620" className="pitch-svg">
+    <svg viewBox="0 0 400 505" className="pitch-svg">
       {/* prato: 5 bande di profondità alternate */}
       {bande.map((i) => (
         <polygon
@@ -95,6 +98,15 @@ export default function PitchView({
       <polygon points={poly([pt(0.4, 0), [pt(0.4, 0)[0], pt(0.4, 0)[1] + 14], [pt(0.6, 0)[0], pt(0.6, 0)[1] + 14], pt(0.6, 0)])} fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
       <polygon points={poly([pt(0.42, 1), [pt(0.42, 1)[0], pt(0.42, 1)[1] - 9], [pt(0.58, 1)[0], pt(0.58, 1)[1] - 9], pt(0.58, 1)])} fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
 
+      {/* badge impostazione tattica selezionata */}
+      {imp && (
+        <g>
+          <rect x="8" y="8" width={badgeW} height="30" rx="15" fill="rgba(20,20,28,0.92)" stroke="rgba(167,139,250,0.55)" strokeWidth="1" />
+          <text x="18" y="28" fontSize="15">{imp.icona}</text>
+          <text x="40" y="27" fill="#ececf1" fontSize="11" fontWeight="700">{imp.label}</text>
+        </g>
+      )}
+
       {/* linee intese sotto le figure */}
       {linee.map((l) => (
         <line
@@ -120,7 +132,7 @@ export default function PitchView({
             style={{ cursor: 'pointer' }}
           >
             {/* area tap generosa */}
-            <rect x={x - 44} y={y - 26} width="88" height="64" fill="transparent" />
+            <rect x={x - 44} y={y - 25} width="88" height="60" fill="transparent" />
             {isSel && <circle cx={x} cy={y - 4} r="21" fill="none" stroke="#a78bfa" strokeWidth="3" />}
             {p ? (
               <>
@@ -131,10 +143,10 @@ export default function PitchView({
                 {warning && (
                   <text x={x + 14} y={y - 14} fontSize="12">⚠️</text>
                 )}
-                <text x={x} y={y + 27} textAnchor="middle" fill="#ececf1" fontSize="10.5" fontWeight="700">
+                <text x={x} y={y + 25} textAnchor="middle" fill="#ececf1" fontSize="10.5" fontWeight="700">
                   {nomeCorto(p)}
                 </text>
-                <text x={x} y={y + 38} textAnchor="middle" fontSize="7.5">
+                <text x={x} y={y + 35} textAnchor="middle" fontSize="7.5">
                   <tspan fill={colore} fontWeight="800">{slot.sigla}</tspan>
                   <tspan fill="rgba(255,255,255,0.75)"> · {ruolo}</tspan>
                 </text>
@@ -148,10 +160,10 @@ export default function PitchView({
                 <text x={x} y={y} textAnchor="middle" fill={colore} fontSize="9.5" fontWeight="800">
                   {slot.sigla}
                 </text>
-                <text x={x} y={y + 27} textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize="9">
+                <text x={x} y={y + 25} textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize="9">
                   tocca
                 </text>
-                <text x={x} y={y + 38} textAnchor="middle" fontSize="7.5" fill="rgba(255,255,255,0.55)">
+                <text x={x} y={y + 35} textAnchor="middle" fontSize="7.5" fill="rgba(255,255,255,0.55)">
                   {ruolo}
                 </text>
               </>

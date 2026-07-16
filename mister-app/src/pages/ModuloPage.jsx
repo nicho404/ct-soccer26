@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { MODULI, IMPOSTAZIONI, ruoloSlot, inPosizione } from '../lib/formazioni'
-import { famigliaRuolo, isAttivo, ruoloLabel } from '../db/constants'
+import { famigliaRuolo, isAttivo, ruoloLabel, ruoloTatticoInfo } from '../db/constants'
 import PitchView from '../components/PitchView'
 import EmptyState from '../components/EmptyState'
 
@@ -16,6 +16,8 @@ export default function ModuloPage() {
   const [slots, setSlots] = useState(VUOTO())
   const [sel, setSel] = useState(null)
   const [loaded, setLoaded] = useState(false)
+  const [infoModulo, setInfoModulo] = useState(null)
+  const [infoRuolo, setInfoRuolo] = useState(false)
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const intese = useLiveQuery(() => db.intese.toArray(), [])
@@ -62,6 +64,7 @@ export default function ModuloPage() {
   }
 
   const onSlotTap = (i) => {
+    setInfoRuolo(false)
     if (sel === null) {
       setSel(i)
       return
@@ -154,9 +157,26 @@ export default function ModuloPage() {
                 onClick={() => cambiaModulo(key)}
               >
                 {key}
+                <span
+                  className="chip-info"
+                  role="button"
+                  aria-label={`Info sul modulo ${key}`}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setInfoModulo((v) => (v === key ? null : key))
+                  }}
+                >
+                  ?
+                </span>
               </button>
             ))}
           </div>
+          {infoModulo && MODULI[infoModulo] && (
+            <div className="info-pop" style={{ marginBottom: 8 }} onClick={() => setInfoModulo(null)}>
+              <strong>{infoModulo}</strong>
+              <p>{MODULI[infoModulo].descrizione}</p>
+            </div>
+          )}
           <div className="chip-row" style={{ marginBottom: 10, paddingLeft: 6 }}>
             {IMPOSTAZIONI.map((imp) => (
               <button
@@ -164,7 +184,7 @@ export default function ModuloPage() {
                 className={`chip chip-sm ${impostazione === imp.value ? 'selected' : ''}`}
                 onClick={() => cambiaImpostazione(imp.value)}
               >
-                {imp.label}
+                {imp.icona} {imp.label}
               </button>
             ))}
           </div>
@@ -188,6 +208,14 @@ export default function ModuloPage() {
                   {slotSel.sigla} — {ruoloLabel(slotSel.sigla)}
                 </strong>
                 <span className="badge badge-accent">{ruoloSlot(slotSel.sigla, impostazione)}</span>
+                <span
+                  className="chip-info"
+                  role="button"
+                  aria-label={`Info sul ruolo ${ruoloSlot(slotSel.sigla, impostazione)}`}
+                  onClick={() => setInfoRuolo((v) => !v)}
+                >
+                  ?
+                </span>
                 <span className="spacer" />
                 {playerSel && (
                   <button className="btn btn-sm btn-danger" onClick={togli}>
@@ -195,6 +223,13 @@ export default function ModuloPage() {
                   </button>
                 )}
               </div>
+              {infoRuolo && ruoloTatticoInfo(ruoloSlot(slotSel.sigla, impostazione)) && (
+                <div className="info-pop" style={{ marginBottom: 8 }} onClick={() => setInfoRuolo(false)}>
+                  <strong>{ruoloSlot(slotSel.sigla, impostazione)}</strong>{' '}
+                  <span className="en">({ruoloTatticoInfo(ruoloSlot(slotSel.sigla, impostazione)).en})</span>
+                  <p>{ruoloTatticoInfo(ruoloSlot(slotSel.sigla, impostazione)).descrizione}</p>
+                </div>
+              )}
               <div className="chip-row">
                 {candidati.map((p) => {
                   const ok = inPosizione(p, slotSel.sigla)
