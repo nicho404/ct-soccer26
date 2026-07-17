@@ -17,7 +17,9 @@ import IntesaFormPage from './pages/IntesaFormPage'
 import { IconCalendar, IconClipboardCheck, IconChart, IconTarget, IconBook, IconStar } from './components/icons'
 
 export default function App() {
-  const team = useLiveQuery(() => db.meta.get('team'), [])
+  // ?? null: distingue "record assente" (null) da "query in corso" (undefined),
+  // altrimenti senza record salvato l'app resterebbe su schermo nero
+  const team = useLiveQuery(() => db.meta.get('team').then((t) => t ?? null), [])
 
   if (team === undefined) return null
   if (!team?.setupDone) return <OnboardingPage team={team} />

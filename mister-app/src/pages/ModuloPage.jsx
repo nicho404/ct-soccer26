@@ -24,8 +24,8 @@ export default function ModuloPage() {
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const intese = useLiveQuery(() => db.intese.toArray(), [])
-  const team = useLiveQuery(() => db.meta.get('team'), [])
-  const salvati = useLiveQuery(() => db.meta.get('moduliSalvati'), [])
+  const team = useLiveQuery(() => db.meta.get('team').then((t) => t ?? null), [])
+  const salvati = useLiveQuery(() => db.meta.get('moduliSalvati').then((s) => s ?? null), [])
 
   useEffect(() => {
     db.meta.get('modulo').then((m) => {

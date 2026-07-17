@@ -13,7 +13,7 @@ export default function ImpostazioniPage() {
   const fileInputRef = useRef(null)
   const logoInputRef = useRef(null)
 
-  const team = useLiveQuery(() => db.meta.get('team'), [])
+  const team = useLiveQuery(() => db.meta.get('team').then((t) => t ?? null), [])
 
   useEffect(() => {
     hasDemoData().then(setDemoOn)
