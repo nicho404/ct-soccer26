@@ -86,6 +86,32 @@ export default function ImpostazioniPage() {
           così restano uncontrolled e la digitazione non perde caratteri */}
       <div className="card" key={team === undefined ? 'loading' : 'loaded'}>
         <div className="field">
+          <label>Nome mister</label>
+          <input
+            className="input"
+            defaultValue={team?.mister ?? ''}
+            onChange={(e) => saveTeam({ mister: e.target.value })}
+            placeholder="Come ti chiami"
+          />
+        </div>
+        <div className="field">
+          <label>Formato</label>
+          <div className="chip-row">
+            {[7, 8].map((f) => (
+              <button
+                key={f}
+                className={`chip chip-sm ${team?.formato === f ? 'selected' : ''}`}
+                onClick={() => saveTeam({ formato: f })}
+              >
+                Calcio a {f}
+              </button>
+            ))}
+          </div>
+          <p className="muted small" style={{ marginBottom: 0 }}>
+            Determina i moduli disponibili nel builder tattico.
+          </p>
+        </div>
+        <div className="field">
           <label>Nome squadra</label>
           <input
             className="input"

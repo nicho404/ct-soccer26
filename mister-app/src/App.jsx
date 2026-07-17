@@ -1,5 +1,8 @@
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from './db/db'
 import Layout from './components/Layout'
+import OnboardingPage from './pages/OnboardingPage'
 import HomePage from './pages/HomePage'
 import RosaPage from './pages/RosaPage'
 import PlayerFormPage from './pages/PlayerFormPage'
@@ -14,6 +17,11 @@ import IntesaFormPage from './pages/IntesaFormPage'
 import { IconCalendar, IconClipboardCheck, IconChart, IconTarget, IconBook, IconStar } from './components/icons'
 
 export default function App() {
+  const team = useLiveQuery(() => db.meta.get('team'), [])
+
+  if (team === undefined) return null
+  if (!team?.setupDone) return <OnboardingPage team={team} />
+
   return (
     <HashRouter>
       <Routes>

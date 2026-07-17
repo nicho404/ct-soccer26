@@ -15,7 +15,6 @@ const DEFAULT_BY_FORMATO = () =>
 
 export default function ModuloPage() {
   const navigate = useNavigate()
-  const [formato, setFormato] = useState(7)
   const [byFormato, setByFormato] = useState(DEFAULT_BY_FORMATO)
   const [impostazione, setImpostazione] = useState('possesso')
   const [sel, setSel] = useState(null)
@@ -25,6 +24,8 @@ export default function ModuloPage() {
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const intese = useLiveQuery(() => db.intese.toArray(), [])
+  const team = useLiveQuery(() => db.meta.get('team'), [])
+  const salvati = useLiveQuery(() => db.meta.get('moduliSalvati'), [])
 
   useEffect(() => {
     db.meta.get('modulo').then((m) => {
@@ -38,7 +39,6 @@ export default function ModuloPage() {
             if (MODULI_FORMATO[f][cfg.modulo]) base[f].modulo = cfg.modulo
             if (Array.isArray(cfg.slots) && cfg.slots.length === f) base[f].slots = cfg.slots
           }
-          if (FORMATI.includes(v.formato)) setFormato(v.formato)
         } else {
           // dati salvati prima dello switch di formato: erano solo calcio a 7
           if (MODULI_FORMATO[7][v.modulo]) base[7].modulo = v.modulo
@@ -53,25 +53,50 @@ export default function ModuloPage() {
     })
   }, [])
 
+  if (!players || !intese || !loaded || team === undefined || salvati === undefined) return null
+
+  // Il formato arriva dalla configurazione squadra (onboarding/impostazioni):
+  // qui si vedono solo i moduli di quel formato
+  const formato = FORMATI.includes(team?.formato) ? team.formato : 7
+  const listaSalvati = (salvati?.value ?? []).filter((s) => s.formato === formato)
+
   const persist = (patch = {}) => {
-    const value = { formato, impostazione, byFormato, ...patch }
+    const value = { impostazione, byFormato, ...patch }
     db.meta.put({ key: 'modulo', value })
   }
-
-  if (!players || !intese || !loaded) return null
 
   const MODULI = MODULI_FORMATO[formato]
   const { modulo: moduloKey, slots } = byFormato[formato]
   const modulo = MODULI[moduloKey]
   const attivi = players.filter(isAttivo)
 
-  const cambiaFormato = (f) => {
-    if (f === formato) return
-    setFormato(f)
+  const salvaCorrente = async () => {
+    const nome = window.prompt('Nome per questa formazione (es. Titolari, Anti-pressing):')
+    if (!nome?.trim()) return
+    const tutti = salvati?.value ?? []
+    const nuovo = {
+      id: Date.now(),
+      nome: nome.trim(),
+      formato,
+      modulo: moduloKey,
+      slots: [...slots],
+      impostazione,
+    }
+    await db.meta.put({ key: 'moduliSalvati', value: [...tutti, nuovo] })
+  }
+
+  const caricaSalvato = (s) => {
+    const next = { ...byFormato, [formato]: { modulo: s.modulo, slots: [...s.slots] } }
+    setByFormato(next)
+    setImpostazione(s.impostazione)
     setSel(null)
-    setInfoModulo(null)
-    setInfoRuolo(false)
-    persist({ formato: f })
+    persist({ byFormato: next, impostazione: s.impostazione })
+  }
+
+  const eliminaSalvato = async (s) => {
+    if (!window.confirm(`Eliminare la formazione "${s.nome}"?`)) return
+    const tutti = (salvati?.value ?? []).filter((x) => x.id !== s.id)
+    await db.meta.put({ key: 'moduliSalvati', value: tutti })
   }
 
   const cambiaModulo = (key) => {
@@ -165,6 +190,30 @@ export default function ModuloPage() {
         <button className="btn btn-sm" onClick={svuota}>Svuota</button>
       </div>
 
+      {attivi.length > 0 && (
+        <div className="chip-row" style={{ marginBottom: 8, paddingLeft: 6 }}>
+          <button className="chip chip-sm" style={{ color: 'var(--accent)' }} onClick={salvaCorrente}>
+            + Salva formazione
+          </button>
+          {listaSalvati.map((s) => (
+            <button key={s.id} className="chip chip-sm" onClick={() => caricaSalvato(s)}>
+              {s.nome}
+              <span
+                className="chip-info"
+                role="button"
+                aria-label={`Elimina formazione ${s.nome}`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  eliminaSalvato(s)
+                }}
+              >
+                ×
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {attivi.length === 0 ? (
         <EmptyState
           icon={<IconBall />}
@@ -178,18 +227,6 @@ export default function ModuloPage() {
         />
       ) : (
         <>
-          <div className="chip-row" style={{ marginBottom: 8, paddingLeft: 6 }}>
-            {FORMATI.map((f) => (
-              <button
-                key={f}
-                className={`chip chip-sm ${formato === f ? 'selected' : ''}`}
-                style={{ fontWeight: 700 }}
-                onClick={() => cambiaFormato(f)}
-              >
-                ⚽ Calcio a {f}
-              </button>
-            ))}
-          </div>
           <div className="chip-row" style={{ marginBottom: 8, paddingLeft: 6 }}>
             {Object.keys(MODULI).map((key) => (
               <button

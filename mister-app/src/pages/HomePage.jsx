@@ -47,7 +47,9 @@ export default function HomePage() {
           </span>
           <div style={{ minWidth: 0 }}>
             <strong>{team.nome || 'La tua squadra'}</strong>
-            {team.torneo && <div className="muted small">{team.torneo}</div>}
+            <div className="muted small">
+              {[team.torneo, team.mister ? `Mister ${team.mister}` : ''].filter(Boolean).join(' · ')}
+            </div>
           </div>
         </div>
       )}

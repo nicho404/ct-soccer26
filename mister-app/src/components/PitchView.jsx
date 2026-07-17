@@ -137,9 +137,23 @@ export default function PitchView({
             {p ? (
               <>
                 <circle cx={x} cy={y - 4} r="16" fill="#14141c" stroke={colore} strokeWidth="2.5" />
-                <text x={x} y={y + 1} textAnchor="middle" fill="#ececf1" fontSize="12" fontWeight="800">
-                  {p.numero !== '' && p.numero != null ? p.numero : slot.sigla}
-                </text>
+                {p.foto ? (
+                  <>
+                    <clipPath id={`avatar-slot-${i}`}>
+                      <circle cx={x} cy={y - 4} r="14.8" />
+                    </clipPath>
+                    <image
+                      href={p.foto}
+                      x={x - 15} y={y - 19} width="30" height="30"
+                      clipPath={`url(#avatar-slot-${i})`}
+                      preserveAspectRatio="xMidYMid slice"
+                    />
+                  </>
+                ) : (
+                  <text x={x} y={y + 1} textAnchor="middle" fill="#ececf1" fontSize="12" fontWeight="800">
+                    {p.numero !== '' && p.numero != null ? p.numero : slot.sigla}
+                  </text>
+                )}
                 {warning && (
                   <text x={x + 14} y={y - 14} fontSize="12">⚠️</text>
                 )}

@@ -462,6 +462,135 @@ a.card {
   flex-shrink: 0;
 }
 
+/* Card giocatore stile FC26 */
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(120deg, rgba(124, 58, 237, 0.18), rgba(124, 58, 237, 0.04));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.player-card-photo {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.player-card-num {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+  color: #fff;
+  min-width: 26px;
+  height: 26px;
+  font-size: 0.8rem;
+}
+
+.player-card-overall {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  padding-left: 10px;
+  border-left: 1px solid rgba(167, 139, 250, 0.25);
+}
+
+.player-card-overall .ovr {
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.player-card-overall .ovr-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+/* Riepilogo criteri con barre e trend */
+.crit-media-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 0.85rem;
+}
+
+.crit-media-label {
+  min-width: 96px;
+  font-weight: 600;
+}
+
+.stat-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.stat-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+}
+
+.vote-fill-1, .vote-fill-2 { background: var(--danger); }
+.vote-fill-3 { background: var(--warn); }
+.vote-fill-4, .vote-fill-5 { background: var(--ok); }
+
+.trend {
+  min-width: 16px;
+  text-align: center;
+  font-weight: 800;
+}
+
+.trend-up { color: var(--ok); }
+.trend-down { color: var(--danger); }
+.trend-flat { color: var(--muted); }
+
+/* Onboarding primo accesso */
+.onboarding {
+  max-width: 440px;
+  margin: 0 auto;
+  padding-top: 40px;
+}
+
+.onboarding-hero {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.onboarding-hero h1 {
+  font-size: 1.5rem;
+  margin: 14px 0 8px;
+}
+
+.onboarding-hero p {
+  margin: 0;
+}
+
+.onboarding-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  color: var(--accent);
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+}
+
 /* Icona quadrata viola nelle voci del menu Altro */
 .menu-icon {
   display: flex;

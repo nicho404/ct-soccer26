@@ -64,6 +64,12 @@ export default function PlayerDetailPage() {
   const compNome = (cid) =>
     competitions.find((c) => c.id === cid)?.nome ?? 'Senza competizione'
 
+  // Overall stile FC26: media di tutti i voti delle ultime 3 osservazioni, scala 20-100
+  const votiRecenti = observations.slice(0, 3).flatMap((o) => Object.values(o.voti ?? {}))
+  const overall = votiRecenti.length
+    ? Math.round((votiRecenti.reduce((a, b) => a + b, 0) / votiRecenti.length) * 20)
+    : null
+
   const setStato = async (value) => {
     await db.players.update(playerId, { statoAttivita: value })
   }
@@ -83,9 +89,7 @@ export default function PlayerDetailPage() {
     <div className="page">
       <div className="page-header">
         <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/rosa')}>‹</button>
-        <Avatar src={player.foto} size={44} />
         <h1>
-          {player.numero !== '' && player.numero != null ? `${player.numero} · ` : ''}
           {player.nome}
           {player.soprannome ? <span className="muted"> “{player.soprannome}”</span> : null}
         </h1>
@@ -94,13 +98,29 @@ export default function PlayerDetailPage() {
         </button>
       </div>
 
-      <div className="row" style={{ flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
-        <span className={`badge ${stato.badge ? `badge-${stato.badge}` : ''}`}>{stato.label}</span>
-        {player.acciaccato && <span className="badge badge-danger">🩹 Acciaccato</span>}
-        <span className={`badge badge-${tess.badge}`}>{tess.label}</span>
-        {player.porta !== 'no' && (
-          <span className="badge badge-warn">🧤 Porta: {portaInfo(player.porta).label}</span>
-        )}
+      {/* Card stile FC26: foto, badge stato, overall dai voti reali */}
+      <div className="player-card">
+        <div className="player-card-photo">
+          <Avatar src={player.foto} size={76} />
+          {player.numero !== '' && player.numero != null && (
+            <span className="shirt-number player-card-num">{player.numero}</span>
+          )}
+        </div>
+        <div className="row" style={{ flex: 1, flexWrap: 'wrap', gap: 6, minWidth: 0 }}>
+          <span className={`badge ${stato.badge ? `badge-${stato.badge}` : ''}`}>{stato.label}</span>
+          {player.acciaccato && <span className="badge badge-danger">🩹 Acciaccato</span>}
+          <span className={`badge badge-${tess.badge}`}>{tess.label}</span>
+          {player.porta !== 'no' && (
+            <span className="badge badge-warn">🧤 {portaInfo(player.porta).label}</span>
+          )}
+        </div>
+        <div className="player-card-overall">
+          <div className="ovr">{overall ?? '—'}</div>
+          <div className="ovr-label">OVR</div>
+          <span className={`badge badge-role-${famigliaRuolo(player.ruoloNaturale) || 'none'}`}>
+            {player.ruoloNaturale || '—'}
+          </span>
+        </div>
       </div>
 
       <div className="card">
@@ -211,6 +231,37 @@ export default function PlayerDetailPage() {
       )}
 
       <div className="section-title">Osservazioni ({observations.length})</div>
+      {observations.length > 0 && (
+        <div className="card">
+          <p className="muted small" style={{ marginTop: 0 }}>
+            Media delle ultime 3 osservazioni per criterio; la freccia confronta l'ultimo voto col precedente.
+          </p>
+          {CRITERI_OSSERVAZIONE.map((c) => {
+            const serie = observations.filter((o) => o.voti?.[c.key]).map((o) => o.voti[c.key])
+            if (serie.length === 0) return null
+            const recenti = serie.slice(0, 3)
+            const media = recenti.reduce((a, b) => a + b, 0) / recenti.length
+            const trend = serie.length >= 2 ? Math.sign(serie[0] - serie[1]) : null
+            return (
+              <div className="crit-media-row" key={c.key}>
+                <span className="crit-media-label">{c.label}</span>
+                <span className="stat-bar">
+                  <span
+                    className={`stat-bar-fill vote-fill-${Math.round(media)}`}
+                    style={{ width: `${(media / 5) * 100}%` }}
+                  />
+                </span>
+                <span className={`vote-cell-${Math.round(media)}`} style={{ minWidth: 26, textAlign: 'right' }}>
+                  {media.toFixed(1)}
+                </span>
+                <span className={`trend trend-${trend === 1 ? 'up' : trend === -1 ? 'down' : 'flat'}`}>
+                  {trend === 1 ? '↑' : trend === -1 ? '↓' : trend === 0 ? '→' : ''}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      )}
       {observations.length === 0 ? (
         <div className="card muted small">
           Nessuna osservazione registrata. Le aggiungerai dalla schermata Osservazione durante
