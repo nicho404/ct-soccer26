@@ -7,6 +7,7 @@ import {
 } from '../db/constants'
 import { presenzaPct } from '../lib/stats'
 import EmptyState from '../components/EmptyState'
+import Avatar from '../components/Avatar'
 import { IconUsers } from '../components/icons'
 
 function PlayerCard({ player, trainings }) {
@@ -16,7 +17,7 @@ function PlayerCard({ player, trainings }) {
   return (
     <Link to={`/rosa/${player.id}`} className="card tappable">
       <div className="row">
-        <span className={`role-dot ${famigliaRuolo(player.ruoloNaturale)}`} />
+        <Avatar src={player.foto} size={38} />
         {player.numero !== '' && player.numero != null && (
           <span className="shirt-number">{player.numero}</span>
         )}
@@ -43,7 +44,7 @@ function PlayerCard({ player, trainings }) {
         )}
         {player.acciaccato && <span className="badge badge-danger">🩹 Acciaccato</span>}
         {tess.value !== 'ok' && (
-          <span className={`badge badge-${tess.badge}`}>CSI: {tess.label}</span>
+          <span className={`badge badge-${tess.badge}`}>{tess.label}</span>
         )}
         {player.porta === 'si' && <span className="badge badge-warn">🧤 Porta</span>}
         {player.porta === 'emergenza' && <span className="badge">🧤 Porta (emerg.)</span>}
@@ -83,7 +84,7 @@ export default function RosaPage() {
         <EmptyState
           icon={<IconUsers />}
           title="La rosa è vuota"
-          text="Inizia aggiungendo i tuoi giocatori: nome, ruolo e stato tesseramento CSI."
+          text="Inizia aggiungendo i tuoi giocatori: nome, ruolo e stato di tesseramento."
           action={
             <button className="btn btn-primary" onClick={() => navigate('/rosa/nuovo')}>
               + Aggiungi il primo giocatore

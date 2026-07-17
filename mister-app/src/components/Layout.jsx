@@ -1,4 +1,6 @@
 import { NavLink, Outlet, Link } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../db/db'
 import { IconHome, IconUsers, IconPitch, IconCalendar, IconGrid, IconBall } from './icons'
 
 const TABS = [
@@ -10,12 +12,21 @@ const TABS = [
 ]
 
 export default function Layout() {
+  const team = useLiveQuery(() => db.meta.get('team'), [])
+
   return (
     <>
       <header className="app-header">
-        <Link to="/home" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
-          <span className="app-logo" aria-hidden="true"><IconBall size={18} /></span>
-          <span className="title">Mister <span>App</span></span>
+        <Link to="/home" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit', minWidth: 0 }}>
+          <span className="app-logo" aria-hidden="true">
+            {team?.logo ? <img src={team.logo} alt="" /> : <IconBall size={18} />}
+          </span>
+          <span style={{ minWidth: 0 }}>
+            <span className="title">
+              {team?.nome || <>Mister <span>App</span></>}
+            </span>
+            {team?.torneo && <span className="header-torneo">{team.torneo}</span>}
+          </span>
         </Link>
       </header>
       <Outlet />

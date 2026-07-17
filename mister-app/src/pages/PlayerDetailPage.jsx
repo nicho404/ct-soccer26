@@ -7,6 +7,7 @@ import {
   PIEDI, STATI_ATTIVITA, CALCI_FISSI, CRITERI_OSSERVAZIONE, TIPI_INTESA,
 } from '../db/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
+import Avatar from '../components/Avatar'
 
 function InfoRow({ label, children }) {
   return (
@@ -82,7 +83,7 @@ export default function PlayerDetailPage() {
     <div className="page">
       <div className="page-header">
         <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/rosa')}>‹</button>
-        <span className={`role-dot ${famigliaRuolo(player.ruoloNaturale)}`} />
+        <Avatar src={player.foto} size={44} />
         <h1>
           {player.numero !== '' && player.numero != null ? `${player.numero} · ` : ''}
           {player.nome}
@@ -96,7 +97,7 @@ export default function PlayerDetailPage() {
       <div className="row" style={{ flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
         <span className={`badge ${stato.badge ? `badge-${stato.badge}` : ''}`}>{stato.label}</span>
         {player.acciaccato && <span className="badge badge-danger">🩹 Acciaccato</span>}
-        <span className={`badge badge-${tess.badge}`}>CSI: {tess.label}</span>
+        <span className={`badge badge-${tess.badge}`}>{tess.label}</span>
         {player.porta !== 'no' && (
           <span className="badge badge-warn">🧤 Porta: {portaInfo(player.porta).label}</span>
         )}

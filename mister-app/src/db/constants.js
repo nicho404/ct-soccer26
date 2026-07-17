@@ -181,6 +181,6 @@ export const CATEGORIE_MANUALE = [
   { value: 'tattica', label: 'Tattica' },
   { value: 'protocollo', label: 'Protocolli' },
   { value: 'psicologia', label: 'Psicologia / gruppo' },
-  { value: 'regole', label: 'Regole CSI' },
+  { value: 'regole', label: 'Regole torneo' },
   { value: 'principi', label: 'Principi' },
 ]

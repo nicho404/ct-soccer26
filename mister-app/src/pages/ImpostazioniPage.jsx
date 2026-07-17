@@ -1,17 +1,40 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../db/db'
 import { hasDemoData, seedDemoData, clearDemoData } from '../db/demo'
 import { exportBackup, importBackup } from '../db/backup'
+import { resizeToDataUrl } from '../lib/image'
 
 export default function ImpostazioniPage() {
   const navigate = useNavigate()
   const [demoOn, setDemoOn] = useState(null)
   const [backupMsg, setBackupMsg] = useState(null)
   const fileInputRef = useRef(null)
+  const logoInputRef = useRef(null)
+
+  const team = useLiveQuery(() => db.meta.get('team'), [])
 
   useEffect(() => {
     hasDemoData().then(setDemoOn)
   }, [])
+
+  const saveTeam = async (patch) => {
+    const cur = (await db.meta.get('team')) ?? { key: 'team', nome: '', torneo: '', logo: '' }
+    await db.meta.put({ ...cur, ...patch })
+  }
+
+  const onLogoFile = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    try {
+      const logo = await resizeToDataUrl(file, 256, 'image/png')
+      await saveTeam({ logo })
+    } catch {
+      alert('Immagine non leggibile')
+    }
+  }
 
   const toggleDemo = async () => {
     if (demoOn) {
@@ -58,6 +81,58 @@ export default function ImpostazioniPage() {
         <h1>Impostazioni</h1>
       </div>
 
+      <div className="section-title">Squadra</div>
+      {/* key: rimonta gli input quando i dati arrivano da IndexedDB,
+          così restano uncontrolled e la digitazione non perde caratteri */}
+      <div className="card" key={team === undefined ? 'loading' : 'loaded'}>
+        <div className="field">
+          <label>Nome squadra</label>
+          <input
+            className="input"
+            defaultValue={team?.nome ?? ''}
+            onChange={(e) => saveTeam({ nome: e.target.value })}
+            placeholder="Es. Vecchia Guardia FC"
+          />
+        </div>
+        <div className="field">
+          <label>Torneo / campionato</label>
+          <input
+            className="input"
+            defaultValue={team?.torneo ?? ''}
+            onChange={(e) => saveTeam({ torneo: e.target.value })}
+            placeholder="Es. LC8 Milano – Serie C"
+          />
+        </div>
+        <div className="field" style={{ marginBottom: 0 }}>
+          <label>Logo squadra</label>
+          <div className="row">
+            {team?.logo ? (
+              <img src={team.logo} alt="Logo squadra" className="team-logo-preview" />
+            ) : (
+              <span className="team-logo-preview muted small" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>—</span>
+            )}
+            <button className="btn btn-sm" onClick={() => logoInputRef.current?.click()}>
+              {team?.logo ? 'Cambia logo' : 'Carica logo'}
+            </button>
+            {team?.logo && (
+              <button className="btn btn-sm" onClick={() => saveTeam({ logo: '' })}>
+                Rimuovi
+              </button>
+            )}
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={onLogoFile}
+            />
+          </div>
+          <p className="muted small" style={{ marginBottom: 0 }}>
+            Compare in alto a sinistra e in Home. Meglio un'immagine quadrata.
+          </p>
+        </div>
+      </div>
+
       <div className="section-title">Dati di prova</div>
       <div className="card">
         <div className="switch-row">
@@ -101,7 +176,7 @@ export default function ImpostazioniPage() {
 
       <div className="section-title">Info</div>
       <div className="card muted small">
-        Mister App — gestione squadra calcio a 7 (CSI).
+        Mister App — gestione squadra e scouting personale del mister.
         <br />
         I dati vivono solo su questo dispositivo.
       </div>

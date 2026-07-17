@@ -3,11 +3,12 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { isAttivo } from '../db/constants'
 import EmptyState from '../components/EmptyState'
-import { IconBolt } from '../components/icons'
+import { IconBolt, IconBall } from '../components/icons'
 
 export default function HomePage() {
   const navigate = useNavigate()
   const players = useLiveQuery(() => db.players.toArray(), [])
+  const team = useLiveQuery(() => db.meta.get('team'), [])
 
   if (!players) return null
 
@@ -25,17 +26,31 @@ export default function HomePage() {
     alerts.push({ level: 'warn', icon: '🩹', text: `Acciaccati o infortunati: ${acciaccati.map((p) => p.soprannome || p.nome).join(', ')}.` })
   }
   if (daVerificare.length > 0) {
-    alerts.push({ level: 'warn', icon: '📄', text: `Tesseramenti CSI da verificare: ${daVerificare.map((p) => p.soprannome || p.nome).join(', ')}.` })
+    alerts.push({ level: 'warn', icon: '📄', text: `Tesseramenti da verificare: ${daVerificare.map((p) => p.soprannome || p.nome).join(', ')}.` })
   }
   if (nonTesserabili.length > 0) {
     alerts.push({ level: 'danger', icon: '🚫', text: `Non tesserabili: ${nonTesserabili.map((p) => p.soprannome || p.nome).join(', ')}.` })
   }
+
+  const hasTeam = team && (team.nome || team.torneo || team.logo)
 
   return (
     <div className="page">
       <div className="page-header">
         <h1>Home</h1>
       </div>
+
+      {hasTeam && (
+        <div className="team-banner">
+          <span className="team-banner-logo">
+            {team.logo ? <img src={team.logo} alt="" /> : <IconBall size={26} />}
+          </span>
+          <div style={{ minWidth: 0 }}>
+            <strong>{team.nome || 'La tua squadra'}</strong>
+            {team.torneo && <div className="muted small">{team.torneo}</div>}
+          </div>
+        </div>
+      )}
 
       {players.length === 0 ? (
         <EmptyState

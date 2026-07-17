@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { db } from '../db/db'
+import { resizeToDataUrl } from '../lib/image'
+import Avatar from '../components/Avatar'
 import {
   RUOLI, RUOLI_TATTICI, ruoloLabel, famigliaRuolo, famigliaRuoloTattico, ruoloTatticoInfo,
   PIEDI, TESSERAMENTO, STATI_ATTIVITA, PORTA, CALCI_FISSI,
 } from '../db/constants'
 
 const EMPTY = {
+  foto: '',
   nome: '',
   soprannome: '',
   numero: '',
@@ -31,6 +34,7 @@ export default function PlayerFormPage() {
   const [form, setForm] = useState(EMPTY)
   const [loaded, setLoaded] = useState(!editing)
   const [infoRuolo, setInfoRuolo] = useState(null)
+  const fotoInputRef = useRef(null)
 
   useEffect(() => {
     if (!editing) return
@@ -93,6 +97,40 @@ export default function PlayerFormPage() {
       <div className="page-header">
         <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
         <h1>{editing ? 'Modifica giocatore' : 'Nuovo giocatore'}</h1>
+      </div>
+
+      <div className="field">
+        <label>Foto</label>
+        <div className="row">
+          <Avatar src={form.foto} size={56} />
+          <button
+            className="btn btn-sm"
+            onClick={() => fotoInputRef.current?.click()}
+          >
+            {form.foto ? 'Cambia foto' : 'Carica foto'}
+          </button>
+          {form.foto && (
+            <button className="btn btn-sm" onClick={() => set('foto', '')}>
+              Rimuovi
+            </button>
+          )}
+          <input
+            ref={fotoInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              e.target.value = ''
+              if (!file) return
+              try {
+                set('foto', await resizeToDataUrl(file, 256))
+              } catch {
+                alert('Immagine non leggibile')
+              }
+            }}
+          />
+        </div>
       </div>
 
       <div className="field">
@@ -336,7 +374,7 @@ export default function PlayerFormPage() {
       </div>
 
       <div className="field">
-        <label>Tesseramento CSI</label>
+        <label>Tesseramento</label>
         <div className="chip-row">
           {TESSERAMENTO.map((t) => (
             <button
