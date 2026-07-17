@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { TIPI_INTESA } from '../db/constants'
 import EmptyState from '../components/EmptyState'
+import { IconLink } from '../components/icons'
 
 export default function IntesePage() {
   const navigate = useNavigate()
@@ -26,7 +27,7 @@ export default function IntesePage() {
 
       {intese.length === 0 ? (
         <EmptyState
-          icon="🔗"
+          icon={<IconLink />}
           title="Nessuna intesa registrata"
           text="Le coppie e le catene di giocatori che si capiscono sono il vero motore del gioco. Registrale qui e le vedrai disegnate sul campo."
           action={

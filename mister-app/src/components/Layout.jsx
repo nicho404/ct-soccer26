@@ -1,11 +1,12 @@
 import { NavLink, Outlet, Link } from 'react-router-dom'
+import { IconHome, IconUsers, IconPitch, IconCalendar, IconGrid, IconBall } from './icons'
 
 const TABS = [
-  { to: '/home', icon: '⚡', label: 'Home' },
-  { to: '/rosa', icon: '👥', label: 'Rosa' },
-  { to: '/modulo', icon: '⚽', label: 'Modulo' },
-  { to: '/partite', icon: '📅', label: 'Partite' },
-  { to: '/altro', icon: '☰', label: 'Altro' },
+  { to: '/home', Icon: IconHome, label: 'Home' },
+  { to: '/rosa', Icon: IconUsers, label: 'Rosa' },
+  { to: '/modulo', Icon: IconPitch, label: 'Modulo' },
+  { to: '/partite', Icon: IconCalendar, label: 'Partite' },
+  { to: '/altro', Icon: IconGrid, label: 'Altro' },
 ]
 
 export default function Layout() {
@@ -13,7 +14,7 @@ export default function Layout() {
     <>
       <header className="app-header">
         <Link to="/home" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
-          <span className="app-logo" aria-hidden="true">⚽</span>
+          <span className="app-logo" aria-hidden="true"><IconBall size={18} /></span>
           <span className="title">Mister <span>App</span></span>
         </Link>
       </header>
@@ -25,7 +26,7 @@ export default function Layout() {
             to={tab.to}
             className={({ isActive }) => (isActive ? 'active' : '')}
           >
-            <span className="icon">{tab.icon}</span>
+            <span className="icon"><tab.Icon /></span>
             {tab.label}
           </NavLink>
         ))}

@@ -7,6 +7,7 @@ import {
 } from '../db/constants'
 import { presenzaPct } from '../lib/stats'
 import EmptyState from '../components/EmptyState'
+import { IconUsers } from '../components/icons'
 
 function PlayerCard({ player, trainings }) {
   const tess = tesseramentoInfo(player.tesseramento)
@@ -80,7 +81,7 @@ export default function RosaPage() {
 
       {players.length === 0 ? (
         <EmptyState
-          icon="👥"
+          icon={<IconUsers />}
           title="La rosa è vuota"
           text="Inizia aggiungendo i tuoi giocatori: nome, ruolo e stato tesseramento CSI."
           action={

@@ -1,6 +1,7 @@
 import EmptyState from '../components/EmptyState'
+import { IconBall } from '../components/icons'
 
-export default function PlaceholderPage({ title, icon = '🚧', milestone }) {
+export default function PlaceholderPage({ title, icon = <IconBall />, milestone }) {
   return (
     <div className="page">
       <div className="page-header">

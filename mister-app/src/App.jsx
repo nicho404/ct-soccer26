@@ -11,6 +11,7 @@ import ObservationPage from './pages/ObservationPage'
 import ModuloPage from './pages/ModuloPage'
 import IntesePage from './pages/IntesePage'
 import IntesaFormPage from './pages/IntesaFormPage'
+import { IconCalendar, IconClipboardCheck, IconChart, IconTarget, IconBook, IconStar } from './components/icons'
 
 export default function App() {
   return (
@@ -27,13 +28,13 @@ export default function App() {
           <Route path="/intese" element={<IntesePage />} />
           <Route path="/intese/nuova" element={<IntesaFormPage />} />
           <Route path="/intese/:id" element={<IntesaFormPage />} />
-          <Route path="/partite" element={<PlaceholderPage title="Partite e calendario" icon="📅" milestone="M3" />} />
+          <Route path="/partite" element={<PlaceholderPage title="Partite e calendario" icon={<IconCalendar />} milestone="M3" />} />
           <Route path="/modulo" element={<ModuloPage />} />
-          <Route path="/presenze" element={<PlaceholderPage title="Presenze e sedute" icon="🏃" milestone="M5" />} />
-          <Route path="/storico" element={<PlaceholderPage title="Storico" icon="📊" milestone="M6" />} />
-          <Route path="/avversari" element={<PlaceholderPage title="Avversari" icon="🎯" milestone="M7" />} />
-          <Route path="/manuale" element={<PlaceholderPage title="Manuale" icon="📋" milestone="M7" />} />
-          <Route path="/capitano" element={<PlaceholderPage title="Capitano" icon="⭐" milestone="M7" />} />
+          <Route path="/presenze" element={<PlaceholderPage title="Presenze e sedute" icon={<IconClipboardCheck />} milestone="M5" />} />
+          <Route path="/storico" element={<PlaceholderPage title="Storico" icon={<IconChart />} milestone="M6" />} />
+          <Route path="/avversari" element={<PlaceholderPage title="Avversari" icon={<IconTarget />} milestone="M7" />} />
+          <Route path="/manuale" element={<PlaceholderPage title="Manuale" icon={<IconBook />} milestone="M7" />} />
+          <Route path="/capitano" element={<PlaceholderPage title="Capitano" icon={<IconStar />} milestone="M7" />} />
           <Route path="/altro" element={<AltroPage />} />
           <Route path="/impostazioni" element={<ImpostazioniPage />} />
           <Route path="*" element={<Navigate to="/home" replace />} />

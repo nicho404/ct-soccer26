@@ -6,6 +6,7 @@ import { MODULI_FORMATO, FORMATI, MODULO_DEFAULT, IMPOSTAZIONI, ruoloSlot, inPos
 import { famigliaRuolo, isAttivo, ruoloLabel, ruoloTatticoInfo } from '../db/constants'
 import PitchView from '../components/PitchView'
 import EmptyState from '../components/EmptyState'
+import { IconBall } from '../components/icons'
 
 const VUOTO = (formato) => Array(formato).fill(null)
 
@@ -166,7 +167,7 @@ export default function ModuloPage() {
 
       {attivi.length === 0 ? (
         <EmptyState
-          icon="⚽"
+          icon={<IconBall />}
           title="Nessun giocatore attivo"
           text="Aggiungi i giocatori alla rosa per schierarli sul campo."
           action={

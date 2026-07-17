@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { isAttivo } from '../db/constants'
 import EmptyState from '../components/EmptyState'
+import { IconBolt } from '../components/icons'
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -38,7 +39,7 @@ export default function HomePage() {
 
       {players.length === 0 ? (
         <EmptyState
-          icon="⚡"
+          icon={<IconBolt />}
           title="Benvenuto, mister"
           text="Parti dalla rosa: inserisci i tuoi giocatori, poi arriveranno osservazioni, formazioni e partite."
           action={

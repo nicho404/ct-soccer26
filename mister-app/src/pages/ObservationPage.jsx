@@ -6,6 +6,7 @@ import {
   CRITERI_OSSERVAZIONE, CONTESTI_OSSERVAZIONE, famigliaRuolo, isAttivo,
 } from '../db/constants'
 import EmptyState from '../components/EmptyState'
+import { IconEye, IconChart } from '../components/icons'
 
 const oggi = () => new Date().toISOString().slice(0, 10)
 
@@ -154,7 +155,7 @@ export default function ObservationPage() {
 
       {attivi.length === 0 ? (
         <EmptyState
-          icon="🔍"
+          icon={<IconEye />}
           title="Nessun giocatore attivo"
           text="Aggiungi prima i giocatori alla rosa: poi potrai osservarli e votarli da bordo campo."
           action={
@@ -263,7 +264,7 @@ export default function ObservationPage() {
         </>
       ) : ultime.size === 0 ? (
         <EmptyState
-          icon="📊"
+          icon={<IconChart />}
           title="Nessuna osservazione in questa sessione"
           text="Registra i voti dei giocatori con questa data e contesto: qui li confronterai fianco a fianco."
         />
