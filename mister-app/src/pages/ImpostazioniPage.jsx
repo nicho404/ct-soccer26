@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { hasDemoData, seedDemoData, clearDemoData } from '../db/demo'
+import { exportBackup, importBackup } from '../db/backup'
 
 export default function ImpostazioniPage() {
   const navigate = useNavigate()
   const [demoOn, setDemoOn] = useState(null)
+  const [backupMsg, setBackupMsg] = useState(null)
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     hasDemoData().then(setDemoOn)
@@ -19,6 +22,32 @@ export default function ImpostazioniPage() {
     } else {
       await seedDemoData()
       setDemoOn(true)
+    }
+  }
+
+  const onExport = async () => {
+    try {
+      await exportBackup()
+      setBackupMsg({ ok: true, text: 'Backup esportato.' })
+    } catch (e) {
+      setBackupMsg({ ok: false, text: `Errore durante l'esportazione: ${e.message}` })
+    }
+  }
+
+  const onImportFile = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const ok = window.confirm(
+      'Importare il backup? Tutti i dati attuali su questo dispositivo verranno sostituiti.'
+    )
+    if (!ok) return
+    try {
+      await importBackup(file)
+      setBackupMsg({ ok: true, text: 'Backup importato.' })
+      hasDemoData().then(setDemoOn)
+    } catch (err) {
+      setBackupMsg({ ok: false, text: err.message })
     }
   }
 
@@ -49,12 +78,25 @@ export default function ImpostazioniPage() {
       <div className="card">
         <p className="muted small" style={{ marginTop: 0 }}>
           Esporta e importa tutti i dati in un file JSON: è l'unico ponte tra telefono e PC.
-          Disponibile con la milestone M8.
         </p>
         <div className="row">
-          <button className="btn btn-sm" disabled style={{ opacity: 0.5 }}>Esporta backup</button>
-          <button className="btn btn-sm" disabled style={{ opacity: 0.5 }}>Importa backup</button>
+          <button className="btn btn-sm" onClick={onExport}>Esporta backup</button>
+          <button className="btn btn-sm" onClick={() => fileInputRef.current?.click()}>
+            Importa backup
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            style={{ display: 'none' }}
+            onChange={onImportFile}
+          />
         </div>
+        {backupMsg && (
+          <p className="small" style={{ marginBottom: 0, color: backupMsg.ok ? undefined : '#e05555' }}>
+            {backupMsg.text}
+          </p>
+        )}
       </div>
 
       <div className="section-title">Info</div>

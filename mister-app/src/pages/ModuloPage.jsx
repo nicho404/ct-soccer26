@@ -2,18 +2,21 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
-import { MODULI, IMPOSTAZIONI, ruoloSlot, inPosizione } from '../lib/formazioni'
+import { MODULI_FORMATO, FORMATI, MODULO_DEFAULT, IMPOSTAZIONI, ruoloSlot, inPosizione } from '../lib/formazioni'
 import { famigliaRuolo, isAttivo, ruoloLabel, ruoloTatticoInfo } from '../db/constants'
 import PitchView from '../components/PitchView'
 import EmptyState from '../components/EmptyState'
 
-const VUOTO = () => Array(7).fill(null)
+const VUOTO = (formato) => Array(formato).fill(null)
+
+const DEFAULT_BY_FORMATO = () =>
+  Object.fromEntries(FORMATI.map((f) => [f, { modulo: MODULO_DEFAULT[f], slots: VUOTO(f) }]))
 
 export default function ModuloPage() {
   const navigate = useNavigate()
-  const [moduloKey, setModuloKey] = useState('2-3-1')
+  const [formato, setFormato] = useState(7)
+  const [byFormato, setByFormato] = useState(DEFAULT_BY_FORMATO)
   const [impostazione, setImpostazione] = useState('possesso')
-  const [slots, setSlots] = useState(VUOTO())
   const [sel, setSel] = useState(null)
   const [loaded, setLoaded] = useState(false)
   const [infoModulo, setInfoModulo] = useState(null)
@@ -24,13 +27,25 @@ export default function ModuloPage() {
 
   useEffect(() => {
     db.meta.get('modulo').then((m) => {
-      if (m?.value) {
-        if (MODULI[m.value.modulo]) setModuloKey(m.value.modulo)
-        if (IMPOSTAZIONI.some((i) => i.value === m.value.impostazione)) {
-          setImpostazione(m.value.impostazione)
+      const v = m?.value
+      if (v) {
+        const base = DEFAULT_BY_FORMATO()
+        if (v.byFormato) {
+          for (const f of FORMATI) {
+            const cfg = v.byFormato[f]
+            if (!cfg) continue
+            if (MODULI_FORMATO[f][cfg.modulo]) base[f].modulo = cfg.modulo
+            if (Array.isArray(cfg.slots) && cfg.slots.length === f) base[f].slots = cfg.slots
+          }
+          if (FORMATI.includes(v.formato)) setFormato(v.formato)
+        } else {
+          // dati salvati prima dello switch di formato: erano solo calcio a 7
+          if (MODULI_FORMATO[7][v.modulo]) base[7].modulo = v.modulo
+          if (Array.isArray(v.slots) && v.slots.length === 7) base[7].slots = v.slots
         }
-        if (Array.isArray(m.value.slots) && m.value.slots.length === 7) {
-          setSlots(m.value.slots)
+        setByFormato(base)
+        if (IMPOSTAZIONI.some((i) => i.value === v.impostazione)) {
+          setImpostazione(v.impostazione)
         }
       }
       setLoaded(true)
@@ -38,19 +53,31 @@ export default function ModuloPage() {
   }, [])
 
   const persist = (patch = {}) => {
-    const value = { modulo: moduloKey, impostazione, slots, ...patch }
+    const value = { formato, impostazione, byFormato, ...patch }
     db.meta.put({ key: 'modulo', value })
   }
 
   if (!players || !intese || !loaded) return null
 
+  const MODULI = MODULI_FORMATO[formato]
+  const { modulo: moduloKey, slots } = byFormato[formato]
   const modulo = MODULI[moduloKey]
   const attivi = players.filter(isAttivo)
 
-  const cambiaModulo = (key) => {
-    setModuloKey(key)
+  const cambiaFormato = (f) => {
+    if (f === formato) return
+    setFormato(f)
     setSel(null)
-    persist({ modulo: key })
+    setInfoModulo(null)
+    setInfoRuolo(false)
+    persist({ formato: f })
+  }
+
+  const cambiaModulo = (key) => {
+    const next = { ...byFormato, [formato]: { ...byFormato[formato], modulo: key } }
+    setByFormato(next)
+    setSel(null)
+    persist({ byFormato: next })
   }
 
   const cambiaImpostazione = (value) => {
@@ -58,9 +85,10 @@ export default function ModuloPage() {
     persist({ impostazione: value })
   }
 
-  const setSlots2 = (next) => {
-    setSlots(next)
-    persist({ slots: next })
+  const setSlots2 = (nextSlots) => {
+    const next = { ...byFormato, [formato]: { ...byFormato[formato], slots: nextSlots } }
+    setByFormato(next)
+    persist({ byFormato: next })
   }
 
   const onSlotTap = (i) => {
@@ -104,7 +132,7 @@ export default function ModuloPage() {
 
   const svuota = () => {
     if (!window.confirm('Togliere tutti i giocatori dal campo?')) return
-    setSlots2(VUOTO())
+    setSlots2(VUOTO(formato))
     setSel(null)
   }
 
@@ -149,6 +177,18 @@ export default function ModuloPage() {
         />
       ) : (
         <>
+          <div className="chip-row" style={{ marginBottom: 8, paddingLeft: 6 }}>
+            {FORMATI.map((f) => (
+              <button
+                key={f}
+                className={`chip chip-sm ${formato === f ? 'selected' : ''}`}
+                style={{ fontWeight: 700 }}
+                onClick={() => cambiaFormato(f)}
+              >
+                ⚽ Calcio a {f}
+              </button>
+            ))}
+          </div>
           <div className="chip-row" style={{ marginBottom: 8, paddingLeft: 6 }}>
             {Object.keys(MODULI).map((key) => (
               <button

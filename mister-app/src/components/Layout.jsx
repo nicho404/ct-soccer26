@@ -1,5 +1,4 @@
 import { NavLink, Outlet, Link } from 'react-router-dom'
-import logo from '../assets/logo.jpg'
 
 const TABS = [
   { to: '/home', icon: '⚡', label: 'Home' },
@@ -14,7 +13,7 @@ export default function Layout() {
     <>
       <header className="app-header">
         <Link to="/home" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}>
-          <img src={logo} alt="Logo squadra" />
+          <span className="app-logo" aria-hidden="true">⚽</span>
           <span className="title">Mister <span>App</span></span>
         </Link>
       </header>
