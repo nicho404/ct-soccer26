@@ -204,13 +204,73 @@ export const MODULO_DEFAULT = { 7: '2-3-1', 8: '3-3-1' }
 
 // Impostazioni tattiche: cambiano il ruolo tattico imposto a ogni posizione
 export const IMPOSTAZIONI = [
-  { value: 'possesso', label: 'Possesso palla', icona: '⚽' },
-  { value: 'contropiede', label: 'Contropiede', icona: '⚡' },
-  { value: 'pressing', label: 'Pressing alto', icona: '🔥' },
-  { value: 'ali', label: 'Gioco sulle ali', icona: '🦅' },
-  { value: 'pallalunga', label: 'Palla lunga', icona: '🚀' },
-  { value: 'difesa', label: 'Difesa a oltranza', icona: '🛡️' },
+  {
+    value: 'possesso', label: 'Possesso palla', icona: '⚽',
+    descrizione: 'Tieni tu il pallone e sposta l\'avversario col giro palla: tutti danno una linea di appoggio, si attacca solo quando la difesa si è aperta. Serve tecnica diffusa e pazienza; se perdi palla in uscita ti esponi al contropiede.',
+  },
+  {
+    value: 'contropiede', label: 'Contropiede', icona: '⚡',
+    descrizione: 'Blocco compatto dietro la linea della palla e ripartenza immediata appena la recuperi: due tocchi e verticalizzazione. Perfetta con punte rapide; accetti di soffrire e concedi campo e conclusioni da fuori.',
+  },
+  {
+    value: 'pressing', label: 'Pressing alto', icona: '🔥',
+    descrizione: 'Riaggressione feroce appena persa palla: le punte guidano la caccia sui difensori, la squadra accorcia in avanti. Recuperi palla vicino alla porta avversaria, ma è dispendiosa: a 7/8 servono cambi e gambe fresche per reggerla.',
+  },
+  {
+    value: 'ali', label: 'Gioco sulle ali', icona: '🦅',
+    descrizione: 'Il gioco si allarga sugli esterni: uno contro uno, fondo e palla in mezzo, bassa o tesa. Serve superiorità sulle fasce e punte brave ad attaccare il primo palo; il centro resta leggero se gli esterni non rientrano.',
+  },
+  {
+    value: 'pallalunga', label: 'Palla lunga', icona: '🚀',
+    descrizione: 'Salti il centrocampo con lanci diretti sulla punta boa: sponde e seconde palle da aggredire. Efficace su campi piccoli, pesanti o contro pressing alto; rinunci al palleggio e vivi di duelli fisici.',
+  },
+  {
+    value: 'difesa', label: 'Difesa a oltranza', icona: '🛡️',
+    descrizione: 'Tutti sotto la linea della palla, densità massima davanti all\'area, ripartenze solo a campo lunghissimo. Per difendere un risultato o arginare un avversario più forte: concedi possesso e iniziativa, non profondità.',
+  },
 ]
+
+// Manovra di costruzione (stile FC26: come esci col pallone dal basso)
+export const COSTRUZIONI = [
+  {
+    value: 'equilibrata', label: 'Equilibrata',
+    descrizione: 'Uscita palla flessibile: corta quando c\'è spazio per palleggiare, diretta quando il pressing avversario morde. La scelta di default se la squadra sa leggere i momenti della partita.',
+  },
+  {
+    value: 'contropiede', label: 'Contropiede',
+    descrizione: 'Appena recuperata palla la squadra scatta in avanti: transizioni rapide e verticali, pochi tocchi. Massimo pericolo in campo aperto, ma più errori tecnici e possesso complessivo ceduto all\'avversario.',
+  },
+  {
+    value: 'corta', label: 'Passaggi corti',
+    descrizione: 'Uscita dal basso con passaggi corti, portiere compreso: attiri il pressing avversario per superarlo col palleggio e trovare l\'uomo libero. Serve qualità sotto pressione: un errore in uscita è un\'occasione regalata.',
+  },
+]
+
+export const costruzioneInfo = (value) =>
+  COSTRUZIONI.find((c) => c.value === value) ?? COSTRUZIONI[0]
+
+// Altezza della linea difensiva (stile FC26)
+export const LINEE_DIFESA = [
+  {
+    value: 'bassa', label: 'Bassa',
+    descrizione: 'Linea arretrata a protezione dell\'area: togli la profondità alle punte avversarie e inviti l\'avversario nella tua metà campo. Ti affidi a compattezza e ripartenze.',
+  },
+  {
+    value: 'normale', label: 'Normale',
+    descrizione: 'Altezza standard: la linea segue il pallone mantenendo le distanze tra i reparti. Il compromesso tra copertura della profondità e squadra corta.',
+  },
+  {
+    value: 'alta', label: 'Alta',
+    descrizione: 'Linea alta per schiacciare l\'avversario nella sua metà campo e accorciare la squadra in avanti. Si sposa col pressing; il portiere deve saper coprire lo spazio alle spalle dei difensori.',
+  },
+  {
+    value: 'aggressiva', label: 'Aggressiva',
+    descrizione: 'Linea altissima e difensori in anticipo su ogni appoggio: riaggressione totale e avversario soffocato. Rischio massimo sugli attacchi alla profondità: serve una squadra veloce, concentrata e ben allenata.',
+  },
+]
+
+export const lineaDifesaInfo = (value) =>
+  LINEE_DIFESA.find((l) => l.value === value) ?? LINEE_DIFESA[1]
 
 // Ruolo tattico per sigla posizione, per ogni impostazione (nomi FC26)
 const RUOLI_IMPOSTAZIONE = {

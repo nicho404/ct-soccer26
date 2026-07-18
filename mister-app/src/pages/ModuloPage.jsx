@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
-import { MODULI_FORMATO, FORMATI, MODULO_DEFAULT, IMPOSTAZIONI, ruoloSlot, inPosizione } from '../lib/formazioni'
+import {
+  MODULI_FORMATO, FORMATI, MODULO_DEFAULT, IMPOSTAZIONI, COSTRUZIONI, LINEE_DIFESA,
+  costruzioneInfo, lineaDifesaInfo, ruoloSlot, inPosizione,
+} from '../lib/formazioni'
 import { famigliaRuolo, isAttivo, ruoloLabel, ruoloTatticoInfo } from '../db/constants'
 import PitchView from '../components/PitchView'
 import EmptyState from '../components/EmptyState'
@@ -13,10 +16,51 @@ const VUOTO = (formato) => Array(formato).fill(null)
 const DEFAULT_BY_FORMATO = () =>
   Object.fromEntries(FORMATI.map((f) => [f, { modulo: MODULO_DEFAULT[f], slots: VUOTO(f) }]))
 
+// Riga di scelta stile FC26: etichetta, chip e "?" con la descrizione
+function ChipSetting({ label, options, value, onChange }) {
+  const [info, setInfo] = useState(null)
+  const aperta = options.find((o) => o.value === info)
+  return (
+    <>
+      <div className="mini-label">{label}</div>
+      <div className="chip-row" style={{ marginBottom: 8, paddingLeft: 6 }}>
+        {options.map((o) => (
+          <button
+            key={o.value}
+            className={`chip chip-sm ${value === o.value ? 'selected' : ''}`}
+            onClick={() => onChange(o.value)}
+          >
+            {o.icona ? `${o.icona} ` : ''}{o.label}
+            <span
+              className="chip-info"
+              role="button"
+              aria-label={`Info su ${o.label}`}
+              onClick={(e) => {
+                e.stopPropagation()
+                setInfo((v) => (v === o.value ? null : o.value))
+              }}
+            >
+              ?
+            </span>
+          </button>
+        ))}
+      </div>
+      {aperta && (
+        <div className="info-pop" style={{ marginBottom: 8 }} onClick={() => setInfo(null)}>
+          <strong>{aperta.label}</strong>
+          <p>{aperta.descrizione}</p>
+        </div>
+      )}
+    </>
+  )
+}
+
 export default function ModuloPage() {
   const navigate = useNavigate()
   const [byFormato, setByFormato] = useState(DEFAULT_BY_FORMATO)
   const [impostazione, setImpostazione] = useState('possesso')
+  const [costruzione, setCostruzione] = useState('equilibrata')
+  const [linea, setLinea] = useState('normale')
   const [sel, setSel] = useState(null)
   const [loaded, setLoaded] = useState(false)
   const [infoModulo, setInfoModulo] = useState(null)
@@ -48,6 +92,8 @@ export default function ModuloPage() {
         if (IMPOSTAZIONI.some((i) => i.value === v.impostazione)) {
           setImpostazione(v.impostazione)
         }
+        if (COSTRUZIONI.some((c) => c.value === v.costruzione)) setCostruzione(v.costruzione)
+        if (LINEE_DIFESA.some((l) => l.value === v.linea)) setLinea(v.linea)
       }
       setLoaded(true)
     })
@@ -61,7 +107,7 @@ export default function ModuloPage() {
   const listaSalvati = (salvati?.value ?? []).filter((s) => s.formato === formato)
 
   const persist = (patch = {}) => {
-    const value = { impostazione, byFormato, ...patch }
+    const value = { impostazione, costruzione, linea, byFormato, ...patch }
     db.meta.put({ key: 'modulo', value })
   }
 
@@ -71,7 +117,7 @@ export default function ModuloPage() {
   const attivi = players.filter(isAttivo)
 
   const salvaCorrente = async () => {
-    const nome = window.prompt('Nome per questa formazione (es. Titolari, Anti-pressing):')
+    const nome = window.prompt('Nome per questo assetto (es. Titolari, Anti-pressing):')
     if (!nome?.trim()) return
     const tutti = salvati?.value ?? []
     const nuovo = {
@@ -81,16 +127,23 @@ export default function ModuloPage() {
       modulo: moduloKey,
       slots: [...slots],
       impostazione,
+      costruzione,
+      linea,
     }
     await db.meta.put({ key: 'moduliSalvati', value: [...tutti, nuovo] })
   }
 
   const caricaSalvato = (s) => {
     const next = { ...byFormato, [formato]: { modulo: s.modulo, slots: [...s.slots] } }
+    const imp = IMPOSTAZIONI.some((i) => i.value === s.impostazione) ? s.impostazione : impostazione
+    const cos = COSTRUZIONI.some((c) => c.value === s.costruzione) ? s.costruzione : 'equilibrata'
+    const lin = LINEE_DIFESA.some((l) => l.value === s.linea) ? s.linea : 'normale'
     setByFormato(next)
-    setImpostazione(s.impostazione)
+    setImpostazione(imp)
+    setCostruzione(cos)
+    setLinea(lin)
     setSel(null)
-    persist({ byFormato: next, impostazione: s.impostazione })
+    persist({ byFormato: next, impostazione: imp, costruzione: cos, linea: lin })
   }
 
   const eliminaSalvato = async (s) => {
@@ -190,30 +243,6 @@ export default function ModuloPage() {
         <button className="btn btn-sm" onClick={svuota}>Svuota</button>
       </div>
 
-      {attivi.length > 0 && (
-        <div className="chip-row" style={{ marginBottom: 8, paddingLeft: 6 }}>
-          <button className="chip chip-sm" style={{ color: 'var(--accent)' }} onClick={salvaCorrente}>
-            + Salva formazione
-          </button>
-          {listaSalvati.map((s) => (
-            <button key={s.id} className="chip chip-sm" onClick={() => caricaSalvato(s)}>
-              {s.nome}
-              <span
-                className="chip-info"
-                role="button"
-                aria-label={`Elimina formazione ${s.nome}`}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  eliminaSalvato(s)
-                }}
-              >
-                ×
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
       {attivi.length === 0 ? (
         <EmptyState
           icon={<IconBall />}
@@ -227,6 +256,7 @@ export default function ModuloPage() {
         />
       ) : (
         <>
+          <div className="mini-label">Modulo — calcio a {formato}</div>
           <div className="chip-row" style={{ marginBottom: 8, paddingLeft: 6 }}>
             {Object.keys(MODULI).map((key) => (
               <button
@@ -255,17 +285,30 @@ export default function ModuloPage() {
               <p>{MODULI[infoModulo].descrizione}</p>
             </div>
           )}
-          <div className="chip-row" style={{ marginBottom: 10, paddingLeft: 6 }}>
-            {IMPOSTAZIONI.map((imp) => (
-              <button
-                key={imp.value}
-                className={`chip chip-sm ${impostazione === imp.value ? 'selected' : ''}`}
-                onClick={() => cambiaImpostazione(imp.value)}
-              >
-                {imp.icona} {imp.label}
-              </button>
-            ))}
-          </div>
+          <ChipSetting
+            label="Tattica"
+            options={IMPOSTAZIONI}
+            value={impostazione}
+            onChange={cambiaImpostazione}
+          />
+          <ChipSetting
+            label="Manovra di costruzione"
+            options={COSTRUZIONI}
+            value={costruzione}
+            onChange={(v) => {
+              setCostruzione(v)
+              persist({ costruzione: v })
+            }}
+          />
+          <ChipSetting
+            label="Linea difensiva"
+            options={LINEE_DIFESA}
+            value={linea}
+            onChange={(v) => {
+              setLinea(v)
+              persist({ linea: v })
+            }}
+          />
 
           <div className="pitch-wrap">
             <PitchView
@@ -338,6 +381,44 @@ export default function ModuloPage() {
               Tocca una posizione sul campo per schierare, togliere o scambiare un giocatore.
               {panchina.length > 0 && ` In panchina: ${panchina.map((p) => p.soprannome || p.nome.split(' ')[0]).join(', ')}.`}
             </p>
+          )}
+
+          <div className="section-title row" style={{ paddingLeft: 6 }}>
+            <span style={{ flex: 1 }}>Gestione squadra</span>
+            <button className="btn btn-sm" onClick={salvaCorrente}>+ Salva assetto</button>
+          </div>
+          {listaSalvati.length === 0 ? (
+            <div className="card muted small" style={{ marginLeft: 6, marginRight: 6 }}>
+              Salva l'assetto attuale (modulo, undici, tattica, costruzione e linea) con un nome:
+              potrai richiamarlo con un tocco, come i piani partita di FC26.
+            </div>
+          ) : (
+            listaSalvati.map((s) => (
+              <div className="card" key={s.id} style={{ marginLeft: 6, marginRight: 6 }}>
+                <div className="row">
+                  <strong>{s.nome}</strong>
+                  <span className="badge badge-accent">{s.modulo}</span>
+                  <span className="spacer" />
+                  <button className="btn btn-sm" onClick={() => caricaSalvato(s)}>Carica</button>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    aria-label={`Elimina assetto ${s.nome}`}
+                    onClick={() => eliminaSalvato(s)}
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="muted small" style={{ marginTop: 6 }}>
+                  {[
+                    IMPOSTAZIONI.find((i) => i.value === s.impostazione)?.label,
+                    costruzioneInfo(s.costruzione).label,
+                    `Linea ${lineaDifesaInfo(s.linea).label.toLowerCase()}`,
+                  ].filter(Boolean).join(' · ')}
+                  {' · '}
+                  {s.slots.filter(Boolean).length}/{s.formato} schierati
+                </div>
+              </div>
+            ))
           )}
         </>
       )}

@@ -591,6 +591,17 @@ a.card {
   border: 1px solid rgba(167, 139, 250, 0.35);
 }
 
+/* Etichetta piccola sopra le righe di scelta tattica (Modulo) */
+.mini-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin: 2px 0 4px;
+  padding-left: 6px;
+}
+
 /* Icona quadrata viola nelle voci del menu Altro */
 .menu-icon {
   display: flex;
