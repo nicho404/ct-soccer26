@@ -1,5 +1,6 @@
 import { COLORI_FAMIGLIA, famigliaRuolo, TIPI_INTESA } from '../db/constants'
 import { ruoloSlot, IMPOSTAZIONI } from '../lib/formazioni'
+import { nomeBreve } from '../lib/nomi'
 
 // Proiezione prospettica a un punto di fuga (vista da dietro la nostra porta).
 // t = 0 nostra linea di porta (vicina, larga), t = 1 porta avversaria (lontana, stretta).
@@ -23,8 +24,8 @@ function areaPoly(t0, t1, u0 = 0.22, u1 = 0.78) {
 }
 
 function nomeCorto(p) {
-  const n = p.soprannome || p.nome.split(' ')[0]
-  return n.length > 12 ? n.slice(0, 11) + '…' : n
+  const n = nomeBreve(p)
+  return n.length > 13 ? n.slice(0, 12) + '…' : n
 }
 
 export default function PitchView({

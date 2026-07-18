@@ -4,8 +4,9 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import {
   MODULI_FORMATO, FORMATI, MODULO_DEFAULT, IMPOSTAZIONI, COSTRUZIONI, LINEE_DIFESA,
-  costruzioneInfo, lineaDifesaInfo, ruoloSlot, inPosizione,
+  costruzioneInfo, lineaDifesaInfo, costruzioneInContrasto, ruoloSlot, inPosizione,
 } from '../lib/formazioni'
+import { nomeBreve } from '../lib/nomi'
 import { famigliaRuolo, isAttivo, ruoloLabel, ruoloTatticoInfo } from '../db/constants'
 import PitchView from '../components/PitchView'
 import EmptyState from '../components/EmptyState'
@@ -25,6 +26,9 @@ export default function ModuloPage() {
   const [linea, setLinea] = useState('normale')
   const [sel, setSel] = useState(null)
   const [loaded, setLoaded] = useState(false)
+  // ultima riga tattica toccata: solo quella mostra la descrizione,
+  // così il pannello resta compatto in un'unica schermata col campo
+  const [touched, setTouched] = useState(null)
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const intese = useLiveQuery(() => db.intese.toArray(), [])
@@ -220,22 +224,59 @@ export default function ModuloPage() {
         />
       ) : (
         <>
-          <ArrowSelect
-            label={`Modulo — calcio a ${formato}`}
-            options={Object.entries(MODULI).map(([key, m]) => ({
-              value: key,
-              label: key,
-              descrizione: m.descrizione,
-            }))}
-            value={moduloKey}
-            onChange={cambiaModulo}
-          />
-          <ArrowSelect
-            label="Tattica"
-            options={IMPOSTAZIONI}
-            value={impostazione}
-            onChange={cambiaImpostazione}
-          />
+          <div className="tactics-panel">
+            <ArrowSelect
+              label="Tattica"
+              options={IMPOSTAZIONI}
+              value={impostazione}
+              showDesc={touched === 'tattica'}
+              onChange={(v) => {
+                setTouched('tattica')
+                cambiaImpostazione(v)
+              }}
+            />
+            <ArrowSelect
+              label={`Modulo — calcio a ${formato}`}
+              options={Object.entries(MODULI).map(([key, m]) => ({
+                value: key,
+                label: key,
+                descrizione: m.descrizione,
+              }))}
+              value={moduloKey}
+              showDesc={touched === 'modulo'}
+              onChange={(v) => {
+                setTouched('modulo')
+                cambiaModulo(v)
+              }}
+            />
+            <ArrowSelect
+              label="Manovra di costruzione"
+              options={COSTRUZIONI}
+              value={costruzione}
+              showDesc={touched === 'costruzione'}
+              warning={
+                costruzioneInContrasto(impostazione, costruzione)
+                  ? `In contrasto con "${IMPOSTAZIONI.find((i) => i.value === impostazione)?.label}": la squadra riceve indicazioni opposte.`
+                  : null
+              }
+              onChange={(v) => {
+                setTouched('costruzione')
+                setCostruzione(v)
+                persist({ costruzione: v })
+              }}
+            />
+            <ArrowSelect
+              label="Linea difensiva"
+              options={LINEE_DIFESA}
+              value={linea}
+              showDesc={touched === 'linea'}
+              onChange={(v) => {
+                setTouched('linea')
+                setLinea(v)
+                persist({ linea: v })
+              }}
+            />
+          </div>
 
           <div className="pitch-wrap">
             <PitchView
@@ -259,7 +300,7 @@ export default function ModuloPage() {
                 <span className="spacer" />
                 {playerSel && (
                   <button className="btn btn-sm btn-danger" onClick={togli}>
-                    Togli {playerSel.soprannome || playerSel.nome.split(' ')[0]}
+                    Togli {nomeBreve(playerSel)}
                   </button>
                 )}
               </div>
@@ -285,7 +326,7 @@ export default function ModuloPage() {
                         style={{ marginRight: 6 }}
                       />
                       {p.titolare && <span className="star-on">★ </span>}
-                      {p.soprannome || p.nome.split(' ')[0]}
+                      {nomeBreve(p)}
                       {inCampo.has(p.id) ? ' (in campo)' : ''}
                       {fitTattico && <span className="fit-plus"> +</span>}
                       {!ok && ' ⚠️'}
@@ -301,30 +342,9 @@ export default function ModuloPage() {
           ) : (
             <p className="muted small" style={{ margin: '10px 6px 0' }}>
               Tocca una posizione sul campo per schierare, togliere o scambiare un giocatore.
-              {panchina.length > 0 && ` In panchina: ${panchina.map((p) => p.soprannome || p.nome.split(' ')[0]).join(', ')}.`}
+              {panchina.length > 0 && ` In panchina: ${panchina.map(nomeBreve).join(', ')}.`}
             </p>
           )}
-
-          <div style={{ marginTop: 10 }}>
-            <ArrowSelect
-              label="Manovra di costruzione"
-              options={COSTRUZIONI}
-              value={costruzione}
-              onChange={(v) => {
-                setCostruzione(v)
-                persist({ costruzione: v })
-              }}
-            />
-            <ArrowSelect
-              label="Linea difensiva"
-              options={LINEE_DIFESA}
-              value={linea}
-              onChange={(v) => {
-                setLinea(v)
-                persist({ linea: v })
-              }}
-            />
-          </div>
 
           <div className="section-title row" style={{ paddingLeft: 6 }}>
             <span style={{ flex: 1 }}>Gestione squadra</span>

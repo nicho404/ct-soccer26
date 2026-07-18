@@ -8,6 +8,7 @@ import {
 } from '../db/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
 import Avatar from '../components/Avatar'
+import { nomeBreve } from '../lib/nomi'
 
 function InfoRow({ label, children }) {
   return (
@@ -59,7 +60,7 @@ export default function PlayerDetailPage() {
   const porta = statPorta(matches, playerId)
   const nomeDi = (pid) => {
     const p = allPlayers.find((x) => x.id === pid)
-    return p ? p.soprannome || p.nome : '?'
+    return nomeBreve(p)
   }
   const compNome = (cid) =>
     competitions.find((c) => c.id === cid)?.nome ?? 'Senza competizione'

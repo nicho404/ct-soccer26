@@ -7,11 +7,12 @@ import {
 } from '../db/constants'
 import EmptyState from '../components/EmptyState'
 import { IconEye, IconChart } from '../components/icons'
+import { nomeBreve } from '../lib/nomi'
 
 const oggi = () => new Date().toISOString().slice(0, 10)
 
 function nomeCorto(p) {
-  return p.soprannome || p.nome.split(' ')[0]
+  return nomeBreve(p)
 }
 
 // Ultima osservazione per giocatore nella sessione (data + contesto)

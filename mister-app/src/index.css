@@ -591,6 +591,28 @@ a.card {
   border: 1px solid rgba(167, 139, 250, 0.35);
 }
 
+/* Pannello tattico unico: le 4 righe di scelta in una schermata col campo */
+.tactics-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.tactics-panel .arrow-select {
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  margin-bottom: 0;
+  padding: 5px 12px;
+}
+
+.tactics-panel .arrow-select:last-child {
+  border-bottom: none;
+}
+
 /* Selettore a frecce stile FC26 (Modulo) */
 .arrow-select {
   background: var(--surface);
@@ -598,6 +620,23 @@ a.card {
   border-radius: var(--radius);
   padding: 8px 12px;
   margin-bottom: 8px;
+}
+
+.chain-broken {
+  display: inline-flex;
+  vertical-align: -2px;
+  margin-right: 5px;
+  color: var(--danger);
+}
+
+.arrow-select-warn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 2px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--danger);
 }
 
 .arrow-select-top {

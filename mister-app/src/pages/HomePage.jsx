@@ -4,6 +4,7 @@ import { db } from '../db/db'
 import { isAttivo } from '../db/constants'
 import EmptyState from '../components/EmptyState'
 import { IconBolt, IconBall } from '../components/icons'
+import { nomeBreve } from '../lib/nomi'
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -23,13 +24,13 @@ export default function HomePage() {
     alerts.push({ level: 'danger', icon: '🧤', text: 'Porta scoperta: nessun giocatore attivo copre la porta stabilmente.' })
   }
   if (acciaccati.length > 0) {
-    alerts.push({ level: 'warn', icon: '🩹', text: `Acciaccati o infortunati: ${acciaccati.map((p) => p.soprannome || p.nome).join(', ')}.` })
+    alerts.push({ level: 'warn', icon: '🩹', text: `Acciaccati o infortunati: ${acciaccati.map(nomeBreve).join(', ')}.` })
   }
   if (daVerificare.length > 0) {
-    alerts.push({ level: 'warn', icon: '📄', text: `Tesseramenti da verificare: ${daVerificare.map((p) => p.soprannome || p.nome).join(', ')}.` })
+    alerts.push({ level: 'warn', icon: '📄', text: `Tesseramenti da verificare: ${daVerificare.map(nomeBreve).join(', ')}.` })
   }
   if (nonTesserabili.length > 0) {
-    alerts.push({ level: 'danger', icon: '🚫', text: `Non tesserabili: ${nonTesserabili.map((p) => p.soprannome || p.nome).join(', ')}.` })
+    alerts.push({ level: 'danger', icon: '🚫', text: `Non tesserabili: ${nonTesserabili.map(nomeBreve).join(', ')}.` })
   }
 
   const hasTeam = team && (team.nome || team.torneo || team.logo)

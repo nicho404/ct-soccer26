@@ -249,6 +249,18 @@ export const COSTRUZIONI = [
 export const costruzioneInfo = (value) =>
   COSTRUZIONI.find((c) => c.value === value) ?? COSTRUZIONI[0]
 
+// Sintonia tattica ↔ manovra di costruzione: le coppie in contrasto danno
+// alla squadra indicazioni opposte (catena spezzata, come su FC26)
+const COSTRUZIONI_IN_CONTRASTO = {
+  possesso: ['contropiede'],
+  contropiede: ['corta'],
+  pallalunga: ['corta'],
+  difesa: ['corta'],
+}
+
+export const costruzioneInContrasto = (impostazione, costruzione) =>
+  (COSTRUZIONI_IN_CONTRASTO[impostazione] ?? []).includes(costruzione)
+
 // Altezza della linea difensiva (stile FC26)
 export const LINEE_DIFESA = [
   {

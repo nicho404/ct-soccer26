@@ -4,6 +4,7 @@ import { db } from '../db/db'
 import { TIPI_INTESA } from '../db/constants'
 import EmptyState from '../components/EmptyState'
 import { IconLink } from '../components/icons'
+import { nomeBreve } from '../lib/nomi'
 
 export default function IntesePage() {
   const navigate = useNavigate()
@@ -14,7 +15,7 @@ export default function IntesePage() {
 
   const nomeDi = (id) => {
     const p = players.find((x) => x.id === id)
-    return p ? p.soprannome || p.nome : '?'
+    return nomeBreve(p)
   }
 
   return (
