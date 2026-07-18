@@ -26,6 +26,8 @@ export default function ModuloPage() {
   const [linea, setLinea] = useState('normale')
   const [sel, setSel] = useState(null)
   const [loaded, setLoaded] = useState(false)
+  // quale dei 4 selettori mostra la descrizione nel box condiviso sotto la griglia
+  const [descDi, setDescDi] = useState(null)
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const intese = useLiveQuery(() => db.intese.toArray(), [])
@@ -221,47 +223,80 @@ export default function ModuloPage() {
         />
       ) : (
         <>
-          <div className="tactics-panel">
+          <div className="tactics-grid">
             <ArrowSelect
+              compact
               label="Tattica"
               options={IMPOSTAZIONI}
               value={impostazione}
-              onChange={cambiaImpostazione}
+              onChange={(v) => {
+                setDescDi('tattica')
+                cambiaImpostazione(v)
+              }}
             />
             <ArrowSelect
-              label={`Modulo — calcio a ${formato}`}
+              compact
+              label={`Modulo (c. a ${formato})`}
               options={Object.entries(MODULI).map(([key, m]) => ({
                 value: key,
                 label: key,
                 descrizione: m.descrizione,
               }))}
               value={moduloKey}
-              onChange={cambiaModulo}
+              onChange={(v) => {
+                setDescDi('modulo')
+                cambiaModulo(v)
+              }}
             />
             <ArrowSelect
-              label="Manovra di costruzione"
+              compact
+              label="Costruzione"
               options={COSTRUZIONI}
               value={costruzione}
               warning={
                 costruzioneInContrasto(impostazione, costruzione)
-                  ? `In contrasto con "${IMPOSTAZIONI.find((i) => i.value === impostazione)?.label}": la squadra riceve indicazioni opposte.`
+                  ? 'In contrasto con la tattica scelta'
                   : null
               }
               onChange={(v) => {
+                setDescDi('costruzione')
                 setCostruzione(v)
                 persist({ costruzione: v })
               }}
             />
             <ArrowSelect
+              compact
               label="Linea difensiva"
               options={LINEE_DIFESA}
               value={linea}
               onChange={(v) => {
+                setDescDi('linea')
                 setLinea(v)
                 persist({ linea: v })
               }}
             />
           </div>
+
+          {descDi && (() => {
+            const box = {
+              tattica: IMPOSTAZIONI.find((i) => i.value === impostazione),
+              modulo: { label: moduloKey, descrizione: modulo.descrizione },
+              costruzione: costruzioneInfo(costruzione),
+              linea: lineaDifesaInfo(linea),
+            }[descDi]
+            return (
+              <div className="tactics-desc" onClick={() => setDescDi(null)}>
+                <strong>{box.icona ? `${box.icona} ` : ''}{box.label}</strong> — {box.descrizione}
+              </div>
+            )
+          })()}
+
+          {costruzioneInContrasto(impostazione, costruzione) && (
+            <p className="arrow-select-warn" style={{ margin: '0 6px 8px' }}>
+              Catena spezzata: "{costruzioneInfo(costruzione).label}" è in contrasto con
+              "{IMPOSTAZIONI.find((i) => i.value === impostazione)?.label}" — la squadra riceve indicazioni opposte.
+            </p>
+          )}
 
           <div className="pitch-wrap">
             <PitchView

@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import {
   ruoloLabel, ruoloOrdine, famigliaRuolo, tesseramentoInfo, statoAttivitaInfo, isAttivo,
+  stileInfo,
 } from '../db/constants'
 import { presenzaPct } from '../lib/stats'
 import EmptyState from '../components/EmptyState'
@@ -49,6 +50,11 @@ function PlayerCard({ player, trainings }) {
         )}
         {player.porta === 'si' && <span className="badge badge-warn">🧤 Porta</span>}
         {player.porta === 'emergenza' && <span className="badge">🧤 Porta (emerg.)</span>}
+        {player.stiliGioco?.length > 0 && (
+          <span className="badge" title={player.stiliGioco.join(', ')}>
+            {player.stiliGioco.map((s) => stileInfo(s)?.icona ?? '').join('')}
+          </span>
+        )}
         <span className="badge">Presenze: {pct === null ? '—' : `${pct}%`}</span>
       </div>
     </Link>

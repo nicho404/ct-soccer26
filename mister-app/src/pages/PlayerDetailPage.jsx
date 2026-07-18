@@ -5,7 +5,7 @@ import {
   ruoloLabel, famigliaRuolo, famigliaRuoloTattico, tesseramentoInfo, statoAttivitaInfo,
   portaInfo, isAttivo,
   PIEDI, STATI_ATTIVITA, CALCI_FISSI, CRITERI_OSSERVAZIONE, TIPI_INTESA,
-  GESTIONE_ERRORE, CARATTERE,
+  GESTIONE_ERRORE, CARATTERE, stileInfo,
 } from '../db/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
 import Avatar from '../components/Avatar'
@@ -186,7 +186,7 @@ export default function PlayerDetailPage() {
           {player.stiliGioco?.length
             ? player.stiliGioco.map((s) => (
                 <span key={s} className="badge badge-accent" style={{ marginRight: 4, marginBottom: 4 }}>
-                  {s}
+                  {stileInfo(s) ? `${stileInfo(s).icona} ` : ''}{s}
                 </span>
               ))
             : '—'}

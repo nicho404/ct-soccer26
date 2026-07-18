@@ -591,26 +591,56 @@ a.card {
   border: 1px solid rgba(167, 139, 250, 0.35);
 }
 
-/* Pannello tattico unico: le 4 righe di scelta in una schermata col campo */
-.tactics-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin-bottom: 8px;
-  overflow: hidden;
+/* Griglia tattica 2×2: le 4 scelte compatte, tutto in una schermata col campo */
+.tactics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 6px;
 }
 
-.tactics-panel .arrow-select {
-  background: none;
-  border: none;
-  border-bottom: 1px solid var(--border);
-  border-radius: 0;
+.arrow-select-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 8px;
   margin-bottom: 0;
-  padding: 5px 12px;
 }
 
-.tactics-panel .arrow-select:last-child {
-  border-bottom: none;
+.arrow-select-compact .arrow-select-label {
+  text-align: center;
+}
+
+.arrow-select-compact .arrow-select-ctrl {
+  justify-content: space-between;
+}
+
+.arrow-select-compact .arrow-select-value {
+  min-width: 0;
+  flex: 1;
+  font-size: 0.85rem;
+}
+
+.arrow-select-compact .arrow-btn {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+/* Box condiviso con la descrizione dell'ultima scelta toccata */
+.tactics-desc {
+  background: var(--surface-2);
+  border: 1px solid var(--accent-dark);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.tactics-desc strong {
+  color: var(--accent);
 }
 
 /* Selettore a frecce stile FC26 (Modulo) */

@@ -6,7 +6,7 @@ import Avatar from '../components/Avatar'
 import {
   RUOLI, RUOLI_TATTICI, ruoloLabel, famigliaRuolo, famigliaRuoloTattico, ruoloTatticoInfo,
   PIEDI, TESSERAMENTO, STATI_ATTIVITA, PORTA, CALCI_FISSI,
-  GESTIONE_ERRORE, CARATTERE, NOTE_FISICHE, STILI_GIOCO,
+  GESTIONE_ERRORE, CARATTERE, NOTE_FISICHE, STILI_GIOCO, stileInfo,
 } from '../db/constants'
 
 const EMPTY = {
@@ -40,6 +40,7 @@ export default function PlayerFormPage() {
   const [form, setForm] = useState(EMPTY)
   const [loaded, setLoaded] = useState(!editing)
   const [infoRuolo, setInfoRuolo] = useState(null)
+  const [infoStile, setInfoStile] = useState(null)
   const fotoInputRef = useRef(null)
 
   useEffect(() => {
@@ -348,14 +349,31 @@ export default function PlayerFormPage() {
         <div className="chip-row">
           {STILI_GIOCO.map((s) => (
             <button
-              key={s}
-              className={`chip chip-sm ${form.stiliGioco.includes(s) ? 'selected' : ''}`}
-              onClick={() => toggleInList('stiliGioco', s)}
+              key={s.value}
+              className={`chip chip-sm ${form.stiliGioco.includes(s.value) ? 'selected' : ''}`}
+              onClick={() => toggleInList('stiliGioco', s.value)}
             >
-              {form.stiliGioco.includes(s) ? '✓ ' : ''}{s}
+              {s.icona} {s.value}
+              <span
+                className="chip-info"
+                role="button"
+                aria-label={`Descrizione di ${s.value}`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setInfoStile((v) => (v === s.value ? null : s.value))
+                }}
+              >
+                ?
+              </span>
             </button>
           ))}
         </div>
+        {infoStile && stileInfo(infoStile) && (
+          <div className="info-pop" onClick={() => setInfoStile(null)}>
+            <strong>{stileInfo(infoStile).icona} {infoStile}</strong>
+            <p>{stileInfo(infoStile).descrizione}</p>
+          </div>
+        )}
       </div>
 
       <div className="field">

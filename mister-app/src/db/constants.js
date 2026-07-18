@@ -150,15 +150,34 @@ export const NOTE_FISICHE = [
   'Esplosivo', 'Resistente', 'Agile', 'Potente',
 ]
 
-// Stili di gioco alla FC26 (PlayStyles): un giocatore può averne più di uno
+// Stili di gioco alla FC26 (PlayStyles): un giocatore può averne più di uno.
+// value = etichetta salvata sul giocatore (retrocompatibile coi dati esistenti)
 export const STILI_GIOCO = [
-  'Tecnico', 'Funambolo', 'Estro', 'Primo controllo',
-  'Tiro a giro', 'Tiro potente', 'Palle inattive',
-  'Palla lunga', 'Passaggio filtrante', 'Cross teso',
-  'Acrobata', 'Gioco aereo', 'Scatto', 'Instancabile',
-  'Anti-pressing', 'Anticipo', 'Intercetto', 'Muro',
-  'Scivolata', 'Fisico', 'Marcatura', 'Rimessa lunga',
+  { value: 'Tecnico', icona: '🪄', descrizione: 'Tocco di qualità superiore: controlli orientati, giocate pulite anche in spazi stretti.' },
+  { value: 'Funambolo', icona: '🤹', descrizione: 'Dribbling e finte nell\'uno contro uno: cerca il duello e spesso lo vince.' },
+  { value: 'Estro', icona: '✨', descrizione: 'Giocate imprevedibili: tacchi, no-look, invenzioni che spaccano le difese schierate.' },
+  { value: 'Primo controllo', icona: '🧲', descrizione: 'Primo tocco che addomestica qualsiasi pallone, anche in corsa o sotto pressione.' },
+  { value: 'Tiro a giro', icona: '🌀', descrizione: 'Conclusioni a giro sul secondo palo, specialità dal limite dell\'area.' },
+  { value: 'Tiro potente', icona: '💥', descrizione: 'Conclusioni violente anche da fuori: quando carica il tiro, il portiere lo sente.' },
+  { value: 'Palle inattive', icona: '🎯', descrizione: 'Specialista di punizioni, rigori e angoli: palla ferma, occasione vera.' },
+  { value: 'Palla lunga', icona: '🚀', descrizione: 'Lanci lunghi precisi a cambiare campo o pescare la profondità.' },
+  { value: 'Passaggio filtrante', icona: '🔑', descrizione: 'Vede e serve l\'ultimo passaggio: filtranti che tagliano le linee.' },
+  { value: 'Cross teso', icona: '🥏', descrizione: 'Traversoni tesi e velenosi dal fondo o da posizione arretrata.' },
+  { value: 'Acrobata', icona: '🤸', descrizione: 'Rovesciate, volée e giocate acrobatiche: colpisce qualsiasi pallone sporco in area.' },
+  { value: 'Gioco aereo', icona: '✈️', descrizione: 'Domina di testa: stacco, tempo di salto e colpi di testa pericolosi in entrambe le aree.' },
+  { value: 'Scatto', icona: '⚡', descrizione: 'Bruciante sui primi metri: vince i duelli in velocità e attacca la profondità.' },
+  { value: 'Instancabile', icona: '🔋', descrizione: 'Corre per due per tutta la partita: recupera la posizione anche nei finali.' },
+  { value: 'Anti-pressing', icona: '🧊', descrizione: 'Freddo sotto pressione: protegge palla e esce dal raddoppio senza perderla.' },
+  { value: 'Anticipo', icona: '⏱️', descrizione: 'Legge l\'azione prima degli altri: arriva primo sul pallone senza fare fallo.' },
+  { value: 'Intercetto', icona: '🕸️', descrizione: 'Chiude le linee di passaggio: mette il corpo dove passerà il pallone.' },
+  { value: 'Muro', icona: '🧱', descrizione: 'Si immola sulle conclusioni: blocca tiri e cross col corpo.' },
+  { value: 'Scivolata', icona: '🛝', descrizione: 'Tackle in scivolata puliti e tempestivi, anche come ultima risorsa.' },
+  { value: 'Fisico', icona: '🐂', descrizione: 'Usa il corpo: spalla a spalla, protezione palla e duelli vinti di forza.' },
+  { value: 'Marcatura', icona: '🔒', descrizione: 'Segue l\'uomo come un\'ombra: non perde mai il suo riferimento.' },
+  { value: 'Rimessa lunga', icona: '🤾', descrizione: 'Rimesse laterali lunghe fino in area: un angolo in più a ogni laterale.' },
 ]
+
+export const stileInfo = (value) => STILI_GIOCO.find((s) => s.value === value)
 
 export const CALCI_FISSI = [
   { key: 'punizioni', label: 'Punizioni' },
