@@ -591,15 +591,78 @@ a.card {
   border: 1px solid rgba(167, 139, 250, 0.35);
 }
 
-/* Etichetta piccola sopra le righe di scelta tattica (Modulo) */
-.mini-label {
+/* Selettore a frecce stile FC26 (Modulo) */
+.arrow-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.arrow-select-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.arrow-select-label {
+  flex: 1;
+  min-width: 0;
   font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--muted);
-  margin: 2px 0 4px;
-  padding-left: 6px;
+}
+
+.arrow-select-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.arrow-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--accent);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arrow-btn:active {
+  border-color: var(--accent-dark);
+}
+
+.arrow-select-value {
+  min-width: 148px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arrow-select-desc {
+  margin: 7px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+/* Indicatore "ha il ruolo tattico richiesto" */
+.fit-plus {
+  color: var(--ok);
+  font-weight: 800;
 }
 
 /* Icona quadrata viola nelle voci del menu Altro */

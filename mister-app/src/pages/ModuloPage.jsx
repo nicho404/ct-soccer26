@@ -9,51 +9,13 @@ import {
 import { famigliaRuolo, isAttivo, ruoloLabel, ruoloTatticoInfo } from '../db/constants'
 import PitchView from '../components/PitchView'
 import EmptyState from '../components/EmptyState'
+import ArrowSelect from '../components/ArrowSelect'
 import { IconBall } from '../components/icons'
 
 const VUOTO = (formato) => Array(formato).fill(null)
 
 const DEFAULT_BY_FORMATO = () =>
   Object.fromEntries(FORMATI.map((f) => [f, { modulo: MODULO_DEFAULT[f], slots: VUOTO(f) }]))
-
-// Riga di scelta stile FC26: etichetta, chip e "?" con la descrizione
-function ChipSetting({ label, options, value, onChange }) {
-  const [info, setInfo] = useState(null)
-  const aperta = options.find((o) => o.value === info)
-  return (
-    <>
-      <div className="mini-label">{label}</div>
-      <div className="chip-row" style={{ marginBottom: 8, paddingLeft: 6 }}>
-        {options.map((o) => (
-          <button
-            key={o.value}
-            className={`chip chip-sm ${value === o.value ? 'selected' : ''}`}
-            onClick={() => onChange(o.value)}
-          >
-            {o.icona ? `${o.icona} ` : ''}{o.label}
-            <span
-              className="chip-info"
-              role="button"
-              aria-label={`Info su ${o.label}`}
-              onClick={(e) => {
-                e.stopPropagation()
-                setInfo((v) => (v === o.value ? null : o.value))
-              }}
-            >
-              ?
-            </span>
-          </button>
-        ))}
-      </div>
-      {aperta && (
-        <div className="info-pop" style={{ marginBottom: 8 }} onClick={() => setInfo(null)}>
-          <strong>{aperta.label}</strong>
-          <p>{aperta.descrizione}</p>
-        </div>
-      )}
-    </>
-  )
-}
 
 export default function ModuloPage() {
   const navigate = useNavigate()
@@ -63,8 +25,6 @@ export default function ModuloPage() {
   const [linea, setLinea] = useState('normale')
   const [sel, setSel] = useState(null)
   const [loaded, setLoaded] = useState(false)
-  const [infoModulo, setInfoModulo] = useState(null)
-  const [infoRuolo, setInfoRuolo] = useState(false)
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const intese = useLiveQuery(() => db.intese.toArray(), [])
@@ -171,7 +131,6 @@ export default function ModuloPage() {
   }
 
   const onSlotTap = (i) => {
-    setInfoRuolo(false)
     if (sel === null) {
       setSel(i)
       return
@@ -217,6 +176,7 @@ export default function ModuloPage() {
 
   const slotSel = sel !== null ? modulo.slots[sel] : null
   const playerSel = sel !== null && slots[sel] ? players.find((p) => p.id === slots[sel]) : null
+  const ruoloRichiesto = slotSel ? ruoloSlot(slotSel, modulo, impostazione) : ''
 
   // Candidati per lo slot selezionato: prima chi è in posizione
   const candidati =
@@ -256,58 +216,21 @@ export default function ModuloPage() {
         />
       ) : (
         <>
-          <div className="mini-label">Modulo — calcio a {formato}</div>
-          <div className="chip-row" style={{ marginBottom: 8, paddingLeft: 6 }}>
-            {Object.keys(MODULI).map((key) => (
-              <button
-                key={key}
-                className={`chip chip-sm ${moduloKey === key ? 'selected' : ''}`}
-                onClick={() => cambiaModulo(key)}
-              >
-                {key}
-                <span
-                  className="chip-info"
-                  role="button"
-                  aria-label={`Info sul modulo ${key}`}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setInfoModulo((v) => (v === key ? null : key))
-                  }}
-                >
-                  ?
-                </span>
-              </button>
-            ))}
-          </div>
-          {infoModulo && MODULI[infoModulo] && (
-            <div className="info-pop" style={{ marginBottom: 8 }} onClick={() => setInfoModulo(null)}>
-              <strong>{infoModulo}</strong>
-              <p>{MODULI[infoModulo].descrizione}</p>
-            </div>
-          )}
-          <ChipSetting
+          <ArrowSelect
+            label={`Modulo — calcio a ${formato}`}
+            options={Object.entries(MODULI).map(([key, m]) => ({
+              value: key,
+              label: key,
+              descrizione: m.descrizione,
+            }))}
+            value={moduloKey}
+            onChange={cambiaModulo}
+          />
+          <ArrowSelect
             label="Tattica"
             options={IMPOSTAZIONI}
             value={impostazione}
             onChange={cambiaImpostazione}
-          />
-          <ChipSetting
-            label="Manovra di costruzione"
-            options={COSTRUZIONI}
-            value={costruzione}
-            onChange={(v) => {
-              setCostruzione(v)
-              persist({ costruzione: v })
-            }}
-          />
-          <ChipSetting
-            label="Linea difensiva"
-            options={LINEE_DIFESA}
-            value={linea}
-            onChange={(v) => {
-              setLinea(v)
-              persist({ linea: v })
-            }}
           />
 
           <div className="pitch-wrap">
@@ -328,15 +251,7 @@ export default function ModuloPage() {
                 <strong>
                   {slotSel.sigla} — {ruoloLabel(slotSel.sigla)}
                 </strong>
-                <span className="badge badge-accent">{ruoloSlot(slotSel.sigla, impostazione)}</span>
-                <span
-                  className="chip-info"
-                  role="button"
-                  aria-label={`Info sul ruolo ${ruoloSlot(slotSel.sigla, impostazione)}`}
-                  onClick={() => setInfoRuolo((v) => !v)}
-                >
-                  ?
-                </span>
+                <span className="badge badge-accent">{ruoloRichiesto}</span>
                 <span className="spacer" />
                 {playerSel && (
                   <button className="btn btn-sm btn-danger" onClick={togli}>
@@ -344,20 +259,20 @@ export default function ModuloPage() {
                   </button>
                 )}
               </div>
-              {infoRuolo && ruoloTatticoInfo(ruoloSlot(slotSel.sigla, impostazione)) && (
-                <div className="info-pop" style={{ marginBottom: 8 }} onClick={() => setInfoRuolo(false)}>
-                  <strong>{ruoloSlot(slotSel.sigla, impostazione)}</strong>{' '}
-                  <span className="en">({ruoloTatticoInfo(ruoloSlot(slotSel.sigla, impostazione)).en})</span>
-                  <p>{ruoloTatticoInfo(ruoloSlot(slotSel.sigla, impostazione)).descrizione}</p>
-                </div>
+              {ruoloTatticoInfo(ruoloRichiesto) && (
+                <p className="muted small" style={{ margin: '0 0 8px' }}>
+                  <span className="en">({ruoloTatticoInfo(ruoloRichiesto).en})</span>{' '}
+                  {ruoloTatticoInfo(ruoloRichiesto).descrizione}
+                </p>
               )}
               <div className="chip-row">
                 {candidati.map((p) => {
                   const ok = inPosizione(p, slotSel.sigla)
+                  const fitTattico = ok && (p.ruoliTattici ?? []).includes(ruoloRichiesto)
                   return (
                     <button
                       key={p.id}
-                      className={`chip chip-sm ${inCampo.has(p.id) ? '' : ''}`}
+                      className="chip chip-sm"
                       style={inCampo.has(p.id) ? { opacity: 0.55 } : undefined}
                       onClick={() => assegna(p.id)}
                     >
@@ -367,13 +282,15 @@ export default function ModuloPage() {
                       />
                       {p.soprannome || p.nome.split(' ')[0]}
                       {inCampo.has(p.id) ? ' (in campo)' : ''}
+                      {fitTattico && <span className="fit-plus"> +</span>}
                       {!ok && ' ⚠️'}
                     </button>
                   )
                 })}
               </div>
               <p className="muted small" style={{ margin: '8px 0 0' }}>
-                ⚠️ = fuori dalle sue posizioni. Tocca un altro slot sul campo per scambiare.
+                <span className="fit-plus">+</span> = ha il ruolo tattico richiesto · ⚠️ = fuori
+                dalle sue posizioni. Tocca un altro slot sul campo per scambiare.
               </p>
             </div>
           ) : (
@@ -382,6 +299,27 @@ export default function ModuloPage() {
               {panchina.length > 0 && ` In panchina: ${panchina.map((p) => p.soprannome || p.nome.split(' ')[0]).join(', ')}.`}
             </p>
           )}
+
+          <div style={{ marginTop: 10 }}>
+            <ArrowSelect
+              label="Manovra di costruzione"
+              options={COSTRUZIONI}
+              value={costruzione}
+              onChange={(v) => {
+                setCostruzione(v)
+                persist({ costruzione: v })
+              }}
+            />
+            <ArrowSelect
+              label="Linea difensiva"
+              options={LINEE_DIFESA}
+              value={linea}
+              onChange={(v) => {
+                setLinea(v)
+                persist({ linea: v })
+              }}
+            />
+          </div>
 
           <div className="section-title row" style={{ paddingLeft: 6 }}>
             <span style={{ flex: 1 }}>Gestione squadra</span>

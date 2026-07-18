@@ -121,10 +121,11 @@ export default function PitchView({
         const [x, y] = posizioni[i]
         const p = playerAt(i)
         const colore = COLORI_FAMIGLIA[famigliaRuolo(slot.sigla)] ?? '#9a9aad'
-        const ruolo = ruoloSlot(slot.sigla, impostazione)
+        const ruolo = ruoloSlot(slot, modulo, impostazione)
         const isSel = selected === i
         const warning =
           p && p.ruoloNaturale !== slot.sigla && !(p.ruoliAdattati ?? []).includes(slot.sigla)
+        const fitTattico = p && !warning && (p.ruoliTattici ?? []).includes(ruolo)
         return (
           <g
             key={i}
@@ -156,6 +157,17 @@ export default function PitchView({
                 )}
                 {warning && (
                   <text x={x + 14} y={y - 14} fontSize="12">⚠️</text>
+                )}
+                {fitTattico && (
+                  <g>
+                    <circle cx={x + 13} cy={y - 14} r="6.5" fill="#34d399" stroke="#0a0a0e" strokeWidth="1.5" />
+                    <text
+                      x={x + 13} y={y - 10.2}
+                      textAnchor="middle" fill="#053022" fontSize="11" fontWeight="900"
+                    >
+                      +
+                    </text>
+                  </g>
                 )}
                 <text x={x} y={y + 25} textAnchor="middle" fill="#ececf1" fontSize="10.5" fontWeight="700">
                   {nomeCorto(p)}

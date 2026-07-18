@@ -318,8 +318,54 @@ const RUOLI_IMPOSTAZIONE = {
   },
 }
 
-export const ruoloSlot = (sigla, impostazione) =>
-  RUOLI_IMPOSTAZIONE[impostazione]?.[sigla] ?? ''
+// Ruolo tattico richiesto da uno slot: parte dalla mappa base della tattica e
+// si adatta al contesto del modulo (esterni presenti o no, numero di punte,
+// centrali, mediani), come le tattiche di FC26 che cambiano col modulo.
+// Accetta anche solo la sigla (senza modulo) e in quel caso torna il ruolo base.
+export function ruoloSlot(slot, modulo, impostazione) {
+  const sigla = typeof slot === 'string' ? slot : slot?.sigla
+  const base = RUOLI_IMPOSTAZIONE[impostazione]?.[sigla] ?? ''
+  if (typeof slot === 'string' || !modulo) return base
+
+  const slots = modulo.slots
+  const n = (s) => slots.filter((x) => x.sigla === s).length
+  const larghi = ['ES', 'ED', 'AS', 'AD', 'TS', 'TD'].some((s) => n(s) > 0)
+  const stessi = slots.filter((x) => x.sigla === sigla).slice().sort((a, b) => a.u - b.u)
+  const primo = stessi.indexOf(slot) === 0
+  const centrale = Math.abs(slot.u - 0.5) < 0.08
+
+  switch (impostazione) {
+    case 'possesso':
+      if (sigla === 'ATT' && n('ATT') >= 2) return primo ? 'Falso 9' : 'Attaccante avanzato'
+      if (sigla === 'CC' && n('CC') >= 2) return primo ? 'Regista' : 'Mezzala'
+      if (sigla === 'DC' && n('DC') >= 3 && !centrale) return 'Difensore'
+      if (sigla === 'COC' && !larghi) return 'Regista'
+      break
+    case 'contropiede':
+      if (sigla === 'ATT' && n('ATT') >= 2) return primo ? 'Attaccante avanzato' : 'Attaccante ombra'
+      if (sigla === 'CC' && n('CC') >= 2 && n('CDC') === 0) return primo ? 'Mediano' : 'Box-to-box'
+      break
+    case 'pressing':
+      if (sigla === 'ATT' && n('ATT') >= 2) return primo ? 'Attaccante avanzato' : 'Attaccante ombra'
+      if (sigla === 'CC' && n('CC') >= 2 && n('CDC') === 0) return primo ? 'Box-to-box' : 'Incursore'
+      if (sigla === 'DC' && n('DC') === 1) return 'Difensore'
+      break
+    case 'ali':
+      if (sigla === 'CC' && !larghi) return 'Mezzala'
+      if (sigla === 'COC' && !larghi) return 'Classico 10'
+      if (sigla === 'DC' && n('DC') >= 3 && centrale) return 'Difensore'
+      if (sigla === 'ATT' && n('ATT') >= 2) return primo ? 'Attaccante boa' : 'Opportunista'
+      break
+    case 'pallalunga':
+      if (sigla === 'ATT' && n('ATT') >= 2) return primo ? 'Attaccante boa' : 'Opportunista'
+      if (sigla === 'CC' && n('CC') >= 2 && n('CDC') === 0) return primo ? 'Centromediano' : 'Box-to-box'
+      break
+    case 'difesa':
+      if (sigla === 'ATT' && n('ATT') >= 2) return primo ? 'Opportunista' : 'Attaccante avanzato'
+      break
+  }
+  return base
+}
 
 // Un giocatore è "in posizione" se la sigla è la sua naturale o una copertura
 export const inPosizione = (player, sigla) =>
