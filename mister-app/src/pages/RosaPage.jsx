@@ -22,6 +22,7 @@ function PlayerCard({ player, trainings }) {
           <span className="shirt-number">{player.numero}</span>
         )}
         <strong>
+          {player.titolare && <span className="star-on">★ </span>}
           {player.nome}
           {player.soprannome ? <span className="muted"> “{player.soprannome}”</span> : null}
         </strong>
@@ -69,7 +70,9 @@ export default function RosaPage() {
 
   const attivi = players.filter(isAttivo).sort(ordina)
   const inattivi = players.filter((p) => !isAttivo(p)).sort(ordina)
-  const visibili = filtro === 'attivi' ? attivi : [...attivi, ...inattivi]
+  const titolari = attivi.filter((p) => p.titolare)
+  const visibili =
+    filtro === 'attivi' ? attivi : filtro === 'titolari' ? titolari : [...attivi, ...inattivi]
 
   return (
     <div className="page">
@@ -99,6 +102,12 @@ export default function RosaPage() {
               onClick={() => setFiltro('attivi')}
             >
               Attivi ({attivi.length})
+            </button>
+            <button
+              className={`chip chip-sm ${filtro === 'titolari' ? 'selected' : ''}`}
+              onClick={() => setFiltro('titolari')}
+            >
+              ★ Titolari ({titolari.length})
             </button>
             <button
               className={`chip chip-sm ${filtro === 'tutti' ? 'selected' : ''}`}

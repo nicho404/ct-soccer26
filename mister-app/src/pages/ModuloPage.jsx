@@ -189,7 +189,11 @@ export default function ModuloPage() {
               : (p.ruoliAdattati ?? []).includes(slotSel.sigla) ? 1
               : famigliaRuolo(p.ruoloNaturale) === famigliaRuolo(slotSel.sigla) ? 2
               : 3
-            return fit(a) - fit(b) || a.nome.localeCompare(b.nome)
+            return (
+              fit(a) - fit(b) ||
+              (b.titolare === true) - (a.titolare === true) ||
+              a.nome.localeCompare(b.nome)
+            )
           })
           .filter((p) => p.id !== slots[sel])
 
@@ -280,6 +284,7 @@ export default function ModuloPage() {
                         className={`role-dot ${famigliaRuolo(p.ruoloNaturale)}`}
                         style={{ marginRight: 6 }}
                       />
+                      {p.titolare && <span className="star-on">★ </span>}
                       {p.soprannome || p.nome.split(' ')[0]}
                       {inCampo.has(p.id) ? ' (in campo)' : ''}
                       {fitTattico && <span className="fit-plus"> +</span>}

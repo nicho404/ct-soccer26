@@ -107,7 +107,15 @@ export default function PlayerDetailPage() {
           )}
         </div>
         <div className="row" style={{ flex: 1, flexWrap: 'wrap', gap: 6, minWidth: 0 }}>
-          <span className={`badge ${stato.badge ? `badge-${stato.badge}` : ''}`}>{stato.label}</span>
+          <button
+            className={`star-toggle ${player.titolare ? 'on' : ''}`}
+            onClick={() => db.players.update(playerId, { titolare: !player.titolare })}
+          >
+            {player.titolare ? '★' : '☆'} Titolare
+          </button>
+          {player.statoAttivita !== 'sicuro' && (
+            <span className={`badge ${stato.badge ? `badge-${stato.badge}` : ''}`}>{stato.label}</span>
+          )}
           {player.acciaccato && <span className="badge badge-danger">🩹 Acciaccato</span>}
           <span className={`badge badge-${tess.badge}`}>{tess.label}</span>
           {player.porta !== 'no' && (
