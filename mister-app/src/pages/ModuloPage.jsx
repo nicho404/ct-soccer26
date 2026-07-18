@@ -26,9 +26,6 @@ export default function ModuloPage() {
   const [linea, setLinea] = useState('normale')
   const [sel, setSel] = useState(null)
   const [loaded, setLoaded] = useState(false)
-  // ultima riga tattica toccata: solo quella mostra la descrizione,
-  // così il pannello resta compatto in un'unica schermata col campo
-  const [touched, setTouched] = useState(null)
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const intese = useLiveQuery(() => db.intese.toArray(), [])
@@ -229,11 +226,7 @@ export default function ModuloPage() {
               label="Tattica"
               options={IMPOSTAZIONI}
               value={impostazione}
-              showDesc={touched === 'tattica'}
-              onChange={(v) => {
-                setTouched('tattica')
-                cambiaImpostazione(v)
-              }}
+              onChange={cambiaImpostazione}
             />
             <ArrowSelect
               label={`Modulo — calcio a ${formato}`}
@@ -243,24 +236,18 @@ export default function ModuloPage() {
                 descrizione: m.descrizione,
               }))}
               value={moduloKey}
-              showDesc={touched === 'modulo'}
-              onChange={(v) => {
-                setTouched('modulo')
-                cambiaModulo(v)
-              }}
+              onChange={cambiaModulo}
             />
             <ArrowSelect
               label="Manovra di costruzione"
               options={COSTRUZIONI}
               value={costruzione}
-              showDesc={touched === 'costruzione'}
               warning={
                 costruzioneInContrasto(impostazione, costruzione)
                   ? `In contrasto con "${IMPOSTAZIONI.find((i) => i.value === impostazione)?.label}": la squadra riceve indicazioni opposte.`
                   : null
               }
               onChange={(v) => {
-                setTouched('costruzione')
                 setCostruzione(v)
                 persist({ costruzione: v })
               }}
@@ -269,9 +256,7 @@ export default function ModuloPage() {
               label="Linea difensiva"
               options={LINEE_DIFESA}
               value={linea}
-              showDesc={touched === 'linea'}
               onChange={(v) => {
-                setTouched('linea')
                 setLinea(v)
                 persist({ linea: v })
               }}

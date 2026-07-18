@@ -133,6 +133,33 @@ export const PORTA = [
 
 export const portaInfo = (value) => PORTA.find((p) => p.value === value) ?? PORTA[2]
 
+// Come reagisce ai propri errori in campo
+export const GESTIONE_ERRORE = [
+  { value: 'attiva', label: 'Attiva', hint: 'Scarica subito l\'errore: torna aggressivo, si rifà nel gioco' },
+  { value: 'passiva', label: 'Passiva', hint: 'L\'errore lo spegne: si nasconde, va incoraggiato' },
+]
+
+export const CARATTERE = [
+  { value: 'leader', label: 'Leader', hint: 'Trascina il gruppo, parla in campo, prende responsabilità' },
+  { value: 'follower', label: 'Follower', hint: 'Esegue e rende al meglio con indicazioni chiare' },
+]
+
+// Note fisiche a spunta multipla
+export const NOTE_FISICHE = [
+  'Alto', 'Minuto', 'Robusto', 'Esile', 'Veloce', 'Lento',
+  'Esplosivo', 'Resistente', 'Agile', 'Potente',
+]
+
+// Stili di gioco alla FC26 (PlayStyles): un giocatore può averne più di uno
+export const STILI_GIOCO = [
+  'Tecnico', 'Funambolo', 'Estro', 'Primo controllo',
+  'Tiro a giro', 'Tiro potente', 'Palle inattive',
+  'Palla lunga', 'Passaggio filtrante', 'Cross teso',
+  'Acrobata', 'Gioco aereo', 'Scatto', 'Instancabile',
+  'Anti-pressing', 'Anticipo', 'Intercetto', 'Muro',
+  'Scivolata', 'Fisico', 'Marcatura', 'Rimessa lunga',
+]
+
 export const CALCI_FISSI = [
   { key: 'punizioni', label: 'Punizioni' },
   { key: 'angoliDx', label: 'Angoli dx' },

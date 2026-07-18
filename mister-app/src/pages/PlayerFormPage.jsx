@@ -6,6 +6,7 @@ import Avatar from '../components/Avatar'
 import {
   RUOLI, RUOLI_TATTICI, ruoloLabel, famigliaRuolo, famigliaRuoloTattico, ruoloTatticoInfo,
   PIEDI, TESSERAMENTO, STATI_ATTIVITA, PORTA, CALCI_FISSI,
+  GESTIONE_ERRORE, CARATTERE, NOTE_FISICHE, STILI_GIOCO,
 } from '../db/constants'
 
 const EMPTY = {
@@ -24,6 +25,11 @@ const EMPTY = {
   tesseramento: 'da_verificare',
   porta: 'no',
   calciFissi: [],
+  carattere: '',
+  gestioneErrore: '',
+  chiamaMarcature: false,
+  noteFisiche: [],
+  stiliGioco: [],
   note: '',
 }
 
@@ -332,6 +338,84 @@ export default function PlayerFormPage() {
               onClick={() => set('porta', p.value)}
             >
               🧤 {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="field">
+        <label>Stili di gioco (più di uno, come su FC26)</label>
+        <div className="chip-row">
+          {STILI_GIOCO.map((s) => (
+            <button
+              key={s}
+              className={`chip chip-sm ${form.stiliGioco.includes(s) ? 'selected' : ''}`}
+              onClick={() => toggleInList('stiliGioco', s)}
+            >
+              {form.stiliGioco.includes(s) ? '✓ ' : ''}{s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="field">
+        <label>Carattere</label>
+        <div className="chip-row">
+          {CARATTERE.map((c) => (
+            <button
+              key={c.value}
+              className={`chip chip-sm ${form.carattere === c.value ? 'selected' : ''}`}
+              title={c.hint}
+              onClick={() => set('carattere', form.carattere === c.value ? '' : c.value)}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="field">
+        <label>Gestione dell'errore</label>
+        <div className="chip-row">
+          {GESTIONE_ERRORE.map((g) => (
+            <button
+              key={g.value}
+              className={`chip chip-sm ${form.gestioneErrore === g.value ? 'selected' : ''}`}
+              title={g.hint}
+              onClick={() => set('gestioneErrore', form.gestioneErrore === g.value ? '' : g.value)}
+            >
+              {g.label}
+            </button>
+          ))}
+        </div>
+        {form.gestioneErrore && (
+          <p className="muted small" style={{ marginBottom: 0 }}>
+            {GESTIONE_ERRORE.find((g) => g.value === form.gestioneErrore)?.hint}
+          </p>
+        )}
+      </div>
+
+      <div className="field">
+        <div className="switch-row">
+          <span className="label">📣 Chiama le marcature</span>
+          <button
+            className={`toggle ${form.chiamaMarcature ? 'on' : ''}`}
+            aria-label="Chiama le marcature"
+            onClick={() => set('chiamaMarcature', !form.chiamaMarcature)}
+          />
+        </div>
+      </div>
+
+      <div className="field">
+        <label>Note fisiche</label>
+        <div className="chip-row">
+          {NOTE_FISICHE.map((n) => (
+            <button
+              key={n}
+              className={`chip chip-sm ${form.noteFisiche.includes(n) ? 'selected' : ''}`}
+              onClick={() => toggleInList('noteFisiche', n)}
+            >
+              {n}
             </button>
           ))}
         </div>

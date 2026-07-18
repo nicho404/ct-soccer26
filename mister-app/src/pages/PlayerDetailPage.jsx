@@ -5,6 +5,7 @@ import {
   ruoloLabel, famigliaRuolo, famigliaRuoloTattico, tesseramentoInfo, statoAttivitaInfo,
   portaInfo, isAttivo,
   PIEDI, STATI_ATTIVITA, CALCI_FISSI, CRITERI_OSSERVAZIONE, TIPI_INTESA,
+  GESTIONE_ERRORE, CARATTERE,
 } from '../db/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
 import Avatar from '../components/Avatar'
@@ -180,6 +181,26 @@ export default function PlayerDetailPage() {
                 .map((k) => CALCI_FISSI.find((c) => c.key === k)?.label ?? k)
                 .join(', ')
             : '—'}
+        </InfoRow>
+        <InfoRow label="Stili di gioco">
+          {player.stiliGioco?.length
+            ? player.stiliGioco.map((s) => (
+                <span key={s} className="badge badge-accent" style={{ marginRight: 4, marginBottom: 4 }}>
+                  {s}
+                </span>
+              ))
+            : '—'}
+        </InfoRow>
+        <InfoRow label="Carattere">
+          {[
+            CARATTERE.find((c) => c.value === player.carattere)?.label,
+            player.gestioneErrore &&
+              `errore: gestione ${GESTIONE_ERRORE.find((g) => g.value === player.gestioneErrore)?.label.toLowerCase()}`,
+            player.chiamaMarcature && '📣 chiama le marcature',
+          ].filter(Boolean).join(' · ') || '—'}
+        </InfoRow>
+        <InfoRow label="Fisico">
+          {player.noteFisiche?.length ? player.noteFisiche.join(', ') : '—'}
         </InfoRow>
         {player.condizione && <InfoRow label="Condizione">{player.condizione}</InfoRow>}
         {player.note && <InfoRow label="Note">{player.note}</InfoRow>}
