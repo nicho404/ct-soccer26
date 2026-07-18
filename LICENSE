@@ -1,16 +1,19 @@
-MIT License
+Copyright (c) 2026 Nicholas. All rights reserved.
 
-Copyright (c) 2026 Nicholas
+This source code is made publicly available for viewing and reference only.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+No permission is granted to use, copy, modify, merge, publish, distribute,
+sublicense, sell, or create derivative works of this software or any part
+of it, for any purpose, whether commercial or non-commercial, without the
+prior written permission of the copyright holder.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Viewing the source code on the hosting platform (e.g. GitHub) and forking
+the repository within that platform, to the extent required by the
+platform's terms of service, are permitted. Any other use is prohibited.
+
+Note: versions of this software published before this license was adopted
+were distributed under the MIT License; this license applies to all
+subsequent versions.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,

@@ -32,4 +32,4 @@ Ogni push su `main` viene pubblicato automaticamente su GitHub Pages tramite il 
 
 ## Licenza
 
-[MIT](LICENSE)
+Tutti i diritti riservati — codice visibile a solo scopo di consultazione, ogni utilizzo richiede permesso scritto. Vedi [LICENSE](LICENSE).
