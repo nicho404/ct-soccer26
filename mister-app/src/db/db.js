@@ -1,4 +1,5 @@
 import Dexie from 'dexie'
+import { RUOLI } from '../tactics/constants'
 
 export const db = new Dexie('misterApp')
 
@@ -110,3 +111,111 @@ db.version(6)
       ]
     })
   )
+
+// Motore tattico (src/tactics): vocabolario ruoli chiuso a 27 codici.
+// Nomi FC26 riusati per un concetto che coincide passano senza flag.
+// Nomi riusati per un concetto più specifico (restringimento) vengono
+// comunque adottati ma marcati per revisione, insieme all'originale.
+// Nomi senza alcun corrispondente restano solo come storico.
+const RUOLI_TATTICI_RESTRITTIVI = new Set(['Difensore largo', 'Tornante', 'Mediano', 'Mezzala'])
+
+// impostazione/costruzione/linea: dal vecchio vocabolario (src/lib/formazioni.js,
+// pre-motore-tattico) al nuovo. "pressing" e "aggressiva" non hanno un
+// corrispondente diretto: restano sul default e vengono marcati da rivedere.
+const IMPOSTAZIONE_LEGACY_TO_NUOVA = {
+  possesso: 'possesso',
+  ali: 'ali',
+  pallalunga: 'lunga',
+  contropiede: 'contropiede',
+  difesa: 'oltranza',
+}
+const COSTRUZIONE_LEGACY_TO_NUOVA = {
+  equilibrata: 'equilibrata',
+  corta: 'corti',
+  contropiede: 'diretta',
+}
+const LINEA_LEGACY_TO_NUOVA = {
+  bassa: 'bassa',
+  normale: 'normale',
+  alta: 'alta',
+}
+
+function convertiValoreTattico(mappa, valoreLegacy, fallback) {
+  if (valoreLegacy === undefined) return { valore: fallback, daRivedere: false }
+  const convertito = mappa[valoreLegacy]
+  if (convertito !== undefined) return { valore: convertito, daRivedere: false }
+  return { valore: fallback, daRivedere: true }
+}
+
+function convertiTatticaSalvata(s) {
+  const imp = convertiValoreTattico(IMPOSTAZIONE_LEGACY_TO_NUOVA, s.impostazione, 'possesso')
+  const cos = convertiValoreTattico(COSTRUZIONE_LEGACY_TO_NUOVA, s.costruzione, 'equilibrata')
+  const lin = convertiValoreTattico(LINEA_LEGACY_TO_NUOVA, s.linea, 'normale')
+  const next = {
+    ...s,
+    impostazione: imp.valore,
+    costruzione: cos.valore,
+    linea: lin.valore,
+    slotRuoliOverride: s.slotRuoliOverride ?? {},
+  }
+  if (imp.daRivedere || cos.daRivedere || lin.daRivedere) next.tatticaDaRivedere = true
+  return next
+}
+
+// Applica la conversione v6→v7 (motore tattico) a un ambito con .table():
+// `tx` dentro l'upgrade di Dexie, oppure `db` stesso quando viene richiamata
+// fuori da un upgrade — ad es. da importBackup() dopo aver ripristinato un
+// backup più vecchio della versione corrente, che altrimenti bulkPut-erebbe
+// i dati vecchi senza mai passare dalla migration (Dexie la esegue solo sui
+// cambi di versione dello schema, non sulle scritture manuali).
+export async function migrazioneV7RuoliTattici(scope) {
+  const nomiValidi = new Set(RUOLI.map((r) => r.nome))
+
+  await scope.table('players').toCollection().modify((p) => {
+    const originali = p.ruoliTattici ?? []
+    const confermati = []
+    const legacy = []
+    let daRivedere = false
+    for (const nome of originali) {
+      if (nomiValidi.has(nome)) {
+        confermati.push(nome)
+        if (RUOLI_TATTICI_RESTRITTIVI.has(nome)) {
+          legacy.push(nome)
+          daRivedere = true
+        }
+      } else {
+        legacy.push(nome)
+        daRivedere = true
+      }
+    }
+    p.ruoliTattici = confermati
+    if (legacy.length > 0) {
+      p.ruoliTatticiLegacy = [...new Set([...(p.ruoliTatticiLegacy ?? []), ...legacy])]
+    }
+    if (daRivedere) p.ruoliTatticiDaRivedere = true
+  })
+
+  await scope.table('meta').toCollection().modify((row) => {
+    if (row.key === 'modulo' && row.value) {
+      const imp = convertiValoreTattico(IMPOSTAZIONE_LEGACY_TO_NUOVA, row.value.impostazione, 'possesso')
+      const cos = convertiValoreTattico(COSTRUZIONE_LEGACY_TO_NUOVA, row.value.costruzione, 'equilibrata')
+      const lin = convertiValoreTattico(LINEA_LEGACY_TO_NUOVA, row.value.linea, 'normale')
+      row.value.impostazione = imp.valore
+      row.value.costruzione = cos.valore
+      row.value.linea = lin.valore
+      if (imp.daRivedere || cos.daRivedere || lin.daRivedere) row.value.tatticaDaRivedere = true
+      if (row.value.byFormato) {
+        for (const f of Object.keys(row.value.byFormato)) {
+          row.value.byFormato[f].slotRuoliOverride = row.value.byFormato[f].slotRuoliOverride ?? {}
+        }
+      }
+    }
+    if (row.key === 'moduliSalvati' && Array.isArray(row.value)) {
+      row.value = row.value.map(convertiTatticaSalvata)
+    }
+  })
+}
+
+db.version(7)
+  .stores({})
+  .upgrade((tx) => migrazioneV7RuoliTattici(tx))

@@ -659,6 +659,20 @@ a.card {
   color: var(--danger);
 }
 
+.coerenza-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  margin: 0 6px 10px;
+  font-size: 0.8rem;
+  border: 1px solid transparent;
+}
+.coerenza-banner-ok { background: rgba(52, 211, 153, 0.12); border-color: rgba(52, 211, 153, 0.35); color: var(--ok); }
+.coerenza-banner-warn { background: rgba(251, 191, 36, 0.12); border-color: rgba(251, 191, 36, 0.35); color: var(--warn); }
+.coerenza-banner-rotto { background: rgba(248, 113, 113, 0.12); border-color: rgba(248, 113, 113, 0.35); color: var(--danger); }
+
 .arrow-select-warn {
   display: flex;
   align-items: center;

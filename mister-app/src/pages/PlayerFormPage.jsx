@@ -4,10 +4,11 @@ import { db } from '../db/db'
 import { resizeToDataUrl } from '../lib/image'
 import Avatar from '../components/Avatar'
 import {
-  RUOLI, RUOLI_TATTICI, ruoloLabel, famigliaRuolo, famigliaRuoloTattico, ruoloTatticoInfo,
+  RUOLI, ruoloLabel, famigliaRuolo,
   PIEDI, TESSERAMENTO, STATI_ATTIVITA, PORTA, CALCI_FISSI,
   GESTIONE_ERRORE, CARATTERE, NOTE_FISICHE, STILI_GIOCO, stileInfo,
 } from '../db/constants'
+import { RUOLI as RUOLI_TATTICI, zonaSigla, famigliaRuoloTattico, ruoloPerNome } from '../tactics/constants'
 
 const EMPTY = {
   foto: '',
@@ -59,17 +60,19 @@ export default function PlayerFormPage() {
       [key]: f[key].includes(value) ? f[key].filter((v) => v !== value) : [...f[key], value],
     }))
 
-  // Ruoli tattici raggruppati per posizione del giocatore (naturale + coperture),
-  // come su FC26. Un ruolo condiviso tra più posizioni appare solo nel primo gruppo.
+  // Ruoli tattici raggruppati per posizione del giocatore (naturale + coperture).
+  // Un ruolo condiviso tra più posizioni appare solo nel primo gruppo. Il
+  // raggruppamento passa per la zona (sigla→zona, src/tactics/constants.js)
+  // così le posizioni "aggregate" del motore (CDC→mediano, COC/AD/AS→
+  // centrocampista/esterno) trovano comunque i ruoli giusti.
   const posizioniGiocatore = [form.ruoloNaturale, ...form.ruoliAdattati].filter(Boolean)
   const gruppiTattici = []
   const ruoliVisti = new Set()
   for (const pos of posizioniGiocatore) {
-    const ruoli = RUOLI_TATTICI.filter(
-      (r) => r.posizioni.includes(pos) && !ruoliVisti.has(r.value)
-    )
+    const zona = zonaSigla(pos)
+    const ruoli = RUOLI_TATTICI.filter((r) => r.zona === zona && !ruoliVisti.has(r.nome))
     if (ruoli.length === 0) continue
-    ruoli.forEach((r) => ruoliVisti.add(r.value))
+    ruoli.forEach((r) => ruoliVisti.add(r.nome))
     gruppiTattici.push({ pos, ruoli })
   }
   // Ruoli selezionati che non appartengono più alle posizioni attuali:
@@ -218,7 +221,7 @@ export default function PlayerFormPage() {
       </div>
 
       <div className="field">
-        <label>Ruoli tattici FC26 (anche più di uno)</label>
+        <label>Ruoli tattici (anche più di uno)</label>
         {gruppiTattici.length === 0 && ruoliOrfani.length === 0 ? (
           <p className="muted small" style={{ margin: 0 }}>
             Scegli prima la posizione naturale: qui compariranno i ruoli tattici di quella
@@ -234,18 +237,18 @@ export default function PlayerFormPage() {
                 <div className="chip-row">
                   {ruoli.map((r) => (
                     <button
-                      key={r.value}
-                      className={`chip chip-sm pos-${famigliaRuolo(pos)} ${form.ruoliTattici.includes(r.value) ? 'selected' : ''}`}
-                      onClick={() => toggleInList('ruoliTattici', r.value)}
+                      key={r.nome}
+                      className={`chip chip-sm pos-${famigliaRuolo(pos)} ${form.ruoliTattici.includes(r.nome) ? 'selected' : ''}`}
+                      onClick={() => toggleInList('ruoliTattici', r.nome)}
                     >
-                      {form.ruoliTattici.includes(r.value) ? '✓ ' : ''}{r.value}
+                      {form.ruoliTattici.includes(r.nome) ? '✓ ' : ''}{r.nome}
                       <span
                         className="chip-info"
                         role="button"
-                        aria-label={`Info su ${r.value}`}
+                        aria-label={`Info su ${r.nome}`}
                         onClick={(e) => {
                           e.stopPropagation()
-                          setInfoRuolo((v) => (v === r.value ? null : r.value))
+                          setInfoRuolo((v) => (v === r.nome ? null : r.nome))
                         }}
                       >
                         ?
@@ -253,11 +256,10 @@ export default function PlayerFormPage() {
                     </button>
                   ))}
                 </div>
-                {infoRuolo && ruoli.some((r) => r.value === infoRuolo) && (
+                {infoRuolo && ruoli.some((r) => r.nome === infoRuolo) && (
                   <div className="info-pop" onClick={() => setInfoRuolo(null)}>
-                    <strong>{infoRuolo}</strong>{' '}
-                    <span className="en">({ruoloTatticoInfo(infoRuolo)?.en})</span>
-                    <p>{ruoloTatticoInfo(infoRuolo)?.descrizione}</p>
+                    <strong>{infoRuolo}</strong>
+                    <p>{ruoloPerNome(infoRuolo)?.compito}</p>
                   </div>
                 )}
               </div>
@@ -283,6 +285,29 @@ export default function PlayerFormPage() {
           </>
         )}
       </div>
+
+      {form.ruoliTatticiDaRivedere && (
+        <div className="card" style={{ borderColor: 'rgba(251,191,36,0.5)', marginBottom: 12 }}>
+          <strong>⚠️ Ruoli tattici da rivedere</strong>
+          <p className="muted small" style={{ margin: '6px 0' }}>
+            Con l'aggiornamento del motore tattico alcuni ruoli osservati su questo giocatore
+            non hanno un corrispondente diretto (o ne hanno uno più specifico). Nulla è stato
+            scartato: qui sotto trovi i valori originali, per nome — controlla sopra i ruoli
+            tattici attuali e correggili se serve.
+          </p>
+          {form.ruoliTatticiLegacy?.length > 0 && (
+            <p className="muted small" style={{ margin: '0 0 8px' }}>
+              Valori originali: {form.ruoliTatticiLegacy.join(', ')}
+            </p>
+          )}
+          <button
+            className="btn btn-sm"
+            onClick={() => set('ruoliTatticiDaRivedere', false)}
+          >
+            Ho controllato, segna come rivisto
+          </button>
+        </div>
+      )}
 
       <div className="row" style={{ alignItems: 'flex-start' }}>
         <div className="field" style={{ flex: 1 }}>

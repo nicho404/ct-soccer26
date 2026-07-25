@@ -1,5 +1,5 @@
 import { COLORI_FAMIGLIA, famigliaRuolo, TIPI_INTESA } from '../db/constants'
-import { ruoloSlot, IMPOSTAZIONI } from '../lib/formazioni'
+import { compatibilitaGiocatore } from '../tactics/engine'
 import { nomeBreve } from '../lib/nomi'
 
 // Proiezione prospettica a un punto di fuga (vista da dietro la nostra porta).
@@ -28,8 +28,30 @@ function nomeCorto(p) {
   return n.length > 13 ? n.slice(0, 12) + '…' : n
 }
 
+// Badge di compatibilità giocatore↔ruolo tattico, 3 livelli. "forzato" non
+// mostra badge: l'assenza è già un segnale, senza affollare lo slot.
+function BadgeCompatibilita({ x, y, livello }) {
+  if (livello === 'naturale') {
+    return (
+      <g>
+        <circle cx={x} cy={y} r="6.5" fill="#34d399" stroke="#0a0a0e" strokeWidth="1.5" />
+        <text x={x} y={y + 3.8} textAnchor="middle" fill="#053022" fontSize="11" fontWeight="900">+</text>
+      </g>
+    )
+  }
+  if (livello === 'adattabile') {
+    return (
+      <g>
+        <circle cx={x} cy={y} r="6.5" fill="#fbbf24" stroke="#0a0a0e" strokeWidth="1.5" />
+        <text x={x} y={y + 3.8} textAnchor="middle" fill="#3a2a00" fontSize="11" fontWeight="900">~</text>
+      </g>
+    )
+  }
+  return null
+}
+
 export default function PitchView({
-  modulo, impostazione, assignments, players, intese, selected, onSlotTap,
+  modulo, ruoli, assignments, players, intese, selected, onSlotTap, impostazioneInfo,
 }) {
   const slots = modulo.slots
   const posizioni = slots.map((s) => pt(s.u, s.t))
@@ -62,8 +84,7 @@ export default function PitchView({
   const crx = (pt(0.58, 0.5)[0] - pt(0.42, 0.5)[0]) / 2
   const cry = (pt(0.5, 0.44)[1] - pt(0.5, 0.56)[1]) / 2
 
-  const imp = IMPOSTAZIONI.find((i) => i.value === impostazione)
-  const badgeW = imp ? 46 + imp.label.length * 6.3 : 0
+  const badgeW = impostazioneInfo ? 46 + impostazioneInfo.label.length * 6.3 : 0
 
   return (
     <svg viewBox="0 0 400 505" className="pitch-svg">
@@ -100,11 +121,11 @@ export default function PitchView({
       <polygon points={poly([pt(0.42, 1), [pt(0.42, 1)[0], pt(0.42, 1)[1] - 9], [pt(0.58, 1)[0], pt(0.58, 1)[1] - 9], pt(0.58, 1)])} fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
 
       {/* badge impostazione tattica selezionata */}
-      {imp && (
+      {impostazioneInfo && (
         <g>
           <rect x="8" y="8" width={badgeW} height="30" rx="15" fill="rgba(20,20,28,0.92)" stroke="rgba(167,139,250,0.55)" strokeWidth="1" />
-          <text x="18" y="28" fontSize="15">{imp.icona}</text>
-          <text x="40" y="27" fill="#ececf1" fontSize="11" fontWeight="700">{imp.label}</text>
+          <text x="18" y="28" fontSize="15">{impostazioneInfo.icona}</text>
+          <text x="40" y="27" fill="#ececf1" fontSize="11" fontWeight="700">{impostazioneInfo.label}</text>
         </g>
       )}
 
@@ -122,11 +143,13 @@ export default function PitchView({
         const [x, y] = posizioni[i]
         const p = playerAt(i)
         const colore = COLORI_FAMIGLIA[famigliaRuolo(slot.sigla)] ?? '#9a9aad'
-        const ruolo = ruoloSlot(slot, modulo, impostazione)
+        const ruolo = ruoli[i]
         const isSel = selected === i
         const warning =
           p && p.ruoloNaturale !== slot.sigla && !(p.ruoliAdattati ?? []).includes(slot.sigla)
-        const fitTattico = p && !warning && (p.ruoliTattici ?? []).includes(ruolo)
+        const compat = p && !warning
+          ? compatibilitaGiocatore({ slotRuolo: ruolo.ruoloSuggerito, player: p })
+          : null
         return (
           <g
             key={i}
@@ -159,23 +182,16 @@ export default function PitchView({
                 {warning && (
                   <text x={x + 14} y={y - 14} fontSize="12">⚠️</text>
                 )}
-                {fitTattico && (
-                  <g>
-                    <circle cx={x + 13} cy={y - 14} r="6.5" fill="#34d399" stroke="#0a0a0e" strokeWidth="1.5" />
-                    <text
-                      x={x + 13} y={y - 10.2}
-                      textAnchor="middle" fill="#053022" fontSize="11" fontWeight="900"
-                    >
-                      +
-                    </text>
-                  </g>
-                )}
+                {compat && <BadgeCompatibilita x={x + 13} y={y - 14} livello={compat.livello} />}
                 <text x={x} y={y + 25} textAnchor="middle" fill="#ececf1" fontSize="10.5" fontWeight="700">
                   {nomeCorto(p)}
                 </text>
-                <text x={x} y={y + 35} textAnchor="middle" fontSize="7.5">
-                  <tspan fill={colore} fontWeight="800">{slot.sigla}</tspan>
-                  <tspan fill="rgba(255,255,255,0.75)"> · {ruolo}</tspan>
+                <text x={x} y={y + 36} textAnchor="middle" fill={colore} fontSize="9.5" fontWeight="800">
+                  {slot.sigla}
+                  {ruolo.manuale && <tspan fill="#a78bfa" fontSize="8"> ✎</tspan>}
+                </text>
+                <text x={x} y={y + 45} textAnchor="middle" fill="rgba(255,255,255,0.78)" fontSize="7.5">
+                  {ruolo.nome}
                 </text>
               </>
             ) : (
@@ -190,8 +206,9 @@ export default function PitchView({
                 <text x={x} y={y + 25} textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize="9">
                   tocca
                 </text>
-                <text x={x} y={y + 35} textAnchor="middle" fontSize="7.5" fill="rgba(255,255,255,0.55)">
-                  {ruolo}
+                <text x={x} y={y + 36} textAnchor="middle" fontSize="7.5" fill="rgba(255,255,255,0.55)">
+                  {ruolo.nome}
+                  {ruolo.manuale && <tspan fill="#a78bfa"> ✎</tspan>}
                 </text>
               </>
             )}

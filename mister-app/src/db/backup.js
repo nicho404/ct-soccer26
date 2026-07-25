@@ -1,4 +1,4 @@
-import { db } from './db'
+import { db, migrazioneV7RuoliTattici } from './db'
 
 const FORMAT = 'mister-app-backup'
 
@@ -53,6 +53,12 @@ export async function importBackup(file) {
       if (Array.isArray(rows) && rows.length > 0) {
         await table.bulkPut(rows)
       }
+    }
+    // bulkPut scrive i dati "as-is": un backup di una versione precedente
+    // non passa dalle migration di Dexie (che scattano solo sui cambi di
+    // versione dello schema). Vanno riapplicate a mano quelle rilevanti.
+    if (payload.dbVersion < 7) {
+      await migrazioneV7RuoliTattici(db)
     }
   })
 }

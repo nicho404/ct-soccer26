@@ -202,182 +202,70 @@ export const FORMATI = [7, 8]
 export const MODULI_FORMATO = { 7: MODULI_7, 8: MODULI_8 }
 export const MODULO_DEFAULT = { 7: '2-3-1', 8: '3-3-1' }
 
-// Impostazioni tattiche: cambiano il ruolo tattico imposto a ogni posizione
+// Impostazioni tattiche, costruzione e linea: valori e copy UI (icona +
+// descrizione). Gli stessi `value` sono usati dal motore in src/tactics —
+// questo file resta la sola fonte di verità per moduli/slot, il motore per
+// il calcolo dei ruoli (vedi src/tactics/engine.js, src/tactics/constants.js).
 export const IMPOSTAZIONI = [
   {
     value: 'possesso', label: 'Possesso palla', icona: '⚽',
-    descrizione: 'Tieni tu il pallone e sposta l\'avversario col giro palla: tutti danno una linea di appoggio, si attacca solo quando la difesa si è aperta. Serve tecnica diffusa e pazienza; se perdi palla in uscita ti esponi al contropiede.',
-  },
-  {
-    value: 'contropiede', label: 'Contropiede', icona: '⚡',
-    descrizione: 'Blocco compatto dietro la linea della palla e ripartenza immediata appena la recuperi: due tocchi e verticalizzazione. Perfetta con punte rapide; accetti di soffrire e concedi campo e conclusioni da fuori.',
-  },
-  {
-    value: 'pressing', label: 'Pressing alto', icona: '🔥',
-    descrizione: 'Riaggressione feroce appena persa palla: le punte guidano la caccia sui difensori, la squadra accorcia in avanti. Recuperi palla vicino alla porta avversaria, ma è dispendiosa: a 7/8 servono cambi e gambe fresche per reggerla.',
+    descrizione: 'Tieni tu il pallone e sposta l\'avversario col giro palla: esterni larghi e alti, un regista tra le linee, punta che si abbassa a legare il gioco. Ampiezza alta, 2-3 uomini in area. Serve tecnica diffusa e pazienza.',
   },
   {
     value: 'ali', label: 'Gioco sulle ali', icona: '🦅',
-    descrizione: 'Il gioco si allarga sugli esterni: uno contro uno, fondo e palla in mezzo, bassa o tesa. Serve superiorità sulle fasce e punte brave ad attaccare il primo palo; il centro resta leggero se gli esterni non rientrano.',
+    descrizione: 'Il gioco si allarga sugli esterni: ali di cross che puntano il fondo, un incursore pronto a entrare in area sul traversone, punta d\'area che finalizza. Ampiezza massima, 3-4 uomini in area.',
   },
   {
-    value: 'pallalunga', label: 'Palla lunga', icona: '🚀',
-    descrizione: 'Salti il centrocampo con lanci diretti sulla punta boa: sponde e seconde palle da aggredire. Efficace su campi piccoli, pesanti o contro pressing alto; rinunci al palleggio e vivi di duelli fisici.',
+    value: 'lunga', label: 'Palla lunga', icona: '🚀',
+    descrizione: 'Salti il centrocampo con lanci diretti sulla punta di riferimento: esterni bassi in fase, alti in ripartenza, incursori sulla seconda palla. Ampiezza media, 2-3 uomini sulla seconda palla.',
   },
   {
-    value: 'difesa', label: 'Difesa a oltranza', icona: '🛡️',
-    descrizione: 'Tutti sotto la linea della palla, densità massima davanti all\'area, ripartenze solo a campo lunghissimo. Per difendere un risultato o arginare un avversario più forte: concedi possesso e iniziativa, non profondità.',
+    value: 'contropiede', label: 'Contropiede', icona: '⚡',
+    descrizione: 'Blocco compatto e ripartenza immediata: esterni di strappo in campo aperto, mezzala che attacca lo spazio, punta di profondità sulle spalle della difesa. Ampiezza bassa che esplode in ripartenza, 2 uomini in area.',
+  },
+  {
+    value: 'oltranza', label: 'Difesa a oltranza', icona: '🛡️',
+    descrizione: 'Tutti sotto la linea della palla: esterni bassi, un solo uomo davanti a orientare il pressing. Ampiezza minima, 1 uomo in area. Per difendere un risultato o arginare un avversario più forte.',
   },
 ]
 
-// Manovra di costruzione (stile FC26: come esci col pallone dal basso)
+// Manovra di costruzione (come esci col pallone dal basso)
 export const COSTRUZIONI = [
   {
+    value: 'corti', label: 'Passaggi corti',
+    descrizione: 'Uscita dal basso con passaggi corti, portiere compreso: attiri il pressing avversario per superarlo col palleggio. Superiorità numerica dietro, mediano che si abbassa a fare da regista arretrato.',
+  },
+  {
     value: 'equilibrata', label: 'Equilibrata',
-    descrizione: 'Uscita palla flessibile: corta quando c\'è spazio per palleggiare, diretta quando il pressing avversario morde. La scelta di default se la squadra sa leggere i momenti della partita.',
+    descrizione: 'Uscita flessibile: corto quando c\'è spazio per palleggiare, lungo quando il pressing avversario morde. La scelta di default se la squadra sa leggere i momenti della partita.',
   },
   {
-    value: 'contropiede', label: 'Contropiede',
-    descrizione: 'Appena recuperata palla la squadra scatta in avanti: transizioni rapide e verticali, pochi tocchi. Massimo pericolo in campo aperto, ma più errori tecnici e possesso complessivo ceduto all\'avversario.',
-  },
-  {
-    value: 'corta', label: 'Passaggi corti',
-    descrizione: 'Uscita dal basso con passaggi corti, portiere compreso: attiri il pressing avversario per superarlo col palleggio e trovare l\'uomo libero. Serve qualità sotto pressione: un errore in uscita è un\'occasione regalata.',
+    value: 'diretta', label: 'Contropiede (diretta)',
+    descrizione: 'Prima palla verticale o in fascia, zero rischio in uscita: portiere di rilancio, difensori bloccati, mediano di filtro. Massima sicurezza, minimo palleggio.',
   },
 ]
 
 export const costruzioneInfo = (value) =>
-  COSTRUZIONI.find((c) => c.value === value) ?? COSTRUZIONI[0]
+  COSTRUZIONI.find((c) => c.value === value) ?? COSTRUZIONI[1]
 
-// Sintonia tattica ↔ manovra di costruzione: le coppie in contrasto danno
-// alla squadra indicazioni opposte (catena spezzata, come su FC26)
-const COSTRUZIONI_IN_CONTRASTO = {
-  possesso: ['contropiede'],
-  contropiede: ['corta'],
-  pallalunga: ['corta'],
-  difesa: ['corta'],
-}
-
-export const costruzioneInContrasto = (impostazione, costruzione) =>
-  (COSTRUZIONI_IN_CONTRASTO[impostazione] ?? []).includes(costruzione)
-
-// Altezza della linea difensiva (stile FC26)
+// Altezza della linea difensiva
 export const LINEE_DIFESA = [
   {
-    value: 'bassa', label: 'Bassa',
-    descrizione: 'Linea arretrata a protezione dell\'area: togli la profondità alle punte avversarie e inviti l\'avversario nella tua metà campo. Ti affidi a compattezza e ripartenze.',
+    value: 'alta', label: 'Alta',
+    descrizione: 'Squadra corta, contropressing immediato: schiacci l\'avversario nella sua metà campo. Coerente col possesso palla.',
   },
   {
     value: 'normale', label: 'Normale',
     descrizione: 'Altezza standard: la linea segue il pallone mantenendo le distanze tra i reparti. Il compromesso tra copertura della profondità e squadra corta.',
   },
   {
-    value: 'alta', label: 'Alta',
-    descrizione: 'Linea alta per schiacciare l\'avversario nella sua metà campo e accorciare la squadra in avanti. Si sposa col pressing; il portiere deve saper coprire lo spazio alle spalle dei difensori.',
-  },
-  {
-    value: 'aggressiva', label: 'Aggressiva',
-    descrizione: 'Linea altissima e difensori in anticipo su ogni appoggio: riaggressione totale e avversario soffocato. Rischio massimo sugli attacchi alla profondità: serve una squadra veloce, concentrata e ben allenata.',
+    value: 'bassa', label: 'Bassa',
+    descrizione: 'Linea arretrata a protezione dell\'area: nessuno spazio alle spalle da concedere. Coerente con la difesa a oltranza.',
   },
 ]
 
 export const lineaDifesaInfo = (value) =>
   LINEE_DIFESA.find((l) => l.value === value) ?? LINEE_DIFESA[1]
-
-// Ruolo tattico per sigla posizione, per ogni impostazione (nomi FC26)
-const RUOLI_IMPOSTAZIONE = {
-  possesso: {
-    POR: 'Portiere costruttore', DC: 'Difensore costruttore',
-    TD: 'Terzino invertito', TS: 'Terzino invertito',
-    CDC: 'Regista arretrato', CC: 'Regista', COC: 'Classico 10',
-    ED: 'Regista largo', ES: 'Regista largo',
-    AD: 'Attaccante interno', AS: 'Attaccante interno', ATT: 'Falso 9',
-  },
-  contropiede: {
-    POR: 'Portiere', DC: 'Difensore',
-    TD: 'Terzino', TS: 'Terzino',
-    CDC: 'Mediano', CC: 'Box-to-box', COC: 'Attaccante ombra',
-    ED: 'Ala', ES: 'Ala',
-    AD: 'Attaccante interno', AS: 'Attaccante interno', ATT: 'Attaccante avanzato',
-  },
-  pressing: {
-    POR: 'Portiere libero', DC: 'Stopper',
-    TD: 'Tornante', TS: 'Tornante',
-    CDC: 'Incursore', CC: 'Box-to-box', COC: 'Attaccante ombra',
-    ED: 'Attaccante interno', ES: 'Attaccante interno',
-    AD: 'Ala', AS: 'Ala', ATT: 'Attaccante avanzato',
-  },
-  ali: {
-    POR: 'Portiere', DC: 'Difensore largo',
-    TD: 'Tornante offensivo', TS: 'Tornante offensivo',
-    CDC: 'Mediano laterale', CC: 'Mezzala', COC: 'Regista',
-    ED: 'Ala', ES: 'Ala',
-    AD: 'Ala', AS: 'Ala', ATT: 'Attaccante boa',
-  },
-  pallalunga: {
-    POR: 'Portiere', DC: 'Difensore',
-    TD: 'Terzino', TS: 'Terzino',
-    CDC: 'Centromediano', CC: 'Box-to-box', COC: 'Attaccante ombra',
-    ED: 'Ala', ES: 'Ala',
-    AD: 'Attaccante interno', AS: 'Attaccante interno', ATT: 'Attaccante boa',
-  },
-  difesa: {
-    POR: 'Portiere', DC: 'Difensore',
-    TD: 'Terzino', TS: 'Terzino',
-    CDC: 'Centromediano', CC: 'Mediano', COC: 'Mezzala',
-    ED: 'Esterno di centrocampo', ES: 'Esterno di centrocampo',
-    AD: 'Ala', AS: 'Ala', ATT: 'Opportunista',
-  },
-}
-
-// Ruolo tattico richiesto da uno slot: parte dalla mappa base della tattica e
-// si adatta al contesto del modulo (esterni presenti o no, numero di punte,
-// centrali, mediani), come le tattiche di FC26 che cambiano col modulo.
-// Accetta anche solo la sigla (senza modulo) e in quel caso torna il ruolo base.
-export function ruoloSlot(slot, modulo, impostazione) {
-  const sigla = typeof slot === 'string' ? slot : slot?.sigla
-  const base = RUOLI_IMPOSTAZIONE[impostazione]?.[sigla] ?? ''
-  if (typeof slot === 'string' || !modulo) return base
-
-  const slots = modulo.slots
-  const n = (s) => slots.filter((x) => x.sigla === s).length
-  const larghi = ['ES', 'ED', 'AS', 'AD', 'TS', 'TD'].some((s) => n(s) > 0)
-  const stessi = slots.filter((x) => x.sigla === sigla).slice().sort((a, b) => a.u - b.u)
-  const primo = stessi.indexOf(slot) === 0
-  const centrale = Math.abs(slot.u - 0.5) < 0.08
-
-  switch (impostazione) {
-    case 'possesso':
-      if (sigla === 'ATT' && n('ATT') >= 2) return primo ? 'Falso 9' : 'Attaccante avanzato'
-      if (sigla === 'CC' && n('CC') >= 2) return primo ? 'Regista' : 'Mezzala'
-      if (sigla === 'DC' && n('DC') >= 3 && !centrale) return 'Difensore'
-      if (sigla === 'COC' && !larghi) return 'Regista'
-      break
-    case 'contropiede':
-      if (sigla === 'ATT' && n('ATT') >= 2) return primo ? 'Attaccante avanzato' : 'Attaccante ombra'
-      if (sigla === 'CC' && n('CC') >= 2 && n('CDC') === 0) return primo ? 'Mediano' : 'Box-to-box'
-      break
-    case 'pressing':
-      if (sigla === 'ATT' && n('ATT') >= 2) return primo ? 'Attaccante avanzato' : 'Attaccante ombra'
-      if (sigla === 'CC' && n('CC') >= 2 && n('CDC') === 0) return primo ? 'Box-to-box' : 'Incursore'
-      if (sigla === 'DC' && n('DC') === 1) return 'Difensore'
-      break
-    case 'ali':
-      if (sigla === 'CC' && !larghi) return 'Mezzala'
-      if (sigla === 'COC' && !larghi) return 'Classico 10'
-      if (sigla === 'DC' && n('DC') >= 3 && centrale) return 'Difensore'
-      if (sigla === 'ATT' && n('ATT') >= 2) return primo ? 'Attaccante boa' : 'Opportunista'
-      break
-    case 'pallalunga':
-      if (sigla === 'ATT' && n('ATT') >= 2) return primo ? 'Attaccante boa' : 'Opportunista'
-      if (sigla === 'CC' && n('CC') >= 2 && n('CDC') === 0) return primo ? 'Centromediano' : 'Box-to-box'
-      break
-    case 'difesa':
-      if (sigla === 'ATT' && n('ATT') >= 2) return primo ? 'Opportunista' : 'Attaccante avanzato'
-      break
-  }
-  return base
-}
 
 // Un giocatore è "in posizione" se la sigla è la sua naturale o una copertura
 export const inPosizione = (player, sigla) =>

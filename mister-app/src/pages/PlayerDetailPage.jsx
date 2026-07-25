@@ -2,11 +2,12 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import {
-  ruoloLabel, famigliaRuolo, famigliaRuoloTattico, tesseramentoInfo, statoAttivitaInfo,
+  ruoloLabel, famigliaRuolo, tesseramentoInfo, statoAttivitaInfo,
   portaInfo, isAttivo,
   PIEDI, STATI_ATTIVITA, CALCI_FISSI, CRITERI_OSSERVAZIONE, TIPI_INTESA,
   GESTIONE_ERRORE, CARATTERE, stileInfo,
 } from '../db/constants'
+import { famigliaRuoloTattico } from '../tactics/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
 import Avatar from '../components/Avatar'
 import { nomeBreve } from '../lib/nomi'
@@ -168,6 +169,15 @@ export default function PlayerDetailPage() {
                 </span>
               ))
             : '—'}
+          {player.ruoliTatticiDaRivedere && (
+            <span
+              className="badge badge-warn tappable"
+              style={{ marginLeft: 4 }}
+              onClick={() => navigate(`/rosa/${player.id}/modifica`)}
+            >
+              ⚠️ da rivedere
+            </span>
+          )}
         </InfoRow>
         <InfoRow label="Piede">
           {PIEDI.find((p) => p.value === player.piede)?.label ?? '—'}

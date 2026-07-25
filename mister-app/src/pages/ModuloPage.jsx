@@ -4,10 +4,12 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import {
   MODULI_FORMATO, FORMATI, MODULO_DEFAULT, IMPOSTAZIONI, COSTRUZIONI, LINEE_DIFESA,
-  costruzioneInfo, lineaDifesaInfo, costruzioneInContrasto, ruoloSlot, inPosizione,
+  costruzioneInfo, lineaDifesaInfo, inPosizione,
 } from '../lib/formazioni'
 import { nomeBreve } from '../lib/nomi'
-import { famigliaRuolo, isAttivo, ruoloLabel, ruoloTatticoInfo } from '../db/constants'
+import { famigliaRuolo, isAttivo } from '../db/constants'
+import { ruoliZona, ruoloInfo } from '../tactics/constants'
+import { risolviRuoli, verificaCoerenza, compatibilitaGiocatore } from '../tactics/engine'
 import PitchView from '../components/PitchView'
 import EmptyState from '../components/EmptyState'
 import ArrowSelect from '../components/ArrowSelect'
@@ -16,7 +18,9 @@ import { IconBall } from '../components/icons'
 const VUOTO = (formato) => Array(formato).fill(null)
 
 const DEFAULT_BY_FORMATO = () =>
-  Object.fromEntries(FORMATI.map((f) => [f, { modulo: MODULO_DEFAULT[f], slots: VUOTO(f) }]))
+  Object.fromEntries(
+    FORMATI.map((f) => [f, { modulo: MODULO_DEFAULT[f], slots: VUOTO(f), slotRuoliOverride: {} }])
+  )
 
 export default function ModuloPage() {
   const navigate = useNavigate()
@@ -28,6 +32,7 @@ export default function ModuloPage() {
   const [loaded, setLoaded] = useState(false)
   // quale dei 4 selettori mostra la descrizione nel box condiviso sotto la griglia
   const [descDi, setDescDi] = useState(null)
+  const [scegliManuale, setScegliManuale] = useState(false)
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const intese = useLiveQuery(() => db.intese.toArray(), [])
@@ -45,6 +50,7 @@ export default function ModuloPage() {
             if (!cfg) continue
             if (MODULI_FORMATO[f][cfg.modulo]) base[f].modulo = cfg.modulo
             if (Array.isArray(cfg.slots) && cfg.slots.length === f) base[f].slots = cfg.slots
+            if (cfg.slotRuoliOverride) base[f].slotRuoliOverride = cfg.slotRuoliOverride
           }
         } else {
           // dati salvati prima dello switch di formato: erano solo calcio a 7
@@ -75,9 +81,30 @@ export default function ModuloPage() {
   }
 
   const MODULI = MODULI_FORMATO[formato]
-  const { modulo: moduloKey, slots } = byFormato[formato]
+  const { modulo: moduloKey, slots, slotRuoliOverride } = byFormato[formato]
   const modulo = MODULI[moduloKey]
   const attivi = players.filter(isAttivo)
+
+  // Motore tattico: ruolo calcolato per ogni slot, con gli override manuali
+  // sovrapposti sopra il calcolo automatico (mai il contrario).
+  const ruoliBase = risolviRuoli({ modulo, impostazione, costruzione })
+  const ruoli = ruoliBase.map((r, i) => {
+    const codiceManuale = slotRuoliOverride?.[i]
+    const ruoloManuale = codiceManuale ? ruoloInfo(codiceManuale) : null
+    if (!ruoloManuale) return r
+    return {
+      ...r,
+      zona: ruoloManuale.zona,
+      ruoloSuggerito: ruoloManuale.codice,
+      posizione: ruoloManuale.posizione,
+      nome: ruoloManuale.nome,
+      compito: ruoloManuale.compito,
+      manuale: true,
+    }
+  })
+  const coerenza = verificaCoerenza({ impostazione, costruzione, linea })
+  const problemaCostruzione = coerenza.problemi.find((p) => p.tipo === 'costruzione')
+  const problemaLinea = coerenza.problemi.find((p) => p.tipo === 'linea')
 
   const salvaCorrente = async () => {
     const nome = window.prompt('Nome per questo assetto (es. Titolari, Anti-pressing):')
@@ -92,12 +119,16 @@ export default function ModuloPage() {
       impostazione,
       costruzione,
       linea,
+      slotRuoliOverride: { ...(slotRuoliOverride ?? {}) },
     }
     await db.meta.put({ key: 'moduliSalvati', value: [...tutti, nuovo] })
   }
 
   const caricaSalvato = (s) => {
-    const next = { ...byFormato, [formato]: { modulo: s.modulo, slots: [...s.slots] } }
+    const next = {
+      ...byFormato,
+      [formato]: { modulo: s.modulo, slots: [...s.slots], slotRuoliOverride: { ...(s.slotRuoliOverride ?? {}) } },
+    }
     const imp = IMPOSTAZIONI.some((i) => i.value === s.impostazione) ? s.impostazione : impostazione
     const cos = COSTRUZIONI.some((c) => c.value === s.costruzione) ? s.costruzione : 'equilibrata'
     const lin = LINEE_DIFESA.some((l) => l.value === s.linea) ? s.linea : 'normale'
@@ -133,7 +164,19 @@ export default function ModuloPage() {
     persist({ byFormato: next })
   }
 
+  const setOverride = (codice) => {
+    if (sel === null) return
+    const overrideAttuale = { ...(byFormato[formato].slotRuoliOverride ?? {}) }
+    if (codice) overrideAttuale[sel] = codice
+    else delete overrideAttuale[sel]
+    const next = { ...byFormato, [formato]: { ...byFormato[formato], slotRuoliOverride: overrideAttuale } }
+    setByFormato(next)
+    setScegliManuale(false)
+    persist({ byFormato: next })
+  }
+
   const onSlotTap = (i) => {
+    setScegliManuale(false)
     if (sel === null) {
       setSel(i)
       return
@@ -178,10 +221,11 @@ export default function ModuloPage() {
   }
 
   const slotSel = sel !== null ? modulo.slots[sel] : null
+  const ruoloSel = sel !== null ? ruoli[sel] : null
   const playerSel = sel !== null && slots[sel] ? players.find((p) => p.id === slots[sel]) : null
-  const ruoloRichiesto = slotSel ? ruoloSlot(slotSel, modulo, impostazione) : ''
 
-  // Candidati per lo slot selezionato: prima chi è in posizione
+  // Candidati per lo slot selezionato: prima chi è in posizione, poi chi ha
+  // già il ruolo tattico assegnato dal motore
   const candidati =
     slotSel === null
       ? []
@@ -253,11 +297,7 @@ export default function ModuloPage() {
               label="Costruzione"
               options={COSTRUZIONI}
               value={costruzione}
-              warning={
-                costruzioneInContrasto(impostazione, costruzione)
-                  ? 'In contrasto con la tattica scelta'
-                  : null
-              }
+              warning={problemaCostruzione ? problemaCostruzione.messaggio : null}
               onChange={(v) => {
                 setDescDi('costruzione')
                 setCostruzione(v)
@@ -269,6 +309,7 @@ export default function ModuloPage() {
               label="Linea difensiva"
               options={LINEE_DIFESA}
               value={linea}
+              warning={problemaLinea ? problemaLinea.messaggio : null}
               onChange={(v) => {
                 setDescDi('linea')
                 setLinea(v)
@@ -291,22 +332,31 @@ export default function ModuloPage() {
             )
           })()}
 
-          {costruzioneInContrasto(impostazione, costruzione) && (
-            <p className="arrow-select-warn" style={{ margin: '0 6px 8px' }}>
-              Catena spezzata: "{costruzioneInfo(costruzione).label}" è in contrasto con
-              "{IMPOSTAZIONI.find((i) => i.value === impostazione)?.label}" — la squadra riceve indicazioni opposte.
-            </p>
+          {coerenza.livello !== 'ok' && (
+            <div className={`coerenza-banner coerenza-banner-${coerenza.livello}`}>
+              {coerenza.problemi.map((p, i) => (
+                <span key={i}>
+                  {coerenza.livello === 'rotto' ? '🔴' : '🟡'} {p.messaggio}
+                </span>
+              ))}
+            </div>
+          )}
+          {coerenza.livello === 'ok' && (
+            <div className="coerenza-banner coerenza-banner-ok">
+              <span>🟢 Impostazione, costruzione e linea sono coerenti.</span>
+            </div>
           )}
 
           <div className="pitch-wrap">
             <PitchView
               modulo={modulo}
-              impostazione={impostazione}
+              ruoli={ruoli}
               assignments={slots}
               players={players}
               intese={intese}
               selected={sel}
               onSlotTap={onSlotTap}
+              impostazioneInfo={IMPOSTAZIONI.find((i) => i.value === impostazione)}
             />
           </div>
 
@@ -314,9 +364,9 @@ export default function ModuloPage() {
             <div className="card" style={{ marginTop: 10 }}>
               <div className="row" style={{ marginBottom: 8 }}>
                 <strong>
-                  {slotSel.sigla} — {ruoloLabel(slotSel.sigla)}
+                  {slotSel.sigla} — {ruoloSel.nome}
                 </strong>
-                <span className="badge badge-accent">{ruoloRichiesto}</span>
+                {ruoloSel.manuale && <span className="badge badge-accent">manuale</span>}
                 <span className="spacer" />
                 {playerSel && (
                   <button className="btn btn-sm btn-danger" onClick={togli}>
@@ -324,16 +374,38 @@ export default function ModuloPage() {
                   </button>
                 )}
               </div>
-              {ruoloTatticoInfo(ruoloRichiesto) && (
-                <p className="muted small" style={{ margin: '0 0 8px' }}>
-                  <span className="en">({ruoloTatticoInfo(ruoloRichiesto).en})</span>{' '}
-                  {ruoloTatticoInfo(ruoloRichiesto).descrizione}
-                </p>
+              {ruoloSel.compito && (
+                <p className="muted small" style={{ margin: '0 0 8px' }}>{ruoloSel.compito}</p>
               )}
+
+              <div className="row" style={{ marginBottom: 8 }}>
+                <button className="btn btn-sm" onClick={() => setScegliManuale((v) => !v)}>
+                  {scegliManuale ? 'Annulla' : 'Ruolo manuale'}
+                </button>
+                {ruoloSel.manuale && (
+                  <button className="btn btn-sm" onClick={() => setOverride(null)}>
+                    Torna automatico
+                  </button>
+                )}
+              </div>
+              {scegliManuale && (
+                <div className="chip-row" style={{ marginBottom: 8 }}>
+                  {ruoliZona(ruoloSel.zona).map((r) => (
+                    <button
+                      key={r.codice}
+                      className={`chip chip-sm ${ruoloSel.ruoloSuggerito === r.codice ? 'selected' : ''}`}
+                      onClick={() => setOverride(r.codice)}
+                    >
+                      {r.nome}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <div className="chip-row">
                 {candidati.map((p) => {
                   const ok = inPosizione(p, slotSel.sigla)
-                  const fitTattico = ok && (p.ruoliTattici ?? []).includes(ruoloRichiesto)
+                  const compat = ok ? compatibilitaGiocatore({ slotRuolo: ruoloSel.ruoloSuggerito, player: p }) : null
                   return (
                     <button
                       key={p.id}
@@ -348,15 +420,17 @@ export default function ModuloPage() {
                       {p.titolare && <span className="star-on">★ </span>}
                       {nomeBreve(p)}
                       {inCampo.has(p.id) ? ' (in campo)' : ''}
-                      {fitTattico && <span className="fit-plus"> +</span>}
+                      {compat?.livello === 'naturale' && <span className="fit-plus"> +</span>}
+                      {compat?.livello === 'adattabile' && <span className="fit-plus" style={{ color: 'var(--warn)' }}> ~</span>}
                       {!ok && ' ⚠️'}
                     </button>
                   )
                 })}
               </div>
               <p className="muted small" style={{ margin: '8px 0 0' }}>
-                <span className="fit-plus">+</span> = ha il ruolo tattico richiesto · ⚠️ = fuori
-                dalle sue posizioni. Tocca un altro slot sul campo per scambiare.
+                <span className="fit-plus">+</span> = ha il ruolo tattico richiesto ·{' '}
+                <span className="fit-plus" style={{ color: 'var(--warn)' }}>~</span> = ruolo adattabile ·
+                ⚠️ = fuori dalle sue posizioni. Tocca un altro slot sul campo per scambiare.
               </p>
             </div>
           ) : (
