@@ -1,5 +1,5 @@
 import Dexie from 'dexie'
-import { RUOLI } from '../tactics/constants'
+import { RUOLI, ruoloInfo, ruoloNpInfo } from '../tactics/constants'
 
 export const db = new Dexie('misterApp')
 
@@ -219,3 +219,51 @@ export async function migrazioneV7RuoliTattici(scope) {
 db.version(7)
   .stores({})
   .upgrade((tx) => migrazioneV7RuoliTattici(tx))
+
+// slotRuoliOverride: da "{ [slotIndex]: codice }" (solo possesso, implicito)
+// a "{ possesso: {...}, nonPossesso: {...} }" — un override per fase, non
+// più uno solo. Riconosce la forma vecchia controllando l'ASSENZA delle
+// chiavi possesso/nonPossesso, non il tipo: una forma vecchia con uno slot
+// letteralmente chiamato "possesso" o "nonPossesso" non è mai esistita
+// (sono indici numerici), ma la guardia esplicita è più onesta di un duck type.
+function filtraOverride(mappa, risolutore) {
+  const pulito = {}
+  for (const [slotIndex, codice] of Object.entries(mappa ?? {})) {
+    if (risolutore(codice)) pulito[slotIndex] = codice
+  }
+  return pulito
+}
+
+export function convertiSlotRuoliOverride(override) {
+  const eraGiaNuovaForma = override != null && ('possesso' in override || 'nonPossesso' in override)
+  if (eraGiaNuovaForma) {
+    return {
+      possesso: filtraOverride(override.possesso, ruoloInfo),
+      nonPossesso: filtraOverride(override.nonPossesso, ruoloNpInfo),
+    }
+  }
+  // forma vecchia: era tutto e solo di possesso
+  return { possesso: filtraOverride(override, ruoloInfo), nonPossesso: {} }
+}
+
+// Vedi il commento su migrazioneV7RuoliTattici: richiamabile anche fuori
+// dall'upgrade Dexie, per importBackup() su backup precedenti alla v8.
+export async function migrazioneV8SlotRuoliOverride(scope) {
+  await scope.table('meta').toCollection().modify((row) => {
+    if (row.key === 'modulo' && row.value?.byFormato) {
+      for (const f of Object.keys(row.value.byFormato)) {
+        row.value.byFormato[f].slotRuoliOverride = convertiSlotRuoliOverride(row.value.byFormato[f].slotRuoliOverride)
+      }
+    }
+    if (row.key === 'moduliSalvati' && Array.isArray(row.value)) {
+      row.value = row.value.map((s) => ({
+        ...s,
+        slotRuoliOverride: convertiSlotRuoliOverride(s.slotRuoliOverride),
+      }))
+    }
+  })
+}
+
+db.version(8)
+  .stores({})
+  .upgrade((tx) => migrazioneV8SlotRuoliOverride(tx))

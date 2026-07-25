@@ -29,7 +29,9 @@ function nomeCorto(p) {
 }
 
 // Badge di compatibilità giocatore↔ruolo tattico, 3 livelli. "forzato" non
-// mostra badge: l'assenza è già un segnale, senza affollare lo slot.
+// mostra badge: l'assenza è già un segnale, senza affollare lo slot. Vale
+// solo in fase di possesso (vedi PitchView: compatibilitaGiocatore confronta
+// contro ruoliTattici osservati, che sono nel vocabolario di possesso).
 function BadgeCompatibilita({ x, y, livello }) {
   if (livello === 'naturale') {
     return (
@@ -50,28 +52,37 @@ function BadgeCompatibilita({ x, y, livello }) {
   return null
 }
 
+// `coordinate` sono le {u, t} già risolte dal chiamante (geometria normale o
+// compressa di non possesso): PitchView resta un componente di rendering,
+// non decide da sé quale fase è in corso. `fase` serve solo per sapere cosa
+// nascondere (intese, badge di compatibilità), mai per ricalcolare qualcosa.
 export default function PitchView({
-  modulo, ruoli, assignments, players, intese, selected, onSlotTap, impostazioneInfo,
+  modulo, ruoli, assignments, players, intese, selected, onSlotTap, badgeInfo,
+  coordinate, fase = 'possesso',
 }) {
   const slots = modulo.slots
-  const posizioni = slots.map((s) => pt(s.u, s.t))
+  const coords = coordinate ?? slots.map((s) => ({ u: s.u, t: s.t }))
+  const posizioni = coords.map(({ u, t }) => pt(u, t))
 
   const playerAt = (i) => {
     const id = assignments[i]
     return id ? players.find((p) => p.id === id) : null
   }
 
-  // Linee intese tra giocatori schierati
+  // Linee intese tra giocatori schierati — solo in possesso: sono
+  // combinazioni offensive, rumore su una mappa difensiva.
   const linee = []
-  for (const intesa of intese) {
-    const punti = (intesa.playerIds ?? [])
-      .map((pid) => assignments.indexOf(pid))
-      .filter((i) => i !== -1)
-      .map((i) => posizioni[i])
-    if (punti.length < 2) continue
-    const colore = TIPI_INTESA.find((t) => t.value === intesa.tipo)?.colore ?? '#fff'
-    for (let k = 0; k < punti.length - 1; k++) {
-      linee.push({ a: punti[k], b: punti[k + 1], colore, key: `${intesa.id}-${k}` })
+  if (fase === 'possesso') {
+    for (const intesa of intese) {
+      const punti = (intesa.playerIds ?? [])
+        .map((pid) => assignments.indexOf(pid))
+        .filter((i) => i !== -1)
+        .map((i) => posizioni[i])
+      if (punti.length < 2) continue
+      const colore = TIPI_INTESA.find((t) => t.value === intesa.tipo)?.colore ?? '#fff'
+      for (let k = 0; k < punti.length - 1; k++) {
+        linee.push({ a: punti[k], b: punti[k + 1], colore, key: `${intesa.id}-${k}` })
+      }
     }
   }
 
@@ -84,7 +95,7 @@ export default function PitchView({
   const crx = (pt(0.58, 0.5)[0] - pt(0.42, 0.5)[0]) / 2
   const cry = (pt(0.5, 0.44)[1] - pt(0.5, 0.56)[1]) / 2
 
-  const badgeW = impostazioneInfo ? 46 + impostazioneInfo.label.length * 6.3 : 0
+  const badgeW = badgeInfo ? 46 + badgeInfo.label.length * 6.3 : 0
 
   return (
     <svg viewBox="0 0 400 505" className="pitch-svg">
@@ -120,12 +131,14 @@ export default function PitchView({
       <polygon points={poly([pt(0.4, 0), [pt(0.4, 0)[0], pt(0.4, 0)[1] + 14], [pt(0.6, 0)[0], pt(0.6, 0)[1] + 14], pt(0.6, 0)])} fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
       <polygon points={poly([pt(0.42, 1), [pt(0.42, 1)[0], pt(0.42, 1)[1] - 9], [pt(0.58, 1)[0], pt(0.58, 1)[1] - 9], pt(0.58, 1)])} fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
 
-      {/* badge impostazione tattica selezionata */}
-      {impostazioneInfo && (
+      {/* badge di fase: impostazione in possesso, linea+fase in non possesso —
+          non deve mai essere possibile guardare lo schermo senza sapere
+          quale mappa si sta vedendo */}
+      {badgeInfo && (
         <g>
           <rect x="8" y="8" width={badgeW} height="30" rx="15" fill="rgba(20,20,28,0.92)" stroke="rgba(167,139,250,0.55)" strokeWidth="1" />
-          <text x="18" y="28" fontSize="15">{impostazioneInfo.icona}</text>
-          <text x="40" y="27" fill="#ececf1" fontSize="11" fontWeight="700">{impostazioneInfo.label}</text>
+          <text x="18" y="28" fontSize="15">{badgeInfo.icona}</text>
+          <text x="40" y="27" fill="#ececf1" fontSize="11" fontWeight="700">{badgeInfo.label}</text>
         </g>
       )}
 
@@ -138,7 +151,9 @@ export default function PitchView({
         />
       ))}
 
-      {/* figure giocatori */}
+      {/* figure giocatori — ogni gruppo è posizionato con un transform
+          animabile (CSS transition), così il cambio di fase mostra quanto
+          la squadra si accorcia invece di scattare da una forma all'altra */}
       {slots.map((slot, i) => {
         const [x, y] = posizioni[i]
         const p = playerAt(i)
@@ -147,66 +162,66 @@ export default function PitchView({
         const isSel = selected === i
         const warning =
           p && p.ruoloNaturale !== slot.sigla && !(p.ruoliAdattati ?? []).includes(slot.sigla)
-        const compat = p && !warning
+        const compat = fase === 'possesso' && p && !warning
           ? compatibilitaGiocatore({ slotRuolo: ruolo.ruoloSuggerito, player: p })
           : null
         return (
           <g
             key={i}
             onClick={() => onSlotTap(i)}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', transform: `translate(${x}px, ${y}px)`, transition: 'transform 350ms ease' }}
           >
             {/* area tap generosa */}
-            <rect x={x - 44} y={y - 25} width="88" height="60" fill="transparent" />
-            {isSel && <circle cx={x} cy={y - 4} r="21" fill="none" stroke="#a78bfa" strokeWidth="3" />}
+            <rect x="-44" y="-25" width="88" height="60" fill="transparent" />
+            {isSel && <circle cx="0" cy="-4" r="21" fill="none" stroke="#a78bfa" strokeWidth="3" />}
             {p ? (
               <>
-                <circle cx={x} cy={y - 4} r="16" fill="#14141c" stroke={colore} strokeWidth="2.5" />
+                <circle cx="0" cy="-4" r="16" fill="#14141c" stroke={colore} strokeWidth="2.5" />
                 {p.foto ? (
                   <>
                     <clipPath id={`avatar-slot-${i}`}>
-                      <circle cx={x} cy={y - 4} r="14.8" />
+                      <circle cx="0" cy="-4" r="14.8" />
                     </clipPath>
                     <image
                       href={p.foto}
-                      x={x - 15} y={y - 19} width="30" height="30"
+                      x="-15" y="-19" width="30" height="30"
                       clipPath={`url(#avatar-slot-${i})`}
                       preserveAspectRatio="xMidYMid slice"
                     />
                   </>
                 ) : (
-                  <text x={x} y={y + 1} textAnchor="middle" fill="#ececf1" fontSize="12" fontWeight="800">
+                  <text x="0" y="1" textAnchor="middle" fill="#ececf1" fontSize="12" fontWeight="800">
                     {p.numero !== '' && p.numero != null ? p.numero : slot.sigla}
                   </text>
                 )}
                 {warning && (
-                  <text x={x + 14} y={y - 14} fontSize="12">⚠️</text>
+                  <text x="14" y="-14" fontSize="12">⚠️</text>
                 )}
-                {compat && <BadgeCompatibilita x={x + 13} y={y - 14} livello={compat.livello} />}
-                <text x={x} y={y + 25} textAnchor="middle" fill="#ececf1" fontSize="10.5" fontWeight="700">
+                {compat && <BadgeCompatibilita x={13} y={-14} livello={compat.livello} />}
+                <text x="0" y="25" textAnchor="middle" fill="#ececf1" fontSize="10.5" fontWeight="700">
                   {nomeCorto(p)}
                 </text>
-                <text x={x} y={y + 36} textAnchor="middle" fill={colore} fontSize="9.5" fontWeight="800">
+                <text x="0" y="36" textAnchor="middle" fill={colore} fontSize="9.5" fontWeight="800">
                   {slot.sigla}
                   {ruolo.manuale && <tspan fill="#a78bfa" fontSize="8"> ✎</tspan>}
                 </text>
-                <text x={x} y={y + 45} textAnchor="middle" fill="rgba(255,255,255,0.78)" fontSize="7.5">
+                <text x="0" y="45" textAnchor="middle" fill="rgba(255,255,255,0.78)" fontSize="7.5">
                   {ruolo.nome}
                 </text>
               </>
             ) : (
               <>
                 <circle
-                  cx={x} cy={y - 4} r="16"
+                  cx="0" cy="-4" r="16"
                   fill="rgba(0,0,0,0.25)" stroke={colore} strokeWidth="1.5" strokeDasharray="4 3"
                 />
-                <text x={x} y={y} textAnchor="middle" fill={colore} fontSize="9.5" fontWeight="800">
+                <text x="0" y="0" textAnchor="middle" fill={colore} fontSize="9.5" fontWeight="800">
                   {slot.sigla}
                 </text>
-                <text x={x} y={y + 25} textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize="9">
+                <text x="0" y="25" textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize="9">
                   tocca
                 </text>
-                <text x={x} y={y + 36} textAnchor="middle" fontSize="7.5" fill="rgba(255,255,255,0.55)">
+                <text x="0" y="36" textAnchor="middle" fontSize="7.5" fill="rgba(255,255,255,0.55)">
                   {ruolo.nome}
                   {ruolo.manuale && <tspan fill="#a78bfa"> ✎</tspan>}
                 </text>

@@ -94,6 +94,43 @@ export const ruoloInfo = (codice) => RUOLI.find((r) => r.codice === codice)
 export const ruoloPerNome = (nome) => RUOLI.find((r) => r.nome === nome)
 export const ruoliZona = (zona) => RUOLI.filter((r) => r.zona === zona)
 
+// Vocabolario ruoli di NON possesso — namespace separato (`N-*`), mai
+// mescolato con RUOLI. Niente `posizione`: la sigla mostrata sullo slot
+// resta quella del modulo, cambia solo il compito (mappa-tattica.md §1-bis).
+export const RUOLI_NP = [
+  // Portiere
+  { codice: 'N-POR-S', zona: ZONE.PORTIERE, nome: 'Portiere libero', compito: 'Esci alto fuori area: lo spazio dietro la linea lo copri tu.' },
+  { codice: 'N-POR-E', zona: ZONE.PORTIERE, nome: 'Portiere di reparto', compito: 'Leggi la profondità, esci solo sulla palla che puoi prendere.' },
+  { codice: 'N-POR-A', zona: ZONE.PORTIERE, nome: 'Portiere d\'area', compito: 'Resta in area, non uscire mai in anticipo.' },
+  // Difensori centrali
+  { codice: 'N-DC-A', zona: ZONE.DIFENSORE_CENTRALE, nome: 'Difensore d\'anticipo', compito: 'Esci sul tuo diretto prima che riceva, difendi in avanti.' },
+  { codice: 'N-DC-L', zona: ZONE.DIFENSORE_CENTRALE, nome: 'Difensore di linea', compito: 'Tieni la linea col reparto, sali e scala insieme agli altri.' },
+  { codice: 'N-DC-C', zona: ZONE.DIFENSORE_CENTRALE, nome: 'Difensore di copertura', compito: 'Ultimo uomo: non uscire mai, copri chi esce.' },
+  // Terzini / esterni bassi
+  { codice: 'N-T-P', zona: ZONE.TERZINO, nome: 'Terzino in pressione', compito: 'Sali sull\'esterno avversario appena la palla va sul tuo lato.' },
+  { codice: 'N-T-S', zona: ZONE.TERZINO, nome: 'Terzino che stringe', compito: 'Accorciati dentro sul lato debole, fai il terzo centrale.' },
+  { codice: 'N-T-B', zona: ZONE.TERZINO, nome: 'Terzino bloccato', compito: 'Resta basso in linea, non seguire mai fuori zona.' },
+  // Mediano
+  { codice: 'N-M-A', zona: ZONE.MEDIANO, nome: 'Mediano aggressore', compito: 'Esci sul portatore in mezzo, vai a raddoppiare.' },
+  { codice: 'N-M-S', zona: ZONE.MEDIANO, nome: 'Mediano schermo', compito: 'Stai davanti alla difesa e chiudi il centro, non inseguire.' },
+  { codice: 'N-M-C', zona: ZONE.MEDIANO, nome: 'Mediano di copertura', compito: 'Scala tra i centrali quando uno esce, tappa il buco.' },
+  // Centrocampisti centrali
+  { codice: 'N-CC-P', zona: ZONE.CENTROCAMPISTA_CENTRALE, nome: 'Primo pressore centrale', compito: 'Aggredisci chi riceve in mezzo, non dargli il tempo di girarsi.' },
+  { codice: 'N-CC-R', zona: ZONE.CENTROCAMPISTA_CENTRALE, nome: 'Riferimento sul regista', compito: 'Il loro uomo di regia è tuo: stagli addosso ovunque vada.' },
+  { codice: 'N-CC-B', zona: ZONE.CENTROCAMPISTA_CENTRALE, nome: 'Rientro basso', compito: 'Torna dentro la linea di centrocampo, fai densità.' },
+  // Esterni
+  { codice: 'N-E-P', zona: ZONE.ESTERNO_OFFENSIVO, nome: 'Esterno in pressione', compito: 'Vai sul portatore sulla tua fascia, indirizzalo verso il fondo.' },
+  { codice: 'N-E-T', zona: ZONE.ESTERNO_OFFENSIVO, nome: 'Tornante difensivo', compito: 'Rientra a fare il quarto/quinto di linea, sempre.' },
+  { codice: 'N-E-I', zona: ZONE.ESTERNO_OFFENSIVO, nome: 'Esterno che stringe', compito: 'Chiuditi dentro sul centro, il cross esterno glielo concedi.' },
+  // Punta
+  { codice: 'N-P-1', zona: ZONE.PUNTA, nome: 'Prima pressione', compito: 'Attacca il portatore e indirizzalo su un solo lato, sempre lo stesso.' },
+  { codice: 'N-P-S', zona: ZONE.PUNTA, nome: 'Punta schermo', compito: 'Non inseguire: resta sul loro uomo di regia e chiudi la linea centrale.' },
+  { codice: 'N-P-R', zona: ZONE.PUNTA, nome: 'Punta di riferimento', compito: 'Resta alta, non rientrare: sei tu la palla d\'uscita.' },
+]
+
+export const ruoloNpInfo = (codice) => RUOLI_NP.find((r) => r.codice === codice)
+export const ruoliNpZona = (zona) => RUOLI_NP.filter((r) => r.zona === zona)
+
 // Famiglia di reparto (por/dif/cen/att, vedi src/db/constants.js FAMIGLIE)
 // per un ruolo tattico del motore, individuato per nome — usata per i badge
 // colorati nelle schede giocatore.
@@ -192,4 +229,94 @@ export const LINEA_COERENTE = {
   lunga: { raccomandate: ['normale'], messaggio: 'Il campo lo attacchi col lancio, non col blocco.' },
   contropiede: { raccomandate: ['normale', 'bassa'], critica: 'alta', messaggio: 'Serve spazio davanti da attaccare.' },
   oltranza: { raccomandate: ['bassa'], messaggio: 'Nessuno spazio alle spalle da concedere.' },
+}
+
+// Requisiti strutturali minimi per impostazione: quali zone il modulo DEVE
+// possedere perché l'impostazione abbia degli slot su cui scrivere
+// (mappa-tattica.md §5). Se mancano, l'impostazione gira a vuoto → "rotto".
+// "difensivi" è una chiave composita: DIFENSORE_CENTRALE + TERZINO sommati.
+// Nota: solo le impossibilità vere stanno qui. Le fragilità (che dipendono
+// dal singolo modulo, non dalla struttura) stanno in ECCEZIONI_MODULO.
+export const REQUISITI_IMPOSTAZIONE = {
+  ali: { [ZONE.ESTERNO_OFFENSIVO]: 2 },
+  oltranza: { difensivi: 3 },
+  // possesso / lunga / contropiede: nessun requisito strutturale duro,
+  // scrivono su zone che ogni modulo possiede.
+}
+
+// Fragilità note modulo × impostazione (mappa-tattica.md §5).
+// Chiave = chiave del modulo in MODULI_FORMATO. Livello "warn": il sistema
+// segnala, non impedisce. Un modulo assente dalla tabella è "ok" ovunque
+// tranne dove i requisiti strutturali lo bocciano. I moduli del calcio a 7
+// non hanno eccezioni per ora: la copertura strutturale basta.
+export const ECCEZIONI_MODULO = {
+  '3-3-1': {
+    oltranza: { livello: 'warn', messaggio: 'Un solo mediano e due esterni che devono coprire tutta la fascia: il blocco basso regge solo se gli esterni rientrano ogni volta, senza eccezioni.' },
+  },
+  '3-1-2-1': {
+    lunga: { livello: 'warn', messaggio: 'Nessun esterno che attacca la seconda palla in ampiezza: il lancio ricade sempre sugli stessi due centrali, l\'avversario lo legge dopo dieci minuti.' },
+  },
+  '2-3-2': {
+    possesso: { livello: 'warn', messaggio: 'Due punte tolgono un uomo alla catena del palleggio: il giro palla passa da soli tre centrocampisti, con pressing avversario si spezza.' },
+    ali: { livello: 'warn', messaggio: 'Gli esterni escono dai tre di mezzo: se salgono a mettere cross, davanti alla difesa a due non resta nessuno.' },
+  },
+  '2-4-1': {
+    lunga: { livello: 'warn', messaggio: 'La punta è sola sulla sponda e la difesa a due è lontanissima dalla seconda palla: ogni rimbalzo è una ripartenza avversaria.' },
+    contropiede: { livello: 'warn', messaggio: 'Quattro centrocampisti in ripartenza sono un vantaggio, ma la difesa a due resta in parità numerica su ogni recupero fallito.' },
+  },
+}
+
+// Matrice C — linea difensiva → fase di non possesso (mappa-tattica.md §3-bis).
+// Stessa forma di MATRICE_COSTRUZIONE / MATRICE_IMPOSTAZIONE: chiavi per zona
+// (dcCentrale/dcLaterale distinti per coerenza con le altre matrici, anche
+// se qui coincidono).
+export const MATRICE_LINEA = {
+  alta: {
+    portiere: 'N-POR-S', dcCentrale: 'N-DC-A', dcLaterale: 'N-DC-A', terzino: 'N-T-P',
+    mediano: 'N-M-A', ccOffensivo: 'N-CC-P', esterno: 'N-E-P', punta: 'N-P-1',
+  },
+  normale: {
+    portiere: 'N-POR-E', dcCentrale: 'N-DC-L', dcLaterale: 'N-DC-L', terzino: 'N-T-S',
+    mediano: 'N-M-S', ccOffensivo: 'N-CC-R', esterno: 'N-E-T', punta: 'N-P-S',
+  },
+  bassa: {
+    portiere: 'N-POR-A', dcCentrale: 'N-DC-C', dcLaterale: 'N-DC-C', terzino: 'N-T-B',
+    mediano: 'N-M-C', ccOffensivo: 'N-CC-B', esterno: 'N-E-I', punta: 'N-P-R',
+  },
+}
+
+// Modificatore di transizione — l'impostazione (con palla) determina cosa
+// succede nei secondi dopo la perdita. Sovrascrive MATRICE_LINEA per le sole
+// zone elencate; se una zona non è qui, vince la linea. `nota` è il
+// principio di squadra sulla transizione, non un ruolo di slot.
+export const TRANSIZIONE = {
+  possesso: {
+    punta: 'N-P-1', ccOffensivo: 'N-CC-P',
+    nota: 'Contropressing: riaggredisci subito dov\'è persa, i primi cinque secondi sono nostri.',
+  },
+  ali: {
+    nota: 'Riaggredisci sulla fascia dove hai perso, dentro copre chi è rientrato.',
+  },
+  lunga: {
+    punta: 'N-P-R',
+    nota: 'Non riaggredire: ricompattati e aspetta la seconda palla.',
+  },
+  contropiede: {
+    punta: 'N-P-R', ccOffensivo: 'N-CC-B', esterno: 'N-E-T',
+    nota: 'Ripiega subito dietro la palla: l\'uomo alto resta, gli altri tornano tutti.',
+  },
+  oltranza: {
+    punta: 'N-P-S', ccOffensivo: 'N-CC-B', esterno: 'N-E-I',
+    nota: 'Tutti sotto la linea della palla, nessuno esce dal blocco.',
+  },
+}
+
+// Compressione geometrica in fase di non possesso: la squadra si accorcia
+// verso la propria porta (fattoreT) e si stringe verso il centro (fattoreU).
+// `ancora` è il t minimo di partenza del blocco. Derivata da {u, t} del
+// modulo, non un secondo set di coordinate scritte a mano (mappa-tattica.md §5).
+export const COMPRESSIONE = {
+  alta: { ancora: 0.26, fattoreT: 0.78, fattoreU: 0.86 },
+  normale: { ancora: 0.18, fattoreT: 0.64, fattoreU: 0.80 },
+  bassa: { ancora: 0.11, fattoreT: 0.48, fattoreU: 0.72 },
 }

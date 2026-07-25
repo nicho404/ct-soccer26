@@ -1,4 +1,4 @@
-import { db, migrazioneV7RuoliTattici } from './db'
+import { db, migrazioneV7RuoliTattici, migrazioneV8SlotRuoliOverride } from './db'
 
 const FORMAT = 'mister-app-backup'
 
@@ -59,6 +59,9 @@ export async function importBackup(file) {
     // versione dello schema). Vanno riapplicate a mano quelle rilevanti.
     if (payload.dbVersion < 7) {
       await migrazioneV7RuoliTattici(db)
+    }
+    if (payload.dbVersion < 8) {
+      await migrazioneV8SlotRuoliOverride(db)
     }
   })
 }
