@@ -1,27 +1,7 @@
 import { COLORI_FAMIGLIA, famigliaRuolo, TIPI_INTESA } from '../db/constants'
 import { compatibilitaGiocatore } from '../tactics/engine'
 import { nomeBreve } from '../lib/nomi'
-
-// Proiezione prospettica a un punto di fuga (vista da dietro la nostra porta).
-// t = 0 nostra linea di porta (vicina, larga), t = 1 porta avversaria (lontana, stretta).
-const ZF = 2.1
-const YN = 467
-const YF = 72
-const C = (YN - YF) / (1 - 1 / ZF)
-const YH = YN - C
-const HW = 188
-const CX = 200
-
-function pt(u, t) {
-  const z = 1 + t * (ZF - 1)
-  return [CX + ((u - 0.5) * 2 * HW) / z, YH + C / z]
-}
-
-const poly = (punti) => punti.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ')
-
-function areaPoly(t0, t1, u0 = 0.22, u1 = 0.78) {
-  return poly([pt(u0, t0), pt(u1, t0), pt(u1, t1), pt(u0, t1)])
-}
+import { pt, poly, areaPoly } from '../lib/pitchGeometry'
 
 function nomeCorto(p) {
   const n = nomeBreve(p)

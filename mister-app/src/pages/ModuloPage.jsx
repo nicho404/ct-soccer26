@@ -7,6 +7,7 @@ import {
   costruzioneInfo, lineaDifesaInfo, inPosizione,
 } from '../lib/formazioni'
 import { nomeBreve } from '../lib/nomi'
+import { esportaModulo } from '../lib/esportaModulo'
 import { famigliaRuolo, isAttivo } from '../db/constants'
 import { ruoliZona, ruoliNpZona, ruoloInfo, ruoloNpInfo, TRANSIZIONE } from '../tactics/constants'
 import {
@@ -39,6 +40,7 @@ export default function ModuloPage() {
   const [scegliManuale, setScegliManuale] = useState(false)
   // lente sul campo, non configurazione: non persistita, default possesso
   const [fase, setFase] = useState('possesso')
+  const [esitoExport, setEsitoExport] = useState(null)
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const intese = useLiveQuery(() => db.intese.toArray(), [])
@@ -112,6 +114,20 @@ export default function ModuloPage() {
   const problemaCostruzione = coerenza.problemi.find((p) => p.tipo === 'costruzione')
   const problemaLinea = coerenza.problemi.find((p) => p.tipo === 'linea')
   const problemaModulo = coerenza.problemi.find((p) => p.tipo === 'modulo')
+
+  // Immagine per i giocatori: campo, posizioni e nomi. Volutamente non passa
+  // ruoli, fase, intese o coerenza — quella è la lavagna del mister.
+  const esporta = async () => {
+    setEsitoExport(null)
+    try {
+      const esito = await esportaModulo({ modulo, moduloKey, slots, players, formato, team })
+      if (esito !== 'annullata') {
+        setEsitoExport(esito === 'condivisa' ? 'Immagine condivisa.' : 'Immagine salvata nei download.')
+      }
+    } catch {
+      setEsitoExport('Non è stato possibile creare l’immagine.')
+    }
+  }
 
   const salvaCorrente = async () => {
     const nome = window.prompt('Nome per questo assetto (es. Titolari, Anti-pressing):')
@@ -265,6 +281,9 @@ export default function ModuloPage() {
       <div className="page-header" style={{ paddingLeft: 6 }}>
         <h1>Modulo</h1>
         <button className="btn btn-sm" onClick={svuota}>Svuota</button>
+        {attivi.length > 0 && (
+          <button className="btn btn-sm" onClick={esporta}>📷 Immagine</button>
+        )}
       </div>
 
       {attivi.length === 0 ? (
@@ -395,6 +414,12 @@ export default function ModuloPage() {
               }
             />
           </div>
+
+          {esitoExport && (
+            <p className="muted small" style={{ margin: '0 6px 10px' }} onClick={() => setEsitoExport(null)}>
+              {esitoExport} L’immagine mostra solo campo, posizioni e nomi: niente indicazioni tattiche.
+            </p>
+          )}
 
           {fase === 'nonPossesso' && TRANSIZIONE[impostazione]?.nota && (
             <p className="muted small" style={{ margin: '0 6px 10px' }}>
