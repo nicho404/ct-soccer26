@@ -117,6 +117,43 @@ function refertoDemo(modulo, schieratiIdx, panchinaIdx) {
   return eventi
 }
 
+// Modello di seduta demo: quello che un mister riusa ogni infrasettimanale.
+const DEMO_PIANO = {
+  nome: 'Infrasettimanale tipo',
+  obiettivo: 'Ritmo e possesso corto sotto pressione',
+  blocchi: [
+    { titolo: 'Attivazione + mobilità', minuti: 15, note: 'Corsa blanda, andature, allunghi' },
+    { titolo: 'Torello 5v2', minuti: 15, note: 'Due tocchi, chi sbaglia va in mezzo' },
+    { titolo: 'Possesso 6v6 + 2 jolly', minuti: 20, note: 'Campo stretto, jolly sempre con chi ha palla' },
+    { titolo: 'Partitella a tema', minuti: 25, note: 'Gol valido solo dopo 5 passaggi consecutivi' },
+  ],
+}
+
+// Appello demo: indici di DEMO_PLAYERS → stato. Federico (7) si allena poco
+// ma gioca sempre, Paolo (10) non manca un allenamento e non scende in campo:
+// sono i due casi che il confronto campo/allenamento deve far emergere.
+const DEMO_TRAININGS = [
+  {
+    giorni: -12, ora: '21:00', tema: 'Uscita dal pressing', luogo: 'CS Bonola, campo 2',
+    presenze: { 0: 'presente', 1: 'presente', 3: 'presente', 4: 'presente', 5: 'presente', 6: 'presente', 7: 'assente', 8: 'presente', 9: 'giustificato', 10: 'presente', 11: 'assente' },
+    conPiano: true,
+  },
+  {
+    giorni: -9, ora: '21:00', tema: 'Palle inattive', luogo: 'CS Bonola, campo 2',
+    presenze: { 0: 'presente', 1: 'presente', 3: 'assente', 4: 'presente', 5: 'presente', 6: 'presente', 7: 'presente', 8: 'giustificato', 9: 'presente', 10: 'presente', 11: 'assente' },
+  },
+  {
+    giorni: -5, ora: '21:00', tema: 'Ripartenze', luogo: 'CS Bonola, campo 2',
+    presenze: { 0: 'presente', 1: 'presente', 3: 'presente', 4: 'giustificato', 5: 'presente', 6: 'presente', 7: 'assente', 8: 'presente', 9: 'presente', 10: 'presente', 11: 'presente' },
+    conPiano: true,
+  },
+  {
+    giorni: -2, ora: '21:00', tema: 'Prova formazione', luogo: 'CS Bonola, campo 2',
+    presenze: { 0: 'presente', 1: 'presente', 3: 'presente', 4: 'presente', 5: 'presente', 6: 'assente', 7: 'presente', 8: 'presente', 9: 'assente', 10: 'presente', 11: 'giustificato' },
+    note: 'Provata la difesa a tre: serve un altro passaggio, i centrali si guardano ancora troppo',
+  },
+]
+
 const dataRelativa = (giorni) => {
   const d = new Date()
   d.setDate(d.getDate() + giorni)
@@ -205,6 +242,21 @@ export async function seedDemoData() {
       }
     })
   )
+  await db.sessionPlans.add({ ...DEMO_PIANO, isTemplate: true, demo: true })
+  await db.trainings.bulkAdd(
+    DEMO_TRAININGS.map(({ giorni, presenze, conPiano, ...t }) => ({
+      ...t,
+      data: dataRelativa(giorni),
+      presenze: Object.fromEntries(
+        Object.entries(presenze).map(([idx, stato]) => [playerIds[Number(idx)], stato])
+      ),
+      piano: conPiano
+        ? { obiettivo: DEMO_PIANO.obiettivo, blocchi: DEMO_PIANO.blocchi }
+        : { obiettivo: '', blocchi: [] },
+      demo: true,
+    }))
+  )
+
   const oggi = new Date().toISOString().slice(0, 10)
   await db.observations.bulkAdd(
     DEMO_OBSERVATIONS.map(({ idx, ...o }) => ({

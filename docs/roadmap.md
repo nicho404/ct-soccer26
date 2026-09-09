@@ -12,22 +12,12 @@ Stato delle milestone. Le sigle `M3`…`M7` sono quelle già citate nei placehol
 | M4 | Builder tattico stile FC26 (anticipata, saltando M3) | `pages/ModuloPage`, `tactics/engine.js`, `components/PitchView` |
 | M3 | Partite e calendario | `pages/PartitePage`, `PartitaFormPage`, `lib/partite.js` |
 | M6 | Storico: referto partita, minutaggio, marcatori | `pages/StoricoPage`, `PartitaRefertoPage`, `lib/storico.js` |
+| M5 | Presenze e sedute: appello, piani seduta, confronto campo/allenamento | `pages/PresenzePage`, `SedutaFormPage`, `PianiPage`, `lib/presenze.js` |
 
 Fuori milestone, dopo M4: motore tattico a 27 ruoli, fase di non possesso, stili di gioco,
 export immagine del modulo, PWA, backup/ripristino, onboarding.
 
 ## Mancanti
-
-### M5 — Presenze e sedute
-Appello per allenamento, storico presenze, indicatore di meritocrazia da incrociare con
-le convocazioni. Tabelle già a schema: `trainings`, `sessionPlans`.
-
-- Seduta di allenamento con data, tema, giocatori presenti/assenti/giustificati
-  (`STATI_PRESENZA` esiste già in `db/constants.js`).
-- Percentuale presenze per giocatore, visibile nella scheda giocatore e nella Rosa.
-- Piani seduta riutilizzabili (`sessionPlans.isTemplate`).
-
-Indipendente: si può fare in qualsiasi momento.
 
 ### M7 — Avversari, Manuale, Capitano
 Tre moduli indipendenti tra loro, raggruppati nella stessa milestone.
@@ -42,10 +32,15 @@ Tre moduli indipendenti tra loro, raggruppati nella stessa milestone.
 
 ## Ordine consigliato
 
-`M5` → `M7`
+Resta solo **M7**, i cui tre moduli sono indipendenti tra loro: si possono fare
+nell'ordine che serve di più (Avversari prima di un girone nuovo, Capitano a
+inizio stagione, Manuale quando c'è tempo).
 
-M3 e M6 sono fatte: il calendario e il referto esistono, quindi le due milestone
-rimaste non hanno più dipendenze tra loro né su altro.
+## Debito noto
+
+- Il bundle ha superato i 500 kB (warning di Vite in build). Prima o poi va
+  spezzato per rotta con `lazy()` — non urgente per una PWA che si installa,
+  ma cresce a ogni milestone.
 
 ## Vincoli trasversali
 

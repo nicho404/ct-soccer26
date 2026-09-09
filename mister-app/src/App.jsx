@@ -18,7 +18,10 @@ import PartitePage from './pages/PartitePage'
 import PartitaFormPage from './pages/PartitaFormPage'
 import PartitaRefertoPage from './pages/PartitaRefertoPage'
 import StoricoPage from './pages/StoricoPage'
-import { IconClipboardCheck, IconTarget, IconBook, IconStar } from './components/icons'
+import PresenzePage from './pages/PresenzePage'
+import SedutaFormPage from './pages/SedutaFormPage'
+import PianiPage from './pages/PianiPage'
+import { IconTarget, IconBook, IconStar } from './components/icons'
 
 export default function App() {
   // ?? null: distingue "record assente" (null) da "query in corso" (undefined),
@@ -47,7 +50,10 @@ export default function App() {
           <Route path="/partite/:id" element={<PartitaFormPage />} />
           <Route path="/partite/:id/referto" element={<PartitaRefertoPage />} />
           <Route path="/modulo" element={<ModuloPage />} />
-          <Route path="/presenze" element={<PlaceholderPage title="Presenze e sedute" icon={<IconClipboardCheck />} milestone="M5" />} />
+          <Route path="/presenze" element={<PresenzePage />} />
+          <Route path="/presenze/nuova" element={<SedutaFormPage />} />
+          <Route path="/presenze/piani" element={<PianiPage />} />
+          <Route path="/presenze/:id" element={<SedutaFormPage />} />
           <Route path="/storico" element={<StoricoPage />} />
           <Route path="/avversari" element={<PlaceholderPage title="Avversari" icon={<IconTarget />} milestone="M7" />} />
           <Route path="/manuale" element={<PlaceholderPage title="Manuale" icon={<IconBook />} milestone="M7" />} />

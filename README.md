@@ -10,6 +10,7 @@ App web per allenatori di **calcio a 7 e calcio a 8** amatoriale: gestione rosa,
 - **Modulo** — builder tattico in semi-3D con switch Calcio a 7 ⇄ Calcio a 8, moduli specifici per formato, impostazioni tattiche (possesso, contropiede, pressing…) e ruoli tattici 1:1 con FC26.
 - **Partite** — calendario con prossima partita in home, convocati, risultato e bilancio V-N-P; avversari e competizioni si creano al volo dalla scheda partita.
 - **Storico** — referto partita (formazione schierata, gol, assist, cambi, cartellini) con minuti giocati calcolati dai cambi, classifica marcatori e minutaggio di squadra.
+- **Presenze e sedute** — appello a tre stati per ogni allenamento, piano seduta a blocchi riutilizzabile come modello, rendimento all'appello e confronto tra quanto uno si allena e quanto gioca.
 - **Osservazione** — valutazioni da campo per criterio (lettura, pressione, intensità, leadership…) con modalità comparativa.
 - **Intese** — coppie e catene di giocatori che funzionano bene insieme, visualizzate sul campo.
 - **Dati demo** — un tasto per popolare l'app con una rosa finta e provare tutto subito.
