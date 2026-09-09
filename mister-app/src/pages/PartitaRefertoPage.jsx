@@ -33,7 +33,12 @@ export default function PartitaRefertoPage() {
   const [bozza, setBozza] = useState(null) // evento in composizione
   const [loaded, setLoaded] = useState(false)
 
-  const partita = useLiveQuery(() => db.matches.get(partitaId), [partitaId])
+  // ?? null distingue "partita assente" da "query in corso": senza, il
+  // referto di una partita cancellata resterebbe su schermo vuoto per sempre
+  const partita = useLiveQuery(
+    () => db.matches.get(partitaId).then((m) => m ?? null),
+    [partitaId]
+  )
   const players = useLiveQuery(() => db.players.toArray(), [])
   const opponents = useLiveQuery(() => db.opponents.toArray(), [])
   const team = useLiveQuery(() => db.meta.get('team').then((t) => t ?? null), [])

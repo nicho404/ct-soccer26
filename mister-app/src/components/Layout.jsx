@@ -1,7 +1,8 @@
-import { NavLink, Outlet, Link } from 'react-router-dom'
+import { NavLink, Outlet, Link, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { IconHome, IconUsers, IconPitch, IconCalendar, IconGrid, IconBall } from './icons'
+import ErrorBoundary from './ErrorBoundary'
 
 const TABS = [
   { to: '/home', Icon: IconHome, label: 'Home' },
@@ -13,6 +14,7 @@ const TABS = [
 
 export default function Layout() {
   const team = useLiveQuery(() => db.meta.get('team'), [])
+  const location = useLocation()
 
   return (
     <>
@@ -29,7 +31,11 @@ export default function Layout() {
           </span>
         </Link>
       </header>
-      <Outlet />
+      {/* key sul percorso: cambiando pagina l'errore si azzera da solo,
+          altrimenti una schermata rotta resterebbe rotta per sempre */}
+      <ErrorBoundary key={location.pathname}>
+        <Outlet />
+      </ErrorBoundary>
       <nav className="bottom-nav">
         {TABS.map((tab) => (
           <NavLink
