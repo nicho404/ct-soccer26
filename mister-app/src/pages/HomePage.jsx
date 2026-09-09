@@ -1,17 +1,25 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
-import { isAttivo } from '../db/constants'
+import { isAttivo, campoPartitaInfo } from '../db/constants'
 import EmptyState from '../components/EmptyState'
 import { IconBolt, IconBall } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
+import { prossimaPartita, formatDataPartita, quandoPartita } from '../lib/partite'
 
 export default function HomePage() {
   const navigate = useNavigate()
   const players = useLiveQuery(() => db.players.toArray(), [])
   const team = useLiveQuery(() => db.meta.get('team'), [])
+  const partite = useLiveQuery(() => db.matches.toArray(), [])
+  const opponents = useLiveQuery(() => db.opponents.toArray(), [])
 
-  if (!players) return null
+  if (!players || !partite || !opponents) return null
+
+  const prossima = prossimaPartita(partite)
+  const avversario = prossima
+    ? opponents.find((o) => o.id === prossima.opponentId)?.nome
+    : null
 
   const attivi = players.filter(isAttivo)
   const acciaccati = attivi.filter((p) => p.acciaccato || p.statoAttivita === 'infortunato')
@@ -69,9 +77,40 @@ export default function HomePage() {
       ) : (
         <>
           <div className="section-title">Prossima partita</div>
-          <div className="card muted small">
-            Nessuna partita in calendario. Il calendario arriva con la milestone M3.
-          </div>
+          {prossima ? (
+            <Link to={`/partite/${prossima.id}`} className="card tappable">
+              <div className="row">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <strong>{avversario || 'Avversario da definire'}</strong>
+                  <div className="muted small">
+                    {[
+                      formatDataPartita(prossima.data),
+                      prossima.ora,
+                      campoPartitaInfo(prossima.campo).label,
+                    ].filter(Boolean).join(' · ')}
+                  </div>
+                </div>
+                <span className="badge badge-accent">{quandoPartita(prossima.data)}</span>
+              </div>
+              <div className="muted small" style={{ marginTop: 6, opacity: 0.75 }}>
+                {[
+                  prossima.luogo,
+                  `${(prossima.convocati ?? []).length} convocati`,
+                ].filter(Boolean).join(' · ')}
+              </div>
+            </Link>
+          ) : (
+            <div className="card">
+              <div className="muted small">Nessuna partita in calendario.</div>
+              <button
+                className="btn btn-sm"
+                style={{ marginTop: 10 }}
+                onClick={() => navigate('/partite/nuova')}
+              >
+                + Metti in calendario
+              </button>
+            </div>
+          )}
 
           <div className="section-title">La rosa oggi</div>
           <div className="stat-grid">

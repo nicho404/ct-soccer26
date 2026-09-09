@@ -14,7 +14,9 @@ import ObservationPage from './pages/ObservationPage'
 import ModuloPage from './pages/ModuloPage'
 import IntesePage from './pages/IntesePage'
 import IntesaFormPage from './pages/IntesaFormPage'
-import { IconCalendar, IconClipboardCheck, IconChart, IconTarget, IconBook, IconStar } from './components/icons'
+import PartitePage from './pages/PartitePage'
+import PartitaFormPage from './pages/PartitaFormPage'
+import { IconClipboardCheck, IconChart, IconTarget, IconBook, IconStar } from './components/icons'
 
 export default function App() {
   // ?? null: distingue "record assente" (null) da "query in corso" (undefined),
@@ -38,7 +40,9 @@ export default function App() {
           <Route path="/intese" element={<IntesePage />} />
           <Route path="/intese/nuova" element={<IntesaFormPage />} />
           <Route path="/intese/:id" element={<IntesaFormPage />} />
-          <Route path="/partite" element={<PlaceholderPage title="Partite e calendario" icon={<IconCalendar />} milestone="M3" />} />
+          <Route path="/partite" element={<PartitePage />} />
+          <Route path="/partite/nuova" element={<PartitaFormPage />} />
+          <Route path="/partite/:id" element={<PartitaFormPage />} />
           <Route path="/modulo" element={<ModuloPage />} />
           <Route path="/presenze" element={<PlaceholderPage title="Presenze e sedute" icon={<IconClipboardCheck />} milestone="M5" />} />
           <Route path="/storico" element={<PlaceholderPage title="Storico" icon={<IconChart />} milestone="M6" />} />

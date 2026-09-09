@@ -230,3 +230,17 @@ export const CATEGORIE_MANUALE = [
   { value: 'regole', label: 'Regole torneo' },
   { value: 'principi', label: 'Principi' },
 ]
+
+// Dove si gioca. Il campo neutro esiste davvero nei tornei amatoriali
+// (finali, recuperi spostati), quindi non basta il flag casa/trasferta.
+export const CAMPI_PARTITA = [
+  { value: 'casa', label: 'Casa', sigla: 'C' },
+  { value: 'trasferta', label: 'Trasferta', sigla: 'T' },
+  { value: 'neutro', label: 'Campo neutro', sigla: 'N' },
+]
+
+export const campoPartitaInfo = (value) =>
+  CAMPI_PARTITA.find((c) => c.value === value) ?? CAMPI_PARTITA[0]
+
+export const tipoCompetizioneLabel = (value) =>
+  TIPI_COMPETIZIONE.find((t) => t.value === value)?.label ?? value ?? '—'

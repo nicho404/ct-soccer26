@@ -59,6 +59,28 @@ const DEMO_COMPETITIONS = [
   { nome: 'Amichevoli estive 2026', tipo: 'amichevoli', inizio: '2026-07-01', fine: '2026-09-15' },
 ]
 
+const DEMO_OPPONENTS = [
+  { nome: 'Real Bovisa' },
+  { nome: 'Atletico Lambrate' },
+  { nome: 'Sporting Niguarda' },
+]
+
+// Partite demo: date relative a oggi (giorni di scarto) così il calendario
+// ha sempre una prossima partita e uno storico, qualsiasi giorno sia oggi.
+// oppIdx/compIdx = indici in DEMO_OPPONENTS / DEMO_COMPETITIONS.
+const DEMO_MATCHES = [
+  { giorni: -14, oppIdx: 1, compIdx: 0, campo: 'trasferta', ora: '20:30', luogo: 'CS Lambrate, campo 1', golFatti: 1, golSubiti: 3, note: 'Presi due gol da palla inattiva' },
+  { giorni: -7, oppIdx: 2, compIdx: 0, campo: 'casa', ora: '19:00', luogo: 'CS Bonola, campo 2', golFatti: 2, golSubiti: 2, convocatiIdx: [0, 1, 3, 5, 6, 7, 8, 10] },
+  { giorni: 3, oppIdx: 0, compIdx: 0, campo: 'casa', ora: '19:00', luogo: 'CS Bonola, campo 2', convocatiIdx: [0, 1, 3, 4, 5, 6, 7, 11, 13], note: 'Loro giocano a 3 dietro, occhio al 10 mancino' },
+  { giorni: 10, oppIdx: 1, compIdx: 0, campo: 'trasferta', ora: '21:00', luogo: 'CS Lambrate, campo 1' },
+]
+
+const dataRelativa = (giorni) => {
+  const d = new Date()
+  d.setDate(d.getDate() + giorni)
+  return d.toISOString().slice(0, 10)
+}
+
 export async function hasDemoData() {
   const n = await db.players.filter((p) => p.demo === true).count()
   return n > 0
@@ -76,7 +98,26 @@ export async function seedDemoData() {
       demo: true,
     }))
   )
-  await db.competitions.bulkAdd(DEMO_COMPETITIONS.map((c) => ({ ...c, demo: true })))
+  const competitionIds = await db.competitions.bulkAdd(
+    DEMO_COMPETITIONS.map((c) => ({ ...c, demo: true })),
+    { allKeys: true }
+  )
+  const opponentIds = await db.opponents.bulkAdd(
+    DEMO_OPPONENTS.map((o) => ({ ...o, demo: true })),
+    { allKeys: true }
+  )
+  await db.matches.bulkAdd(
+    DEMO_MATCHES.map(({ giorni, oppIdx, compIdx, convocatiIdx, ...m }) => ({
+      ...m,
+      data: dataRelativa(giorni),
+      opponentId: opponentIds[oppIdx],
+      competitionId: competitionIds[compIdx],
+      convocati: (convocatiIdx ?? []).map((n) => playerIds[n]),
+      golFatti: m.golFatti ?? null,
+      golSubiti: m.golSubiti ?? null,
+      demo: true,
+    }))
+  )
   const oggi = new Date().toISOString().slice(0, 10)
   await db.observations.bulkAdd(
     DEMO_OBSERVATIONS.map(({ idx, ...o }) => ({
