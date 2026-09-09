@@ -13,8 +13,9 @@ export default function HomePage() {
   const team = useLiveQuery(() => db.meta.get('team'), [])
   const partite = useLiveQuery(() => db.matches.toArray(), [])
   const opponents = useLiveQuery(() => db.opponents.toArray(), [])
+  const capitano = useLiveQuery(() => db.meta.get('capitano').then((c) => c ?? null), [])
 
-  if (!players || !partite || !opponents) return null
+  if (!players || !partite || !opponents || capitano === undefined) return null
 
   const prossima = prossimaPartita(partite)
   const avversario = prossima
@@ -57,7 +58,13 @@ export default function HomePage() {
           <div style={{ minWidth: 0 }}>
             <strong>{team.nome || 'La tua squadra'}</strong>
             <div className="muted small">
-              {[team.torneo, team.mister ? `Mister ${team.mister}` : ''].filter(Boolean).join(' · ')}
+              {[
+                team.torneo,
+                team.mister ? `Mister ${team.mister}` : '',
+                capitano?.value != null && players.some((p) => p.id === capitano.value)
+                  ? `Capitano ${nomeBreve(players.find((p) => p.id === capitano.value))}`
+                  : '',
+              ].filter(Boolean).join(' · ')}
             </div>
           </div>
         </div>

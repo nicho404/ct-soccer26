@@ -7,7 +7,6 @@ import HomePage from './pages/HomePage'
 import RosaPage from './pages/RosaPage'
 import PlayerFormPage from './pages/PlayerFormPage'
 import PlayerDetailPage from './pages/PlayerDetailPage'
-import PlaceholderPage from './pages/PlaceholderPage'
 import AltroPage from './pages/AltroPage'
 import ImpostazioniPage from './pages/ImpostazioniPage'
 import ObservationPage from './pages/ObservationPage'
@@ -21,7 +20,11 @@ import StoricoPage from './pages/StoricoPage'
 import PresenzePage from './pages/PresenzePage'
 import SedutaFormPage from './pages/SedutaFormPage'
 import PianiPage from './pages/PianiPage'
-import { IconTarget, IconBook, IconStar } from './components/icons'
+import AvversariPage from './pages/AvversariPage'
+import AvversarioFormPage from './pages/AvversarioFormPage'
+import ManualePage from './pages/ManualePage'
+import ManualeFormPage from './pages/ManualeFormPage'
+import CapitanoPage from './pages/CapitanoPage'
 
 export default function App() {
   // ?? null: distingue "record assente" (null) da "query in corso" (undefined),
@@ -55,9 +58,13 @@ export default function App() {
           <Route path="/presenze/piani" element={<PianiPage />} />
           <Route path="/presenze/:id" element={<SedutaFormPage />} />
           <Route path="/storico" element={<StoricoPage />} />
-          <Route path="/avversari" element={<PlaceholderPage title="Avversari" icon={<IconTarget />} milestone="M7" />} />
-          <Route path="/manuale" element={<PlaceholderPage title="Manuale" icon={<IconBook />} milestone="M7" />} />
-          <Route path="/capitano" element={<PlaceholderPage title="Capitano" icon={<IconStar />} milestone="M7" />} />
+          <Route path="/avversari" element={<AvversariPage />} />
+          <Route path="/avversari/nuovo" element={<AvversarioFormPage />} />
+          <Route path="/avversari/:id" element={<AvversarioFormPage />} />
+          <Route path="/manuale" element={<ManualePage />} />
+          <Route path="/manuale/nuova" element={<ManualeFormPage />} />
+          <Route path="/manuale/:id" element={<ManualeFormPage />} />
+          <Route path="/capitano" element={<CapitanoPage />} />
           <Route path="/altro" element={<AltroPage />} />
           <Route path="/impostazioni" element={<ImpostazioniPage />} />
           <Route path="*" element={<Navigate to="/home" replace />} />

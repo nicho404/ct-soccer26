@@ -5,14 +5,14 @@ import {
 } from '../components/icons'
 
 const VOCI = [
-  { to: '/osservazione', Icon: IconEye, label: 'Osservazione', desc: 'Voti e note da bordo campo', milestone: null },
-  { to: '/intese', Icon: IconLink, label: 'Intese', desc: 'Coppie e catene che si capiscono', milestone: null },
-  { to: '/storico', Icon: IconChart, label: 'Storico', desc: 'Referti, minutaggio, marcatori', milestone: null },
-  { to: '/presenze', Icon: IconClipboardCheck, label: 'Presenze e sedute', desc: 'Appello, meritocrazia, allenamenti', milestone: null },
-  { to: '/avversari', Icon: IconTarget, label: 'Avversari', desc: 'Scouting squadre del girone', milestone: 'M7' },
-  { to: '/manuale', Icon: IconBook, label: 'Manuale', desc: 'La tua knowledge base tattica', milestone: 'M7' },
-  { to: '/capitano', Icon: IconStar, label: 'Capitano', desc: 'Criteri comparati per la scelta', milestone: 'M7' },
-  { to: '/impostazioni', Icon: IconGear, label: 'Impostazioni', desc: 'Backup, dati demo, info', milestone: null },
+  { to: '/osservazione', Icon: IconEye, label: 'Osservazione', desc: 'Voti e note da bordo campo' },
+  { to: '/intese', Icon: IconLink, label: 'Intese', desc: 'Coppie e catene che si capiscono' },
+  { to: '/storico', Icon: IconChart, label: 'Storico', desc: 'Referti, minutaggio, marcatori' },
+  { to: '/presenze', Icon: IconClipboardCheck, label: 'Presenze e sedute', desc: 'Appello, meritocrazia, allenamenti' },
+  { to: '/avversari', Icon: IconTarget, label: 'Avversari', desc: 'Scouting squadre del girone' },
+  { to: '/manuale', Icon: IconBook, label: 'Manuale', desc: 'La tua knowledge base tattica' },
+  { to: '/capitano', Icon: IconStar, label: 'Capitano', desc: 'Criteri comparati per la scelta' },
+  { to: '/impostazioni', Icon: IconGear, label: 'Impostazioni', desc: 'Backup, dati demo, info' },
 ]
 
 export default function AltroPage() {
@@ -30,7 +30,6 @@ export default function AltroPage() {
               <strong>{v.label}</strong>
               <div className="muted small">{v.desc}</div>
             </div>
-            {v.milestone && <span className="badge">{v.milestone}</span>}
           </div>
         </Link>
       ))}

@@ -19,14 +19,14 @@ const base = {
 }
 
 const DEMO_PLAYERS = [
-  { ...base, nome: 'Luca Ferrari', soprannome: 'Fera', numero: 1, ruoloNaturale: 'POR', ruoliTattici: ['Portiere di reparto'], porta: 'si', altezza: 185, note: 'Buona uscita bassa, rilancio corto' },
+  { ...base, nome: 'Luca Ferrari', soprannome: 'Fera', numero: 1, ruoloNaturale: 'POR', ruoliTattici: ['Portiere di reparto'], porta: 'si', altezza: 185, carattere: 'leader', note: 'Buona uscita bassa, rilancio corto' },
   { ...base, nome: 'Marco Colombo', soprannome: 'Colo', numero: 4, ruoloNaturale: 'DC', ruoliAdattati: ['CDC'], ruoliTattici: ['Difensore costruttore'], altezza: 180, calciFissi: ['punizioni'] },
   { ...base, nome: 'Andrea Bianchi', soprannome: '', numero: 5, ruoloNaturale: 'DC', ruoliTattici: ['Stopper'], piede: 'sinistro', statoAttivita: 'infortunato', acciaccato: true, condizione: 'Fastidio al polpaccio sx, da valutare' },
   { ...base, nome: 'Davide Rossi', soprannome: 'Dado', numero: 7, ruoloNaturale: 'ED', ruoliAdattati: ['AD', 'ATT'], ruoliTattici: ['Ala', 'Attaccante interno'], altezza: 173, note: 'Il più veloce della rosa' },
   { ...base, nome: 'Simone Galli', soprannome: '', numero: 3, ruoloNaturale: 'ES', ruoliAdattati: ['TS'], ruoliTattici: ['Esterno di centrocampo'], piede: 'sinistro', tesseramento: 'da_verificare', calciFissi: ['angoliSx'], note: 'Documenti tesseramento da consegnare' },
-  { ...base, nome: 'Matteo Villa', soprannome: 'Teo', numero: 8, ruoloNaturale: 'CC', ruoliAdattati: ['COC'], ruoliTattici: ['Regista', 'Mezzala'], altezza: 178, calciFissi: ['rigori'], note: 'Capitano, organizza il gruppo' },
-  { ...base, nome: 'Alessio Riva', soprannome: '', numero: 6, ruoloNaturale: 'CDC', ruoliAdattati: ['CC', 'DC'], ruoliTattici: ['Mediano', 'Mediano equilibratore'], piede: 'ambidestro', porta: 'emergenza' },
-  { ...base, nome: 'Federico Sala', soprannome: 'Fede', numero: 9, ruoloNaturale: 'ATT', ruoliTattici: ['Opportunista', 'Attaccante avanzato'], altezza: 182, calciFissi: ['angoliDx'], note: 'Bomber, ma non rientra mai' },
+  { ...base, nome: 'Matteo Villa', soprannome: 'Teo', numero: 8, ruoloNaturale: 'CC', ruoliAdattati: ['COC'], ruoliTattici: ['Regista', 'Mezzala'], altezza: 178, calciFissi: ['rigori'], carattere: 'leader', gestioneErrore: 'attiva', note: 'Capitano, organizza il gruppo' },
+  { ...base, nome: 'Alessio Riva', soprannome: '', numero: 6, ruoloNaturale: 'CDC', ruoliAdattati: ['CC', 'DC'], ruoliTattici: ['Mediano', 'Mediano equilibratore'], piede: 'ambidestro', porta: 'emergenza', carattere: 'follower' },
+  { ...base, nome: 'Federico Sala', soprannome: 'Fede', numero: 9, ruoloNaturale: 'ATT', ruoliTattici: ['Opportunista', 'Attaccante avanzato'], altezza: 182, calciFissi: ['angoliDx'], carattere: 'follower', gestioneErrore: 'passiva', note: 'Bomber, ma non rientra mai' },
   { ...base, nome: 'Giorgio Monti', soprannome: 'Gio', numero: 11, ruoloNaturale: 'AS', ruoliAdattati: ['ATT', 'ES'], ruoliTattici: ['Attaccante interno', 'Ala'], piede: 'sinistro', acciaccato: true, condizione: 'Caviglia dolorante dopo ultima partita' },
   { ...base, nome: 'Stefano Corti', soprannome: '', numero: 2, ruoloNaturale: 'DC', ruoliAdattati: ['TD'], statoAttivita: 'condizionale', note: 'Mai visto giocare, da osservare' },
   { ...base, nome: 'Paolo Greco', soprannome: '', numero: 10, ruoloNaturale: 'CC', ruoliAdattati: ['CDC'], ruoliTattici: ['Incursore in area'], tesseramento: 'non_tesserabile', note: 'Già tesserato FIGC, non tesserabile in lega' },
@@ -62,8 +62,25 @@ const DEMO_COMPETITIONS = [
 ]
 
 const DEMO_OPPONENTS = [
-  { nome: 'Real Bovisa' },
-  { nome: 'Atletico Lambrate' },
+  {
+    nome: 'Real Bovisa',
+    moduloAbituale: '2-3-1',
+    stile: 'Difesa alta e pressing sul portatore. Se salti la prima pressione hai campo aperto: il centrale copre male la profondità.',
+    pericolosi: [
+      { nome: 'Il 10 mancino', numero: '10', ruolo: 'COC', nota: 'Calcia da fuori e batte tutte le inattive. Non lasciarlo girare sul sinistro.' },
+      { nome: 'Esterno alto biondo', numero: '7', ruolo: 'AD', nota: 'Parte largo e taglia dentro: raddoppio con il centrale di parte.' },
+    ],
+    note: 'Campo in sintetico corto, palla che scorre. Arbitro fischia molto sui contatti.',
+  },
+  {
+    nome: 'Atletico Lambrate',
+    moduloAbituale: '3-2-1',
+    stile: 'Squadra fisica che difende bassa e riparte lunga sulla punta. Vive di palle inattive.',
+    pericolosi: [
+      { nome: 'Punta boa', numero: '9', ruolo: 'ATT', nota: 'Domina di testa: sui rinvii serve il raddoppio, mai duello singolo.' },
+    ],
+    note: '',
+  },
   { nome: 'Sporting Niguarda' },
 ]
 
@@ -160,6 +177,39 @@ const dataRelativa = (giorni) => {
   return d.toISOString().slice(0, 10)
 }
 
+// Voci di manuale demo: il tipo di cose che un mister si dimentica di aver
+// deciso tre settimane dopo averle decise.
+const DEMO_MANUALE = [
+  {
+    categoria: 'principi',
+    titolo: 'Come usciamo dal pressing alto',
+    testo: `Primo passaggio sempre sul difensore libero, mai sul centrale marcato.
+Se ci pressano in due, il portiere diventa il terzo uomo: si allarga e riceve.
+Quando non c'è la giocata corta, palla lunga sul lato debole — non in mezzo.`,
+  },
+  {
+    categoria: 'protocollo',
+    titolo: 'Protocollo pre-partita',
+    testo: `Ritrovo 45 minuti prima. Chi arriva a meno di 20 minuti non parte titolare.
+Formazione comunicata in spogliatoio, mai in chat.
+Riscaldamento: 10 attivazione, 5 possesso, 5 conclusioni, 5 palle inattive.`,
+  },
+  {
+    categoria: 'psicologia',
+    titolo: 'Chi va incoraggiato e chi va ripreso',
+    testo: `Gestione errore passiva: si spegne dopo lo sbaglio, va ripreso a fine partita e mai davanti al gruppo.
+Gestione errore attiva: regge la ripresa immediata, anzi la usa per rientrare in partita.
+È segnato sulla scheda di ogni giocatore.`,
+  },
+  {
+    categoria: 'regole',
+    titolo: 'Regole del torneo da non dimenticare',
+    testo: `Cambi liberi ma solo a gioco fermo e dal centrocampo.
+Due ammonizioni pesano sulla giornata dopo: la seconda ammonizione squalifica.
+Senza cartellino di tesseramento non si scende in campo, nemmeno con il documento.`,
+  },
+]
+
 export async function hasDemoData() {
   const n = await db.players.filter((p) => p.demo === true).count()
   return n > 0
@@ -243,6 +293,9 @@ export async function seedDemoData() {
     })
   )
   await db.sessionPlans.add({ ...DEMO_PIANO, isTemplate: true, demo: true })
+  await db.manualEntries.bulkAdd(DEMO_MANUALE.map((v) => ({ ...v, demo: true })))
+  // Capitano designato: Matteo Villa, quello segnato come leader del gruppo
+  await db.meta.put({ key: 'capitano', value: playerIds[5] })
   await db.trainings.bulkAdd(
     DEMO_TRAININGS.map(({ giorni, presenze, conPiano, ...t }) => ({
       ...t,
@@ -278,5 +331,12 @@ export async function clearDemoData() {
   for (const table of tables) {
     const ids = await table.filter((r) => r.demo === true).primaryKeys()
     await table.bulkDelete(ids)
+  }
+
+  // Il capitano vive in `meta`, che non ha il flag demo: se puntava a un
+  // giocatore appena cancellato, la fascia va tolta insieme a lui.
+  const capitano = await db.meta.get('capitano')
+  if (capitano?.value != null && !(await db.players.get(capitano.value))) {
+    await db.meta.delete('capitano')
   }
 }

@@ -1,7 +1,9 @@
 # Roadmap Mister App
 
-Stato delle milestone. Le sigle `M3`…`M7` sono quelle già citate nei placeholder
-(`src/App.jsx`, `src/pages/AltroPage.jsx`): questo file è la fonte di verità sullo scope.
+Stato delle milestone. Le sigle `M1`…`M7` vengono dal piano iniziale, quando i moduli
+non ancora fatti erano segnaposto in `src/App.jsx`. **Sono tutte chiuse**: da qui in poi
+il lavoro non ha più una scaletta prefissata, e questo file resta come storia dello scope
+e come elenco del debito.
 
 ## Fatte
 
@@ -13,28 +15,27 @@ Stato delle milestone. Le sigle `M3`…`M7` sono quelle già citate nei placehol
 | M3 | Partite e calendario | `pages/PartitePage`, `PartitaFormPage`, `lib/partite.js` |
 | M6 | Storico: referto partita, minutaggio, marcatori | `pages/StoricoPage`, `PartitaRefertoPage`, `lib/storico.js` |
 | M5 | Presenze e sedute: appello, piani seduta, confronto campo/allenamento | `pages/PresenzePage`, `SedutaFormPage`, `PianiPage`, `lib/presenze.js` |
+| M7 | Avversari (scouting), Manuale, Capitano | `pages/AvversariPage`, `AvversarioFormPage`, `ManualePage`, `ManualeFormPage`, `CapitanoPage`, `lib/capitano.js` |
 
 Fuori milestone, dopo M4: motore tattico a 27 ruoli, fase di non possesso, stili di gioco,
 export immagine del modulo, PWA, backup/ripristino, onboarding.
 
-## Mancanti
+## Tutte chiuse
 
-### M7 — Avversari, Manuale, Capitano
-Tre moduli indipendenti tra loro, raggruppati nella stessa milestone.
+L'ultima milestone (M7) ha chiuso gli ultimi tre segnaposto:
 
-- **Avversari** (`opponents`): oggi la squadra avversaria si crea al volo dalla scheda
-  partita, con il solo nome. Manca lo scouting: modulo abituale, giocatori pericolosi,
-  note partita per partita, storico degli scontri diretti.
-- **Manuale** (`manualEntries`): knowledge base tattica per categoria
-  (`CATEGORIE_MANUALE` già definita: tattica, protocolli, psicologia, regole, principi).
-- **Capitano**: confronto tra candidati sui criteri di osservazione già raccolti
-  (leadership, lettura, presenze) — dipende da M2 (fatta) e migliora con M5.
+- **Avversari** — scouting per squadra (modulo abituale, come giocano, giocatori
+  pericolosi con nota su come fermarli) e scontri diretti dal calendario.
+- **Manuale** — voci per categoria con ricerca: principi, protocolli, psicologia, regole.
+- **Capitano** — confronto tra candidati sui dati già raccolti altrove, senza chiedere
+  niente di nuovo al mister. Vedi `lib/capitano.js` per pesi e regole.
 
-## Ordine consigliato
+Idee emerse strada facendo e non ancora affrontate:
 
-Resta solo **M7**, i cui tre moduli sono indipendenti tra loro: si possono fare
-nell'ordine che serve di più (Avversari prima di un girone nuovo, Capitano a
-inizio stagione, Manuale quando c'è tempo).
+- Sostituzioni per slot nel referto: oggi un cambio è "esce X, entra Y", senza dire in
+  quale posizione. Basta per i minuti, non per ricostruire la forma della squadra.
+- Scontri diretti dentro la scheda partita (oggi si vedono solo dalla scheda avversario).
+- Esportazione della convocazione come immagine, come già si fa per il modulo.
 
 ## Debito noto
 

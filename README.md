@@ -13,6 +13,9 @@ App web per allenatori di **calcio a 7 e calcio a 8** amatoriale: gestione rosa,
 - **Presenze e sedute** — appello a tre stati per ogni allenamento, piano seduta a blocchi riutilizzabile come modello, rendimento all'appello e confronto tra quanto uno si allena e quanto gioca.
 - **Osservazione** — valutazioni da campo per criterio (lettura, pressione, intensità, leadership…) con modalità comparativa.
 - **Intese** — coppie e catene di giocatori che funzionano bene insieme, visualizzate sul campo.
+- **Avversari** — scouting delle squadre del girone: modulo abituale, come giocano, giocatori pericolosi e scontri diretti.
+- **Manuale** — la tua knowledge base: principi, protocolli, psicologia di gruppo, regole del torneo, con ricerca e categorie.
+- **Capitano** — confronto tra candidati sui dati già raccolti (leadership osservata, presenze, minuti, carattere), con i pesi in chiaro.
 - **Dati demo** — un tasto per popolare l'app con una rosa finta e provare tutto subito.
 
 Lo stato delle milestone e cosa manca sono in [`docs/roadmap.md`](docs/roadmap.md).

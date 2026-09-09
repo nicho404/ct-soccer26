@@ -83,3 +83,9 @@ export function quandoPartita(iso, oggi = oggiISO()) {
   if (giorni === -1) return 'Ieri'
   return giorni > 0 ? `tra ${giorni} giorni` : `${-giorni} giorni fa`
 }
+
+// Scontri diretti con una squadra, dalla più recente: la memoria del girone.
+export function partiteContro(partite, opponentId) {
+  if (opponentId == null) return []
+  return partite.filter((m) => m.opponentId === opponentId).sort(perDataDecrescente)
+}

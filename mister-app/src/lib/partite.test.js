@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   partitaGiocata, esitoPartita, partiteInProgramma, partiteGiocate,
-  prossimaPartita, bilancio, formatDataPartita, quandoPartita,
+  prossimaPartita, bilancio, formatDataPartita, quandoPartita, partiteContro,
 } from './partite'
 
 const OGGI = '2026-10-10'
@@ -82,5 +82,23 @@ describe('formattazione date', () => {
     expect(quandoPartita('2026-10-09', OGGI)).toBe('Ieri')
     expect(quandoPartita('2026-10-15', OGGI)).toBe('tra 5 giorni')
     expect(quandoPartita('2026-10-07', OGGI)).toBe('3 giorni fa')
+  })
+})
+
+describe('scontri diretti', () => {
+  const partite = [
+    P('2026-10-03', { opponentId: 1 }),
+    P('2026-09-27', { opponentId: 2 }),
+    P('2026-10-18', { opponentId: 1 }),
+    P('2026-10-10', { opponentId: null }),
+  ]
+
+  it('tiene solo le partite con quella squadra, dalla più recente', () => {
+    expect(partiteContro(partite, 1).map((m) => m.data)).toEqual(['2026-10-18', '2026-10-03'])
+  })
+
+  it('non confonde le partite senza avversario con una ricerca senza id', () => {
+    expect(partiteContro(partite, null)).toEqual([])
+    expect(partiteContro(partite, 99)).toEqual([])
   })
 })
