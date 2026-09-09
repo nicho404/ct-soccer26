@@ -244,3 +244,16 @@ export const campoPartitaInfo = (value) =>
 
 export const tipoCompetizioneLabel = (value) =>
   TIPI_COMPETIZIONE.find((t) => t.value === value)?.label ?? value ?? '—'
+
+// Eventi del referto partita (M6). `conGiocatore` = chiede chi l'ha fatto,
+// `conAssist` = chiede anche chi ha servito, `conCambio` = chiede chi esce e chi entra.
+export const TIPI_EVENTO = [
+  { value: 'gol', label: 'Gol', icona: '⚽', conGiocatore: true, conAssist: true },
+  { value: 'golSubito', label: 'Gol subito', icona: '🥅' },
+  { value: 'cambio', label: 'Cambio', icona: '🔁', conCambio: true },
+  { value: 'giallo', label: 'Ammonizione', icona: '🟨', conGiocatore: true },
+  { value: 'rosso', label: 'Espulsione', icona: '🟥', conGiocatore: true },
+]
+
+export const tipoEventoInfo = (value) =>
+  TIPI_EVENTO.find((t) => t.value === value) ?? TIPI_EVENTO[0]

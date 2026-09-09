@@ -7,6 +7,7 @@ import {
 } from '../db/constants'
 import { nomeBreve } from '../lib/nomi'
 import { oggiISO, esitoPartita, ESITO_INFO } from '../lib/partite'
+import { refertoCompilato, titolariDi } from '../lib/storico'
 
 const EMPTY = {
   data: '',
@@ -295,10 +296,29 @@ export default function PartitaFormPage() {
         <p className="muted small" style={{ margin: '10px 0 0' }}>
           {esito
             ? `${ESITO_INFO[esito].label} ${form.golFatti}-${form.golSubiti}.`
-            : 'Lascia vuoto finché la partita non è giocata.'}{' '}
-          Marcatori, minuti e formazione schierata arrivano con M6.
+            : 'Lascia vuoto finché la partita non è giocata.'}
         </p>
       </div>
+
+      {editing && (
+        <>
+          <div className="section-title">Referto</div>
+          <div className="card">
+            <div className="muted small">
+              {refertoCompilato(form)
+                ? `${titolariDi(form).length} schierati · ${(form.eventi ?? []).length} eventi registrati.`
+                : 'Formazione schierata, marcatori, cambi e minuti giocati.'}
+            </div>
+            <button
+              className="btn btn-sm"
+              style={{ marginTop: 10 }}
+              onClick={() => navigate(`/partite/${id}/referto`)}
+            >
+              {refertoCompilato(form) ? 'Apri referto' : '+ Compila referto'}
+            </button>
+          </div>
+        </>
+      )}
 
       <div className="field" style={{ marginTop: 14 }}>
         <label>Note</label>

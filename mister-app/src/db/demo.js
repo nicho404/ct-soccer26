@@ -1,4 +1,6 @@
 import { db } from './db'
+import { MODULI_FORMATO, FORMATI, MODULO_DEFAULT } from '../lib/formazioni'
+import { calcolaMinuti, portiereIniziale, DURATA_DEFAULT } from '../lib/storico'
 
 // Dati finti per provare l'app. Tutte le righe hanno demo: true
 // così lo svuotamento tocca solo i dati demo, mai quelli reali.
@@ -70,10 +72,50 @@ const DEMO_OPPONENTS = [
 // oppIdx/compIdx = indici in DEMO_OPPONENTS / DEMO_COMPETITIONS.
 const DEMO_MATCHES = [
   { giorni: -14, oppIdx: 1, compIdx: 0, campo: 'trasferta', ora: '20:30', luogo: 'CS Lambrate, campo 1', golFatti: 1, golSubiti: 3, note: 'Presi due gol da palla inattiva' },
-  { giorni: -7, oppIdx: 2, compIdx: 0, campo: 'casa', ora: '19:00', luogo: 'CS Bonola, campo 2', golFatti: 2, golSubiti: 2, convocatiIdx: [0, 1, 3, 5, 6, 7, 8, 10] },
+  { giorni: -7, oppIdx: 2, compIdx: 0, campo: 'casa', ora: '19:00', luogo: 'CS Bonola, campo 2', golFatti: 2, golSubiti: 2, convocatiIdx: [0, 1, 3, 5, 6, 7, 8, 10], referto: true },
   { giorni: 3, oppIdx: 0, compIdx: 0, campo: 'casa', ora: '19:00', luogo: 'CS Bonola, campo 2', convocatiIdx: [0, 1, 3, 4, 5, 6, 7, 11, 13], note: 'Loro giocano a 3 dietro, occhio al 10 mancino' },
   { giorni: 10, oppIdx: 1, compIdx: 0, campo: 'trasferta', ora: '21:00', luogo: 'CS Lambrate, campo 1' },
 ]
+
+// Riempie gli slot del modulo coi convocati: prima chi ha quel ruolo naturale,
+// poi chi lo ha tra gli adattati, infine il primo rimasto. Indipendente dal
+// formato: il demo funziona sia in calcio a 7 sia a 8.
+function schieraDemo(modulo, convocatiIdx) {
+  const liberi = [...convocatiIdx]
+  const scegli = (predicato) => {
+    const k = liberi.findIndex(predicato)
+    return k === -1 ? null : liberi.splice(k, 1)[0]
+  }
+  return modulo.slots.map((slot) =>
+    scegli((i) => DEMO_PLAYERS[i].ruoloNaturale === slot.sigla) ??
+    scegli((i) => (DEMO_PLAYERS[i].ruoliAdattati ?? []).includes(slot.sigla)) ??
+    scegli((i) => slot.sigla === 'POR' || DEMO_PLAYERS[i].ruoloNaturale !== 'POR')
+  )
+}
+
+// Referto demo della partita finita 2-2: un gol per tempo, un cambio che
+// manda in gol il subentrato — così il minutaggio non è tutto uguale.
+function refertoDemo(modulo, schieratiIdx, panchinaIdx) {
+  const slotIdx = (sigla) => modulo.slots.findIndex((s) => s.sigla === sigla)
+  const attaccante = schieratiIdx[slotIdx('ATT')] ?? schieratiIdx[modulo.slots.length - 1]
+  const centrocampista = schieratiIdx[slotIdx('CC')] ?? schieratiIdx[Math.floor(modulo.slots.length / 2)]
+  const difensore = schieratiIdx[slotIdx('DC')] ?? schieratiIdx[1]
+  const subentrato = panchinaIdx[0] ?? null
+
+  const eventi = [
+    { id: 1, tipo: 'gol', minuto: 12, playerId: attaccante, assistId: centrocampista },
+    { id: 2, tipo: 'golSubito', minuto: 25 },
+    { id: 3, tipo: 'giallo', minuto: 33, playerId: difensore },
+  ]
+  if (subentrato != null) {
+    eventi.push({ id: 4, tipo: 'cambio', minuto: 45, outId: attaccante, inId: subentrato })
+    eventi.push({ id: 5, tipo: 'gol', minuto: 52, playerId: subentrato })
+  } else {
+    eventi.push({ id: 5, tipo: 'gol', minuto: 52, playerId: centrocampista })
+  }
+  eventi.push({ id: 6, tipo: 'golSubito', minuto: 57 })
+  return eventi
+}
 
 const dataRelativa = (giorni) => {
   const d = new Date()
@@ -106,17 +148,62 @@ export async function seedDemoData() {
     DEMO_OPPONENTS.map((o) => ({ ...o, demo: true })),
     { allKeys: true }
   )
+  // Il formato lo decide la squadra (onboarding): il modulo demo lo segue.
+  const team = await db.meta.get('team')
+  const formato = FORMATI.includes(team?.formato) ? team.formato : 7
+  const moduloKey = MODULO_DEFAULT[formato]
+  const modulo = MODULI_FORMATO[formato][moduloKey]
+
   await db.matches.bulkAdd(
-    DEMO_MATCHES.map(({ giorni, oppIdx, compIdx, convocatiIdx, ...m }) => ({
-      ...m,
-      data: dataRelativa(giorni),
-      opponentId: opponentIds[oppIdx],
-      competitionId: competitionIds[compIdx],
-      convocati: (convocatiIdx ?? []).map((n) => playerIds[n]),
-      golFatti: m.golFatti ?? null,
-      golSubiti: m.golSubiti ?? null,
-      demo: true,
-    }))
+    DEMO_MATCHES.map(({ giorni, oppIdx, compIdx, convocatiIdx, referto, ...m }) => {
+      const convocati = convocatiIdx ?? []
+      const riga = {
+        ...m,
+        data: dataRelativa(giorni),
+        opponentId: opponentIds[oppIdx],
+        competitionId: competitionIds[compIdx],
+        convocati: convocati.map((n) => playerIds[n]),
+        golFatti: m.golFatti ?? null,
+        golSubiti: m.golSubiti ?? null,
+        demo: true,
+      }
+      if (!referto) return riga
+
+      const schieratiIdx = schieraDemo(modulo, convocati)
+      const panchinaIdx = convocati.filter((i) => !schieratiIdx.includes(i))
+      const eventiIdx = refertoDemo(modulo, schieratiIdx, panchinaIdx)
+      // gli eventi nascono con gli indici demo: qui diventano id veri
+      const conId = (i) => (i == null ? null : playerIds[i])
+      const eventi = eventiIdx.map((ev) => ({
+        ...ev,
+        playerId: conId(ev.playerId),
+        assistId: conId(ev.assistId),
+        outId: conId(ev.outId),
+        inId: conId(ev.inId),
+      }))
+      const slots = schieratiIdx.map(conId)
+      const { minuti, portaMinuti } = calcolaMinuti({
+        titolari: slots.filter(Boolean),
+        eventi,
+        durata: DURATA_DEFAULT,
+        portiereIniziale: portiereIniziale({ slots }, modulo.slots.map((sl) => sl.sigla)),
+      })
+      return {
+        ...riga,
+        formazione: {
+          formato,
+          modulo: moduloKey,
+          slots,
+          impostazione: 'possesso',
+          costruzione: 'equilibrata',
+          linea: 'normale',
+        },
+        durata: DURATA_DEFAULT,
+        eventi,
+        minuti,
+        portaMinuti,
+      }
+    })
   )
   const oggi = new Date().toISOString().slice(0, 10)
   await db.observations.bulkAdd(

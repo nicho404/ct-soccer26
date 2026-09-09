@@ -11,6 +11,7 @@ Stato delle milestone. Le sigle `M3`…`M7` sono quelle già citate nei placehol
 | M2 | Osservazione da campo con modalità comparativa, CRUD Intese | `pages/ObservationPage`, `IntesePage`, `IntesaFormPage` |
 | M4 | Builder tattico stile FC26 (anticipata, saltando M3) | `pages/ModuloPage`, `tactics/engine.js`, `components/PitchView` |
 | M3 | Partite e calendario | `pages/PartitePage`, `PartitaFormPage`, `lib/partite.js` |
+| M6 | Storico: referto partita, minutaggio, marcatori | `pages/StoricoPage`, `PartitaRefertoPage`, `lib/storico.js` |
 
 Fuori milestone, dopo M4: motore tattico a 27 ruoli, fase di non possesso, stili di gioco,
 export immagine del modulo, PWA, backup/ripristino, onboarding.
@@ -28,20 +29,12 @@ le convocazioni. Tabelle già a schema: `trainings`, `sessionPlans`.
 
 Indipendente: si può fare in qualsiasi momento.
 
-### M6 — Storico
-Cosa è successo davvero in partita, non cosa era previsto. Dipende da **M3**.
-
-- Formazione realmente schierata (partendo dall'assetto salvato del Modulo) e cambi.
-- Marcatori, assist, minuti giocati per partita.
-- Aggregati per giocatore: minuti, gol, rendimento nel tempo — si innesta sui trend
-  già calcolati in `lib/stats.js` per le osservazioni.
-
 ### M7 — Avversari, Manuale, Capitano
 Tre moduli indipendenti tra loro, raggruppati nella stessa milestone.
 
-- **Avversari** (`opponents`): scouting delle squadre del girone — modulo abituale,
-  giocatori pericolosi, note partita per partita. Si aggancia a `matches.opponentId`,
-  quindi dopo **M3**.
+- **Avversari** (`opponents`): oggi la squadra avversaria si crea al volo dalla scheda
+  partita, con il solo nome. Manca lo scouting: modulo abituale, giocatori pericolosi,
+  note partita per partita, storico degli scontri diretti.
 - **Manuale** (`manualEntries`): knowledge base tattica per categoria
   (`CATEGORIE_MANUALE` già definita: tattica, protocolli, psicologia, regole, principi).
 - **Capitano**: confronto tra candidati sui criteri di osservazione già raccolti
@@ -49,9 +42,10 @@ Tre moduli indipendenti tra loro, raggruppati nella stessa milestone.
 
 ## Ordine consigliato
 
-`M3` → `M6` → `M5` → `M7`
+`M5` → `M7`
 
-M3 è il collo di bottiglia: senza partite non esistono né storico né scouting avversari.
+M3 e M6 sono fatte: il calendario e il referto esistono, quindi le due milestone
+rimaste non hanno più dipendenze tra loro né su altro.
 
 ## Vincoli trasversali
 

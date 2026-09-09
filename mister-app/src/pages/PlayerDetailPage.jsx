@@ -9,6 +9,7 @@ import {
 } from '../db/constants'
 import { famigliaRuoloTattico } from '../tactics/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
+import { aggregaGiocatori } from '../lib/storico'
 import Avatar from '../components/Avatar'
 import { nomeBreve } from '../lib/nomi'
 
@@ -60,6 +61,7 @@ export default function PlayerDetailPage() {
   const minuti = minutiTotali(matches, playerId)
   const perComp = minutiPerCompetizione(matches, playerId)
   const porta = statPorta(matches, playerId)
+  const stagione = aggregaGiocatori(matches).find((r) => r.playerId === playerId)
   const nomeDi = (pid) => {
     const p = allPlayers.find((x) => x.id === pid)
     return nomeBreve(p)
@@ -219,6 +221,11 @@ export default function PlayerDetailPage() {
       <div className="section-title">Stagione</div>
       <div className="card">
         <InfoRow label="Presenze allenamenti">{pct === null ? 'Nessun dato' : `${pct}%`}</InfoRow>
+        <InfoRow label="Partite giocate">
+          {stagione
+            ? `${stagione.presenze} (${stagione.titolarita} da titolare)`
+            : 'Nessun dato'}
+        </InfoRow>
         <InfoRow label="Minuti giocati">{minuti > 0 ? `${minuti}′` : 'Nessun dato'}</InfoRow>
         {perComp.length > 1 &&
           perComp.map(({ competitionId, minuti: min }) => (
@@ -226,6 +233,19 @@ export default function PlayerDetailPage() {
               {min}′
             </InfoRow>
           ))}
+        <InfoRow label="Gol e assist">
+          {stagione && (stagione.gol > 0 || stagione.assist > 0)
+            ? `${stagione.gol} gol · ${stagione.assist} assist`
+            : 'Nessuno'}
+        </InfoRow>
+        {stagione && (stagione.gialli > 0 || stagione.rossi > 0) && (
+          <InfoRow label="Cartellini">
+            {[
+              stagione.gialli > 0 ? `${stagione.gialli} 🟨` : '',
+              stagione.rossi > 0 ? `${stagione.rossi} 🟥` : '',
+            ].filter(Boolean).join(' · ')}
+          </InfoRow>
+        )}
         <InfoRow label="In porta">
           {porta.partite > 0 ? `${porta.partite} partite · ${porta.minuti}′` : 'Mai'}
         </InfoRow>
