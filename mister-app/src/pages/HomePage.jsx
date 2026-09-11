@@ -6,6 +6,7 @@ import EmptyState from '../components/EmptyState'
 import { IconBolt, IconBall } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
 import { prossimaPartita, formatDataPartita, quandoPartita } from '../lib/partite'
+import { presentiIds } from '../lib/presenze'
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -102,7 +103,7 @@ export default function HomePage() {
               <div className="muted small" style={{ marginTop: 6, opacity: 0.75 }}>
                 {[
                   prossima.luogo,
-                  `${(prossima.convocati ?? []).length} convocati`,
+                  `${presentiIds(prossima).length} presenti`,
                 ].filter(Boolean).join(' · ')}
               </div>
             </Link>

@@ -1,4 +1,4 @@
-import { db, migrazioneV7RuoliTattici, migrazioneV8SlotRuoliOverride } from './db'
+import { db, migrazioneV7RuoliTattici, migrazioneV8SlotRuoliOverride, migrazioneV9PresenzePartite } from './db'
 
 const FORMAT = 'mister-app-backup'
 
@@ -62,6 +62,9 @@ export async function importBackup(file) {
     }
     if (payload.dbVersion < 8) {
       await migrazioneV8SlotRuoliOverride(db)
+    }
+    if (payload.dbVersion < 9) {
+      await migrazioneV9PresenzePartite(db)
     }
   })
 }

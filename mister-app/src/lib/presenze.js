@@ -25,11 +25,20 @@ export function contaSeduta(training) {
   return conteggio
 }
 
-// Percentuale di presenza della squadra su una seduta: quanti dei convocati
-// all'appello si sono presentati davvero.
+// Percentuale di presenza della squadra su una seduta: quanti di chi era
+// atteso all'appello si sono presentati davvero.
 export function pctSeduta(training) {
   const c = contaSeduta(training)
   return c.totale === 0 ? null : Math.round((c.presenti / c.totale) * 100)
+}
+
+// Id dei presenti a un evento (seduta o partita, stesso appello): il posto
+// unico da cui derivare "chi c'è" invece di rileggere training.presenze o
+// match.presenze a mano in ogni pagina.
+export function presentiIds(evento) {
+  return Object.entries(evento?.presenze ?? {})
+    .filter(([, stato]) => stato === 'presente')
+    .map(([pid]) => Number(pid))
 }
 
 const RIGA_VUOTA = () => ({ sedute: 0, presenti: 0, assenti: 0, giustificati: 0 })

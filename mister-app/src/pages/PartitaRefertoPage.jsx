@@ -10,6 +10,7 @@ import { formatDataPartita } from '../lib/partite'
 import {
   DURATA_DEFAULT, calcolaMinuti, portiereIniziale, golDaEventi, disallineamentoRisultato,
 } from '../lib/storico'
+import { presentiIds } from '../lib/presenze'
 import PitchView from '../components/PitchView'
 
 const VUOTO = (n) => Array(n).fill(null)
@@ -90,14 +91,12 @@ export default function PartitaRefertoPage() {
   const giocatoreDi = (pid) => players.find((p) => p.id === pid)
   const nomeDi = (pid) => (pid == null ? '—' : nomeBreve(giocatoreDi(pid)))
 
-  // Candidati: i convocati della partita. Se la convocazione non è stata
-  // compilata si ripiega sull'intera rosa — il referto si scrive comunque,
-  // magari giorni dopo, quando dei convocati non importa più niente a nessuno.
-  const convocati = (partita.convocati ?? []).length > 0
-    ? players.filter((p) => partita.convocati.includes(p.id))
-    : players
+  // Candidati: chi era segnato presente per questa partita (stesso appello
+  // delle sedute). Se non è stato compilato, i candidati restano vuoti — è
+  // un banner sopra a dirlo, non un ripiego silenzioso sull'intera rosa.
+  const presenti = players.filter((p) => presentiIds(partita).includes(p.id))
   const inCampo = slots.filter(Boolean)
-  const panchina = convocati.filter((p) => !inCampo.includes(p.id))
+  const panchina = presenti.filter((p) => !inCampo.includes(p.id))
 
   const assegna = (pid) => {
     if (sel == null) return
@@ -121,8 +120,8 @@ export default function PartitaRefertoPage() {
   const caricaAssetto = (a) => {
     if (!MODULI[a.modulo]) return
     setModuloKey(a.modulo)
-    // tiene solo i giocatori che erano davvero convocati per questa partita
-    const ammessi = new Set(convocati.map((p) => p.id))
+    // tiene solo i giocatori che erano davvero presenti a questa partita
+    const ammessi = new Set(presenti.map((p) => p.id))
     setSlots(a.slots.map((pid) => (pid != null && ammessi.has(pid) ? pid : null)))
     setTattica({
       impostazione: a.impostazione ?? TATTICA_DEFAULT.impostazione,
@@ -237,6 +236,18 @@ export default function PartitaRefertoPage() {
         </div>
       )}
 
+      {presenti.length === 0 && (
+        <div className="alert-card">
+          <span>⚠️</span>
+          <span>
+            Nessun giocatore segnato presente per questa partita: qui non compare nessun candidato.
+            <button className="btn btn-sm" style={{ marginTop: 8 }} onClick={() => navigate(`/partite/${partitaId}`)}>
+              Segna le presenze
+            </button>
+          </span>
+        </div>
+      )}
+
       <div className="section-title">Formazione schierata</div>
 
       <div className="chip-row">
@@ -269,7 +280,7 @@ export default function PartitaRefertoPage() {
         <div className="field">
           <label>Chi ha giocato {sigle[sel]}?</label>
           <div className="chip-row">
-            {convocati.map((p) => (
+            {presenti.map((p) => (
               <button
                 key={p.id}
                 className={`chip chip-sm ${slots[sel] === p.id ? 'selected' : ''}`}
@@ -310,7 +321,7 @@ export default function PartitaRefertoPage() {
             ))}
           </div>
           <p className="muted small" style={{ margin: '8px 0 0' }}>
-            Chi non era convocato resta fuori: lo slot arriva vuoto.
+            Chi non era presente resta fuori: lo slot arriva vuoto.
           </p>
         </div>
       )}
@@ -401,7 +412,7 @@ export default function PartitaRefertoPage() {
                 }))}
               >
                 <option value="">— Scegli —</option>
-                {convocati.map((p) => (
+                {presenti.map((p) => (
                   <option key={p.id} value={p.id}>{nomeBreve(p)}</option>
                 ))}
               </select>
@@ -419,7 +430,7 @@ export default function PartitaRefertoPage() {
                 }))}
               >
                 <option value="">— Nessuno —</option>
-                {convocati.map((p) => (
+                {presenti.map((p) => (
                   <option key={p.id} value={p.id}>{nomeBreve(p)}</option>
                 ))}
               </select>

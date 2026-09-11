@@ -38,7 +38,7 @@ function BadgeCompatibilita({ x, y, livello }) {
 // nascondere (intese, badge di compatibilità), mai per ricalcolare qualcosa.
 export default function PitchView({
   modulo, ruoli, assignments, players, intese, selected, onSlotTap, badgeInfo,
-  coordinate, fase = 'possesso',
+  coordinate, fase = 'possesso', cambi = {},
 }) {
   const slots = modulo.slots
   const coords = coordinate ?? slots.map((s) => ({ u: s.u, t: s.t }))
@@ -188,6 +188,15 @@ export default function PitchView({
                 <text x="0" y="45" textAnchor="middle" fill="rgba(255,255,255,0.78)" fontSize="7.5">
                   {ruolo.nome}
                 </text>
+                {fase === 'cambi' && cambi[i] != null && (() => {
+                  const entrante = players.find((pl) => pl.id === cambi[i])
+                  if (!entrante) return null
+                  return (
+                    <text x="0" y="57" textAnchor="middle" fill="#a78bfa" fontSize="8.5" fontWeight="800">
+                      🔁 {nomeCorto(entrante)}
+                    </text>
+                  )
+                })()}
               </>
             ) : (
               <>

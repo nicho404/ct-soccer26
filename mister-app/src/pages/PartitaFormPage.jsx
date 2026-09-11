@@ -3,11 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import {
-  CAMPI_PARTITA, TIPI_COMPETIZIONE, famigliaRuolo, isAttivo, ruoloOrdine,
+  CAMPI_PARTITA, TIPI_COMPETIZIONE, isAttivo, ruoloOrdine,
 } from '../db/constants'
-import { nomeBreve } from '../lib/nomi'
 import { oggiISO, esitoPartita, ESITO_INFO } from '../lib/partite'
 import { refertoCompilato, titolariDi } from '../lib/storico'
+import { contaSeduta } from '../lib/presenze'
+import AppelloPresenze from '../components/AppelloPresenze'
 
 const EMPTY = {
   data: '',
@@ -16,7 +17,7 @@ const EMPTY = {
   luogo: '',
   competitionId: null,
   opponentId: null,
-  convocati: [],
+  presenze: {},
   golFatti: null,
   golSubiti: null,
   note: '',
@@ -58,19 +59,30 @@ export default function PartitaFormPage() {
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
 
+  // Stesso appello delle sedute: in modifica restano visibili anche gli
+  // inattivi già segnati, per non perdere una presenza registrata quel giorno.
   const convocabili = [
     ...players.filter(isAttivo),
-    // in modifica restano visibili gli inattivi già convocati
-    ...players.filter((p) => !isAttivo(p) && form.convocati.includes(p.id)),
+    ...players.filter((p) => !isAttivo(p) && form.presenze[p.id]),
   ].sort((a, b) => ruoloOrdine(a.ruoloNaturale) - ruoloOrdine(b.ruoloNaturale))
 
-  const toggleConvocato = (pid) =>
+  const segna = (pid, stato) =>
+    setForm((f) => {
+      const next = { ...f.presenze }
+      // ritoccare lo stesso stato lo toglie: si esce dall'appello, non si
+      // resta bloccati su una scelta fatta per sbaglio
+      if (next[pid] === stato) delete next[pid]
+      else next[pid] = stato
+      return { ...f, presenze: next }
+    })
+
+  const tuttiPresenti = () =>
     setForm((f) => ({
       ...f,
-      convocati: f.convocati.includes(pid)
-        ? f.convocati.filter((x) => x !== pid)
-        : [...f.convocati, pid],
+      presenze: Object.fromEntries(convocabili.map((p) => [p.id, f.presenze[p.id] ?? 'presente'])),
     }))
+
+  const svuotaAppello = () => set('presenze', {})
 
   // Cerca l'avversario per nome (senza distinzione di maiuscole) e lo crea se non c'è:
   // così il calendario si popola senza passare da un CRUD avversari, che arriva con M7.
@@ -118,6 +130,7 @@ export default function PartitaFormPage() {
   }
 
   const esito = esitoPartita(form)
+  const conteggioPresenze = contaSeduta(form)
 
   return (
     <div className="page">
@@ -243,29 +256,24 @@ export default function PartitaFormPage() {
         )}
       </div>
 
-      <div className="field">
-        <label>Convocati ({form.convocati.length})</label>
-        <div className="chip-row">
-          {convocabili.map((p) => (
-            <button
-              key={p.id}
-              className={`chip chip-sm ${form.convocati.includes(p.id) ? 'selected' : ''}`}
-              onClick={() => toggleConvocato(p.id)}
-            >
-              <span
-                className={`role-dot ${famigliaRuolo(p.ruoloNaturale)}`}
-                style={{ marginRight: 6 }}
-              />
-              {nomeBreve(p)}
-            </button>
-          ))}
-        </div>
-        {convocabili.length === 0 && (
-          <p className="muted small" style={{ margin: '6px 0 0' }}>
-            Nessun giocatore attivo in rosa da convocare.
-          </p>
-        )}
+      <div className="section-title row">
+        <span style={{ flex: 1 }}>
+          Presenze ({conteggioPresenze.presenti}/{conteggioPresenze.totale})
+        </span>
+        <button className="btn btn-sm" onClick={tuttiPresenti}>Tutti presenti</button>
       </div>
+
+      <AppelloPresenze giocatori={convocabili} presenze={form.presenze} onSegna={segna} />
+      {conteggioPresenze.totale > 0 && (
+        <button className="btn btn-sm" style={{ marginTop: 10 }} onClick={svuotaAppello}>
+          Svuota appello
+        </button>
+      )}
+
+      <p className="muted small" style={{ margin: '10px 0 0' }}>
+        P presente · A assente · G giustificato. Sono i presenti a comparire come
+        candidati in Modulo e nel referto della partita.
+      </p>
 
       <div className="section-title">Risultato</div>
       <div className="card">

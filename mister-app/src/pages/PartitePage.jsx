@@ -8,6 +8,7 @@ import {
   partiteInProgramma, partiteGiocate, esitoPartita, ESITO_INFO,
   formatDataPartita, quandoPartita, bilancio,
 } from '../lib/partite'
+import { presentiIds } from '../lib/presenze'
 
 function CardPartita({ partita, nomeAvversario, nomeCompetizione, inProgramma }) {
   const esito = esitoPartita(partita)
@@ -39,7 +40,7 @@ function CardPartita({ partita, nomeAvversario, nomeCompetizione, inProgramma })
       <div className="muted small" style={{ marginTop: 6, opacity: 0.75 }}>
         {[
           nomeCompetizione,
-          inProgramma ? `${(partita.convocati ?? []).length} convocati` : null,
+          inProgramma ? `${presentiIds(partita).length} presenti` : null,
         ].filter(Boolean).join(' · ')}
       </div>
     </Link>
@@ -82,7 +83,7 @@ export default function PartitePage() {
         <EmptyState
           icon={<IconCalendar />}
           title="Calendario vuoto"
-          text="Metti in calendario la prossima partita: da qui gestisci convocati, risultato e marcatori."
+          text="Metti in calendario la prossima partita: da qui gestisci presenze, risultato e marcatori."
           action={
             <button className="btn btn-primary" onClick={() => navigate('/partite/nuova')}>
               + Prima partita

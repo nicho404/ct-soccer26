@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
-import { STATI_PRESENZA, famigliaRuolo, isAttivo, ruoloOrdine } from '../db/constants'
-import { nomeBreve } from '../lib/nomi'
+import { isAttivo, ruoloOrdine } from '../db/constants'
 import { oggiISO } from '../lib/partite'
 import { contaSeduta, durataPiano } from '../lib/presenze'
+import AppelloPresenze from '../components/AppelloPresenze'
 
 const EMPTY = {
   data: '',
@@ -16,10 +16,6 @@ const EMPTY = {
   piano: { obiettivo: '', blocchi: [] },
   note: '',
 }
-
-// Sigle dei tre stati sui bottoni dell'appello: la riga deve stare su una
-// schermata da telefono accanto al nome.
-const SIGLA = { presente: 'P', assente: 'A', giustificato: 'G' }
 
 // id locale al form (non finisce mai su Dexie come chiave): due tap ravvicinati
 // cadono nello stesso millisecondo, quindi al timestamp serve una coda casuale
@@ -206,39 +202,12 @@ export default function SedutaFormPage() {
         <button className="btn btn-sm" onClick={tuttiPresenti}>Tutti presenti</button>
       </div>
 
-      <div className="card">
-        {convocabili.map((p) => (
-          <div className="crit-row" key={p.id}>
-            <div className="crit-label">
-              <span
-                className={`role-dot ${famigliaRuolo(p.ruoloNaturale)}`}
-                style={{ marginRight: 6 }}
-              />
-              {nomeBreve(p)}
-            </div>
-            <div className="vote-row">
-              {STATI_PRESENZA.map((s) => (
-                <button
-                  key={s.value}
-                  className={`vote-btn ${form.presenze[p.id] === s.value ? 'on' : ''}`}
-                  aria-label={`${nomeBreve(p)}: ${s.label}`}
-                  onClick={() => segna(p.id, s.value)}
-                >
-                  {SIGLA[s.value]}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-        {convocabili.length === 0 && (
-          <div className="muted small">Nessun giocatore attivo in rosa.</div>
-        )}
-        {conteggio.totale > 0 && (
-          <button className="btn btn-sm" style={{ marginTop: 10 }} onClick={svuotaAppello}>
-            Svuota appello
-          </button>
-        )}
-      </div>
+      <AppelloPresenze giocatori={convocabili} presenze={form.presenze} onSegna={segna} />
+      {conteggio.totale > 0 && (
+        <button className="btn btn-sm" style={{ marginTop: 10 }} onClick={svuotaAppello}>
+          Svuota appello
+        </button>
+      )}
 
       <p className="muted small">
         P presente · A assente · G giustificato. Chi resta senza scelta non entra

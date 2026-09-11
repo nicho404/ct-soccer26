@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  contaSeduta, pctSeduta, aggregaPresenze, serieRecente, meritocrazia, durataPiano,
+  contaSeduta, pctSeduta, aggregaPresenze, serieRecente, meritocrazia, durataPiano, presentiIds,
 } from './presenze'
 
 const sedute = [
@@ -90,6 +90,17 @@ describe('meritocrazia', () => {
   it('ordina dal più premiato al più penalizzato', () => {
     expect(meritocrazia({ trainings: sedute, matches }).map((r) => r.playerId))
       .toEqual([2, 3, 1])
+  })
+})
+
+describe('presentiIds', () => {
+  it('restituisce solo gli id segnati presente, come numeri', () => {
+    expect(presentiIds({ presenze: { 1: 'presente', 2: 'assente', 3: 'giustificato' } })).toEqual([1])
+  })
+
+  it('un evento senza appello dà una lista vuota, non crasha', () => {
+    expect(presentiIds({})).toEqual([])
+    expect(presentiIds(undefined)).toEqual([])
   })
 })
 

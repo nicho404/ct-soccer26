@@ -267,3 +267,22 @@ export async function migrazioneV8SlotRuoliOverride(scope) {
 db.version(8)
   .stores({})
   .upgrade((tx) => migrazioneV8SlotRuoliOverride(tx))
+
+// Le partite adottano lo stesso appello delle sedute — presente/assente/
+// giustificato, in matches.presenze — al posto del semplice elenco
+// "convocati": chi era assente giustificato non è più indistinguibile da chi
+// non è mai stato considerato, e la stessa funzione di aggregazione di
+// lib/presenze.js si applica a entrambi senza bisogno di due modelli.
+export async function migrazioneV9PresenzePartite(scope) {
+  await scope.table('matches').toCollection().modify((m) => {
+    if (m.presenze === undefined) {
+      const convocati = Array.isArray(m.convocati) ? m.convocati : []
+      m.presenze = Object.fromEntries(convocati.map((id) => [id, 'presente']))
+    }
+    delete m.convocati
+  })
+}
+
+db.version(9)
+  .stores({})
+  .upgrade((tx) => migrazioneV9PresenzePartite(tx))

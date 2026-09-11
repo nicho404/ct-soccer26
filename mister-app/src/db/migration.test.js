@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { convertiSlotRuoliOverride, migrazioneV8SlotRuoliOverride } from './db'
+import { convertiSlotRuoliOverride, migrazioneV8SlotRuoliOverride, migrazioneV9PresenzePartite } from './db'
 
 // Piccolo scope Dexie-like: solo quanto basta per esercitare
 // `.table(nome).toCollection().modify(fn)` senza IndexedDB — le migration
@@ -88,6 +88,33 @@ describe('migrazioneV8SlotRuoliOverride — richiamabile fuori da un upgrade Dex
       const { possesso, nonPossesso } = metaModulo.value.byFormato[8].slotRuoliOverride
       expect(possesso[2]).toBe('CC-M')
       expect(nonPossesso[2]).toBeUndefined()
+    })
+  })
+})
+
+describe('migrazioneV9PresenzePartite — convocati (elenco) diventa presenze (appello)', () => {
+  it('ogni convocato diventa "presente", il vecchio campo sparisce', () => {
+    const partita = { id: 1, data: '2026-09-20', convocati: [10, 11, 12] }
+    const scope = scopeFinto({ matches: [partita] })
+    return migrazioneV9PresenzePartite(scope).then(() => {
+      expect(partita.presenze).toEqual({ 10: 'presente', 11: 'presente', 12: 'presente' })
+      expect(partita.convocati).toBeUndefined()
+    })
+  })
+
+  it('una partita senza convocati diventa un appello vuoto, non crasha', () => {
+    const partita = { id: 2, data: '2026-09-27' }
+    const scope = scopeFinto({ matches: [partita] })
+    return migrazioneV9PresenzePartite(scope).then(() => {
+      expect(partita.presenze).toEqual({})
+    })
+  })
+
+  it('una partita già migrata (presenze presente) non viene toccata', () => {
+    const partita = { id: 3, data: '2026-10-04', presenze: { 10: 'giustificato' } }
+    const scope = scopeFinto({ matches: [partita] })
+    return migrazioneV9PresenzePartite(scope).then(() => {
+      expect(partita.presenze).toEqual({ 10: 'giustificato' })
     })
   })
 })

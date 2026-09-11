@@ -10,7 +10,7 @@ import {
   contaSeduta, pctSeduta, aggregaPresenze, meritocrazia, LIVELLI_MERITOCRAZIA,
 } from '../lib/presenze'
 
-// Ordine di lettura: la seduta più recente per prima, come lo storico partite.
+// Ordine di lettura: la seduta o partita più recente per prima.
 const perDataDecrescente = (a, b) =>
   `${b.data ?? ''} ${b.ora ?? ''}`.localeCompare(`${a.data ?? ''} ${a.ora ?? ''}`)
 
@@ -19,16 +19,29 @@ export default function PresenzePage() {
   const trainings = useLiveQuery(() => db.trainings.toArray(), [])
   const players = useLiveQuery(() => db.players.toArray(), [])
   const matches = useLiveQuery(() => db.matches.toArray(), [])
+  const opponents = useLiveQuery(() => db.opponents.toArray(), [])
   const piani = useLiveQuery(() => db.sessionPlans.toArray(), [])
 
-  if (!trainings || !players || !matches || !piani) return null
+  if (!trainings || !players || !matches || !opponents || !piani) return null
 
   const sedute = [...trainings].sort(perDataDecrescente)
+  // L'appello di squadra (disciplina agli allenamenti) resta sulle sole
+  // sedute: mischiarci le partite azzererebbe il confronto di meritocrazia,
+  // che vive apposta sul contrasto "quanto ti alleni" vs "quanto giochi".
   const righe = aggregaPresenze(trainings)
   const confronto = meritocrazia({ trainings, matches })
   const modelli = piani.filter((p) => p.isTemplate)
 
   const nomeDi = (pid) => nomeBreve(players.find((p) => p.id === pid))
+  const nomeAvversario = (id) => opponents.find((o) => o.id === id)?.nome
+
+  // Vista unica di "chi c'era": sedute e partite condividono lo stesso
+  // appello (presente/assente/giustificato), quindi finiscono nella stessa
+  // lista cronologica invece che in due sezioni scollegate.
+  const eventi = [
+    ...sedute.map((t) => ({ tipo: 'allenamento', id: t.id, data: t.data, ora: t.ora, presenze: t.presenze, titolo: t.tema || 'Allenamento' })),
+    ...matches.map((m) => ({ tipo: 'partita', id: m.id, data: m.data, ora: m.ora, presenze: m.presenze, titolo: nomeAvversario(m.opponentId) || 'Avversario da definire' })),
+  ].sort(perDataDecrescente)
 
   // Media delle percentuali di squadra: risponde a "quanti si presentano",
   // non a "quanti allenamenti ho fatto".
@@ -44,14 +57,14 @@ export default function PresenzePage() {
       <div className="page-header">
         <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/altro')}>‹</button>
         <h1>Presenze</h1>
-        <span className="muted small">{sedute.length}</span>
+        <span className="muted small">{eventi.length}</span>
       </div>
 
-      {sedute.length === 0 ? (
+      {eventi.length === 0 ? (
         <EmptyState
           icon={<IconClipboardCheck />}
-          title="Nessuna seduta registrata"
-          text="Fai l'appello a ogni allenamento: in poche settimane sai chi c'è sempre e chi solo la domenica."
+          title="Nessun appello registrato"
+          text="Fai l'appello a ogni allenamento e partita: in poche settimane sai chi c'è sempre e chi solo la domenica."
           action={
             <button className="btn btn-primary" onClick={() => navigate('/presenze/nuova')}>
               + Prima seduta
@@ -131,17 +144,22 @@ export default function PresenzePage() {
             </>
           )}
 
-          <div className="section-title">Sedute</div>
-          {sedute.map((t) => {
-            const c = contaSeduta(t)
-            const pct = pctSeduta(t)
+          <div className="section-title">Sedute e partite</div>
+          {eventi.map((ev) => {
+            const c = contaSeduta(ev)
+            const pct = pctSeduta(ev)
+            const isPartita = ev.tipo === 'partita'
             return (
-              <Link to={`/presenze/${t.id}`} className="card tappable" key={t.id}>
+              <Link
+                to={isPartita ? `/partite/${ev.id}` : `/presenze/${ev.id}`}
+                className="card tappable"
+                key={`${ev.tipo}-${ev.id}`}
+              >
                 <div className="row">
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <strong>{t.tema || 'Allenamento'}</strong>
+                    <strong>{isPartita ? '⚽ ' : ''}{ev.titolo}</strong>
                     <div className="muted small">
-                      {[formatDataPartita(t.data), t.ora].filter(Boolean).join(' · ')}
+                      {[formatDataPartita(ev.data), ev.ora].filter(Boolean).join(' · ')}
                     </div>
                   </div>
                   <span className={`badge ${pct === null ? 'badge-warn' : ''}`}>

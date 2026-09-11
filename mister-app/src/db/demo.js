@@ -86,19 +86,21 @@ const DEMO_OPPONENTS = [
 
 // Partite demo: date relative a oggi (giorni di scarto) così il calendario
 // ha sempre una prossima partita e uno storico, qualsiasi giorno sia oggi.
-// oppIdx/compIdx = indici in DEMO_OPPONENTS / DEMO_COMPETITIONS.
+// oppIdx/compIdx = indici in DEMO_OPPONENTS / DEMO_COMPETITIONS. presentiIdx
+// sono tutti "presente"; giustificatiIdx mostra il caso di chi manca con un
+// buon motivo, distinto da chi manca e basta.
 const DEMO_MATCHES = [
   { giorni: -14, oppIdx: 1, compIdx: 0, campo: 'trasferta', ora: '20:30', luogo: 'CS Lambrate, campo 1', golFatti: 1, golSubiti: 3, note: 'Presi due gol da palla inattiva' },
-  { giorni: -7, oppIdx: 2, compIdx: 0, campo: 'casa', ora: '19:00', luogo: 'CS Bonola, campo 2', golFatti: 2, golSubiti: 2, convocatiIdx: [0, 1, 3, 5, 6, 7, 8, 10], referto: true },
-  { giorni: 3, oppIdx: 0, compIdx: 0, campo: 'casa', ora: '19:00', luogo: 'CS Bonola, campo 2', convocatiIdx: [0, 1, 3, 4, 5, 6, 7, 11, 13], note: 'Loro giocano a 3 dietro, occhio al 10 mancino' },
+  { giorni: -7, oppIdx: 2, compIdx: 0, campo: 'casa', ora: '19:00', luogo: 'CS Bonola, campo 2', golFatti: 2, golSubiti: 2, presentiIdx: [0, 1, 3, 5, 6, 7, 8, 10], giustificatiIdx: [4], referto: true },
+  { giorni: 3, oppIdx: 0, compIdx: 0, campo: 'casa', ora: '19:00', luogo: 'CS Bonola, campo 2', presentiIdx: [0, 1, 3, 4, 5, 6, 7, 11, 13], note: 'Loro giocano a 3 dietro, occhio al 10 mancino' },
   { giorni: 10, oppIdx: 1, compIdx: 0, campo: 'trasferta', ora: '21:00', luogo: 'CS Lambrate, campo 1' },
 ]
 
-// Riempie gli slot del modulo coi convocati: prima chi ha quel ruolo naturale,
+// Riempie gli slot del modulo coi presenti: prima chi ha quel ruolo naturale,
 // poi chi lo ha tra gli adattati, infine il primo rimasto. Indipendente dal
 // formato: il demo funziona sia in calcio a 7 sia a 8.
-function schieraDemo(modulo, convocatiIdx) {
-  const liberi = [...convocatiIdx]
+function schieraDemo(modulo, presentiIdx) {
+  const liberi = [...presentiIdx]
   const scegli = (predicato) => {
     const k = liberi.findIndex(predicato)
     return k === -1 ? null : liberi.splice(k, 1)[0]
@@ -242,22 +244,26 @@ export async function seedDemoData() {
   const modulo = MODULI_FORMATO[formato][moduloKey]
 
   await db.matches.bulkAdd(
-    DEMO_MATCHES.map(({ giorni, oppIdx, compIdx, convocatiIdx, referto, ...m }) => {
-      const convocati = convocatiIdx ?? []
+    DEMO_MATCHES.map(({ giorni, oppIdx, compIdx, presentiIdx, giustificatiIdx, referto, ...m }) => {
+      const presenti = presentiIdx ?? []
+      const giustificati = giustificatiIdx ?? []
       const riga = {
         ...m,
         data: dataRelativa(giorni),
         opponentId: opponentIds[oppIdx],
         competitionId: competitionIds[compIdx],
-        convocati: convocati.map((n) => playerIds[n]),
+        presenze: {
+          ...Object.fromEntries(presenti.map((n) => [playerIds[n], 'presente'])),
+          ...Object.fromEntries(giustificati.map((n) => [playerIds[n], 'giustificato'])),
+        },
         golFatti: m.golFatti ?? null,
         golSubiti: m.golSubiti ?? null,
         demo: true,
       }
       if (!referto) return riga
 
-      const schieratiIdx = schieraDemo(modulo, convocati)
-      const panchinaIdx = convocati.filter((i) => !schieratiIdx.includes(i))
+      const schieratiIdx = schieraDemo(modulo, presenti)
+      const panchinaIdx = presenti.filter((i) => !schieratiIdx.includes(i))
       const eventiIdx = refertoDemo(modulo, schieratiIdx, panchinaIdx)
       // gli eventi nascono con gli indici demo: qui diventano id veri
       const conId = (i) => (i == null ? null : playerIds[i])

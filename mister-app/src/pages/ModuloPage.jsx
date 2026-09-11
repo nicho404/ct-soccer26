@@ -7,6 +7,8 @@ import {
   costruzioneInfo, lineaDifesaInfo, inPosizione,
 } from '../lib/formazioni'
 import { nomeBreve } from '../lib/nomi'
+import { partiteInProgramma, partiteGiocate, formatDataPartita } from '../lib/partite'
+import { presentiIds } from '../lib/presenze'
 import { esportaModulo } from '../lib/esportaModulo'
 import { famigliaRuolo, isAttivo } from '../db/constants'
 import { ruoliZona, ruoliNpZona, ruoloInfo, ruoloNpInfo, TRANSIZIONE } from '../tactics/constants'
@@ -24,7 +26,7 @@ const OVERRIDE_VUOTO = () => ({ possesso: {}, nonPossesso: {} })
 
 const DEFAULT_BY_FORMATO = () =>
   Object.fromEntries(
-    FORMATI.map((f) => [f, { modulo: MODULO_DEFAULT[f], slots: VUOTO(f), slotRuoliOverride: OVERRIDE_VUOTO() }])
+    FORMATI.map((f) => [f, { modulo: MODULO_DEFAULT[f], slots: VUOTO(f), slotRuoliOverride: OVERRIDE_VUOTO(), cambi: {} }])
   )
 
 export default function ModuloPage() {
@@ -41,11 +43,15 @@ export default function ModuloPage() {
   // lente sul campo, non configurazione: non persistita, default possesso
   const [fase, setFase] = useState('possesso')
   const [esitoExport, setEsitoExport] = useState(null)
+  // partita selezionata: filtra disponibili/panchina sui presenti; null = tutti gli attivi
+  const [matchId, setMatchId] = useState(null)
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const intese = useLiveQuery(() => db.intese.toArray(), [])
   const team = useLiveQuery(() => db.meta.get('team').then((t) => t ?? null), [])
   const salvati = useLiveQuery(() => db.meta.get('moduliSalvati').then((s) => s ?? null), [])
+  const matches = useLiveQuery(() => db.matches.toArray(), [])
+  const opponents = useLiveQuery(() => db.opponents.toArray(), [])
 
   useEffect(() => {
     db.meta.get('modulo').then((m) => {
@@ -61,6 +67,7 @@ export default function ModuloPage() {
             // normalizza sempre: un record non ancora migrato (o corrotto a
             // mano) non deve mai far crashare il caricamento
             base[f].slotRuoliOverride = convertiSlotRuoliOverride(cfg.slotRuoliOverride)
+            if (cfg.cambi && typeof cfg.cambi === 'object') base[f].cambi = cfg.cambi
           }
         } else {
           // dati salvati prima dello switch di formato: erano solo calcio a 7
@@ -73,12 +80,13 @@ export default function ModuloPage() {
         }
         if (COSTRUZIONI.some((c) => c.value === v.costruzione)) setCostruzione(v.costruzione)
         if (LINEE_DIFESA.some((l) => l.value === v.linea)) setLinea(v.linea)
+        if (v.matchId != null) setMatchId(v.matchId)
       }
       setLoaded(true)
     })
   }, [])
 
-  if (!players || !intese || !loaded || team === undefined || salvati === undefined) return null
+  if (!players || !intese || !loaded || team === undefined || salvati === undefined || !matches || !opponents) return null
 
   // Il formato arriva dalla configurazione squadra (onboarding/impostazioni):
   // qui si vedono solo i moduli di quel formato
@@ -86,14 +94,22 @@ export default function ModuloPage() {
   const listaSalvati = (salvati?.value ?? []).filter((s) => s.formato === formato)
 
   const persist = (patch = {}) => {
-    const value = { impostazione, costruzione, linea, byFormato, ...patch }
+    const value = { impostazione, costruzione, linea, byFormato, matchId, ...patch }
     db.meta.put({ key: 'modulo', value })
   }
 
   const MODULI = MODULI_FORMATO[formato]
-  const { modulo: moduloKey, slots, slotRuoliOverride } = byFormato[formato]
+  const { modulo: moduloKey, slots, slotRuoliOverride, cambi } = byFormato[formato]
   const modulo = MODULI[moduloKey]
-  const attivi = players.filter(isAttivo)
+
+  // Se è selezionata una partita, disponibili e panchina arrivano da chi era
+  // presente (stesso appello delle sedute, non dallo stato attività generico):
+  // sono loro a essere in campo o in panchina in quella gara, non "tutti gli
+  // attivi" in rosa.
+  const matchSelezionata = matches.find((m) => m.id === matchId) ?? null
+  const attivi = matchSelezionata
+    ? players.filter((p) => presentiIds(matchSelezionata).includes(p.id))
+    : players.filter(isAttivo)
 
   // Motore tattico: un ruolo per fase, con gli override manuali di quella
   // fase sovrapposti sopra il calcolo automatico (mai il contrario). Le due
@@ -105,10 +121,12 @@ export default function ModuloPage() {
   const ruoliBaseNonPossesso = risolviRuoliNonPossesso({ modulo, linea, impostazione })
   const ruoliNonPossesso = applicaOverrideRuoli(ruoliBaseNonPossesso, slotRuoliOverride?.nonPossesso, ruoloNpInfo)
 
-  const ruoli = fase === 'possesso' ? ruoliPossesso : ruoliNonPossesso
+  // "Cambi" pianifica sostituzioni sull'undici titolare: riusa la geometria
+  // e i ruoli di possesso, non è una terza mappa tattica.
+  const ruoli = fase === 'nonPossesso' ? ruoliNonPossesso : ruoliPossesso
   const coordinatePossesso = modulo.slots.map((s) => ({ u: s.u, t: s.t }))
   const coordinateNonPossesso = geometriaNonPossesso({ modulo, linea })
-  const coordinate = fase === 'possesso' ? coordinatePossesso : coordinateNonPossesso
+  const coordinate = fase === 'nonPossesso' ? coordinateNonPossesso : coordinatePossesso
 
   const coerenza = verificaCoerenza({ impostazione, costruzione, linea, modulo, moduloKey })
   const problemaCostruzione = coerenza.problemi.find((p) => p.tipo === 'costruzione')
@@ -153,7 +171,14 @@ export default function ModuloPage() {
   const caricaSalvato = (s) => {
     const next = {
       ...byFormato,
-      [formato]: { modulo: s.modulo, slots: [...s.slots], slotRuoliOverride: convertiSlotRuoliOverride(s.slotRuoliOverride) },
+      // i cambi pianificati restano legati all'undici corrente: caricare un
+      // assetto salvato ne cambia gli slot, quindi si riparte da zero
+      [formato]: {
+        modulo: s.modulo,
+        slots: [...s.slots],
+        slotRuoliOverride: convertiSlotRuoliOverride(s.slotRuoliOverride),
+        cambi: {},
+      },
     }
     const imp = IMPOSTAZIONI.some((i) => i.value === s.impostazione) ? s.impostazione : impostazione
     const cos = COSTRUZIONI.some((c) => c.value === s.costruzione) ? s.costruzione : 'equilibrata'
@@ -184,11 +209,19 @@ export default function ModuloPage() {
     persist({ impostazione: value })
   }
 
-  const setSlots2 = (nextSlots) => {
-    const next = { ...byFormato, [formato]: { ...byFormato[formato], slots: nextSlots } }
+  // Un solo setByFormato per aggiornamento: chiamarne due di seguito nello
+  // stesso handler farebbe perdere il primo, perché entrambi partirebbero
+  // dallo stesso byFormato "stale" prima del re-render.
+  const updateFormato = (patch) => {
+    const next = { ...byFormato, [formato]: { ...byFormato[formato], ...patch } }
     setByFormato(next)
     persist({ byFormato: next })
+    return next
   }
+
+  const setSlots2 = (nextSlots) => updateFormato({ slots: nextSlots })
+
+  const setCambi = (nextCambi) => updateFormato({ cambi: nextCambi })
 
   const setOverride = (codice) => {
     if (sel === null) return
@@ -225,6 +258,12 @@ export default function ModuloPage() {
     }
   }
 
+  // In fase Cambi il tap seleziona soltanto: mai scambiare i titolari in
+  // campo, quello resta un gesto esplicito delle altre fasi.
+  const onSlotTapCambi = (i) => {
+    setSel((cur) => (cur === i ? null : i))
+  }
+
   const assegna = (playerId) => {
     if (sel === null) return
     const next = [...slots]
@@ -237,21 +276,44 @@ export default function ModuloPage() {
 
   const togli = () => {
     if (sel === null) return
-    const next = [...slots]
-    next[sel] = null
-    setSlots2(next)
+    const nextSlots = [...slots]
+    nextSlots[sel] = null
+    const nextCambi = { ...cambi }
+    delete nextCambi[sel]
+    updateFormato({ slots: nextSlots, cambi: nextCambi })
     setSel(null)
   }
 
   const svuota = () => {
     if (!window.confirm('Togliere tutti i giocatori dal campo?')) return
-    setSlots2(VUOTO(formato))
+    updateFormato({ slots: VUOTO(formato), cambi: {} })
     setSel(null)
+  }
+
+  // Cambi pianificati: un giocatore in panchina entra al posto del titolare
+  // nello slot selezionato. Un entrante può essere assegnato a un solo slot
+  // alla volta: assegnarlo altrove lo sposta, non lo duplica.
+  const assegnaCambio = (playerId) => {
+    if (sel === null) return
+    const nextCambi = {}
+    for (const [k, v] of Object.entries(cambi)) {
+      if (v !== playerId) nextCambi[k] = v
+    }
+    nextCambi[sel] = playerId
+    setCambi(nextCambi)
+  }
+
+  const rimuoviCambio = () => {
+    if (sel === null || cambi[sel] === undefined) return
+    const nextCambi = { ...cambi }
+    delete nextCambi[sel]
+    setCambi(nextCambi)
   }
 
   const slotSel = sel !== null ? modulo.slots[sel] : null
   const ruoloSel = sel !== null ? ruoli[sel] : null
   const playerSel = sel !== null && slots[sel] ? players.find((p) => p.id === slots[sel]) : null
+  const cambioSel = sel !== null && cambi[sel] != null ? players.find((p) => p.id === cambi[sel]) : null
 
   // Candidati per lo slot selezionato: prima chi è in posizione, poi chi ha
   // già il ruolo tattico assegnato dal motore
@@ -276,6 +338,22 @@ export default function ModuloPage() {
   const inCampo = new Set(slots.filter(Boolean))
   const panchina = attivi.filter((p) => !inCampo.has(p.id))
 
+  const nomeAvversarioDi = (m) => opponents.find((o) => o.id === m.opponentId)?.nome ?? 'Avversario da definire'
+  const opzioniPartita = [
+    { value: '__nessuna__', label: 'Tutti gli attivi' },
+    ...[...partiteInProgramma(matches), ...partiteGiocate(matches)].map((m) => ({
+      value: m.id,
+      label: `${nomeAvversarioDi(m)} · ${formatDataPartita(m.data)}`,
+    })),
+  ]
+
+  const cambiaPartita = (v) => {
+    const next = v === '__nessuna__' ? null : v
+    setMatchId(next)
+    setSel(null)
+    persist({ matchId: next })
+  }
+
   return (
     <div className="page" style={{ paddingLeft: 10, paddingRight: 10 }}>
       <div className="page-header" style={{ paddingLeft: 6 }}>
@@ -289,12 +367,22 @@ export default function ModuloPage() {
       {attivi.length === 0 ? (
         <EmptyState
           icon={<IconBall />}
-          title="Nessun giocatore attivo"
-          text="Aggiungi i giocatori alla rosa per schierarli sul campo."
+          title={matchSelezionata ? 'Nessun presente' : 'Nessun giocatore attivo'}
+          text={
+            matchSelezionata
+              ? `Segna chi era presente alla partita con ${nomeAvversarioDi(matchSelezionata)} per schierarli sul campo.`
+              : 'Aggiungi i giocatori alla rosa per schierarli sul campo.'
+          }
           action={
-            <button className="btn btn-primary" onClick={() => navigate('/rosa/nuovo')}>
-              Vai alla rosa
-            </button>
+            matchSelezionata ? (
+              <button className="btn btn-primary" onClick={() => navigate(`/partite/${matchSelezionata.id}`)}>
+                Vai alla partita
+              </button>
+            ) : (
+              <button className="btn btn-primary" onClick={() => navigate('/rosa/nuovo')}>
+                Vai alla rosa
+              </button>
+            )
           }
         />
       ) : (
@@ -351,6 +439,22 @@ export default function ModuloPage() {
             />
           </div>
 
+          <div style={{ margin: '0 6px 10px' }}>
+            <ArrowSelect
+              compact
+              label="Partita"
+              options={opzioniPartita}
+              value={matchId ?? '__nessuna__'}
+              onChange={cambiaPartita}
+            />
+          </div>
+          {matchSelezionata && (
+            <p className="muted small" style={{ margin: '0 6px 10px' }}>
+              Disponibili e panchina limitati ai {presentiIds(matchSelezionata).length} presenti per{' '}
+              {nomeAvversarioDi(matchSelezionata)}.
+            </p>
+          )}
+
           {descDi && (() => {
             const box = {
               tattica: IMPOSTAZIONI.find((i) => i.value === impostazione),
@@ -394,6 +498,12 @@ export default function ModuloPage() {
             >
               🛡️ Senza palla
             </button>
+            <button
+              className={`chip chip-sm ${fase === 'cambi' ? 'selected' : ''}`}
+              onClick={() => { setFase('cambi'); setSel(null); setScegliManuale(false) }}
+            >
+              🔁 Cambi
+            </button>
           </div>
 
           <div className="pitch-wrap">
@@ -402,15 +512,18 @@ export default function ModuloPage() {
               ruoli={ruoli}
               coordinate={coordinate}
               fase={fase}
+              cambi={cambi}
               assignments={slots}
               players={players}
               intese={intese}
               selected={sel}
-              onSlotTap={onSlotTap}
+              onSlotTap={fase === 'cambi' ? onSlotTapCambi : onSlotTap}
               badgeInfo={
                 fase === 'possesso'
                   ? IMPOSTAZIONI.find((i) => i.value === impostazione)
-                  : { icona: '🛡️', label: `Senza palla — linea ${lineaDifesaInfo(linea).label.toLowerCase()}` }
+                  : fase === 'nonPossesso'
+                  ? { icona: '🛡️', label: `Senza palla — linea ${lineaDifesaInfo(linea).label.toLowerCase()}` }
+                  : { icona: '🔁', label: 'Cambi pianificati' }
               }
             />
           </div>
@@ -427,7 +540,90 @@ export default function ModuloPage() {
             </p>
           )}
 
-          {slotSel ? (
+          {fase === 'cambi' ? (
+            slotSel ? (
+              <div className="card" style={{ marginTop: 10 }}>
+                <div className="row" style={{ marginBottom: 8 }}>
+                  <strong>
+                    {slotSel.sigla} — {playerSel ? nomeBreve(playerSel) : 'vuoto'}
+                  </strong>
+                  <span className="spacer" />
+                  {cambioSel && (
+                    <button className="btn btn-sm btn-danger" onClick={rimuoviCambio}>
+                      Annulla cambio
+                    </button>
+                  )}
+                </div>
+                {!playerSel ? (
+                  <p className="muted small" style={{ margin: 0 }}>
+                    Schiera prima un titolare in questa posizione (fase "Con palla") per pianificarne la sostituzione.
+                  </p>
+                ) : (
+                  <>
+                    <p className="muted small" style={{ margin: '0 0 8px' }}>
+                      {cambioSel
+                        ? `${nomeBreve(cambioSel)} entra al posto di ${nomeBreve(playerSel)}.`
+                        : `Tocca un giocatore dalla panchina per farlo entrare al posto di ${nomeBreve(playerSel)}.`}
+                    </p>
+                    <div className="chip-row">
+                      {panchina.length === 0 ? (
+                        <span className="muted small">Nessun giocatore disponibile in panchina.</span>
+                      ) : (
+                        panchina.map((p) => (
+                          <button
+                            key={p.id}
+                            className={`chip chip-sm ${cambioSel?.id === p.id ? 'selected' : ''}`}
+                            onClick={() => assegnaCambio(p.id)}
+                          >
+                            <span
+                              className={`role-dot ${famigliaRuolo(p.ruoloNaturale)}`}
+                              style={{ marginRight: 6 }}
+                            />
+                            {p.titolare && <span className="star-on">★ </span>}
+                            {nomeBreve(p)}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="card" style={{ marginTop: 10 }}>
+                {Object.keys(cambi).length === 0 ? (
+                  <p className="muted small" style={{ margin: 0 }}>
+                    Nessun cambio pianificato. Tocca un titolare sul campo per pianificarne la sostituzione.
+                    {panchina.length > 0 && ` In panchina: ${panchina.map(nomeBreve).join(', ')}.`}
+                  </p>
+                ) : (
+                  Object.entries(cambi).map(([slotIndex, playerId]) => {
+                    const uscente = players.find((p) => p.id === slots[Number(slotIndex)])
+                    const entrante = players.find((p) => p.id === playerId)
+                    if (!entrante) return null
+                    return (
+                      <div className="row" key={slotIndex} style={{ marginBottom: 6 }}>
+                        <span>
+                          {uscente ? nomeBreve(uscente) : modulo.slots[Number(slotIndex)].sigla} → {nomeBreve(entrante)}
+                        </span>
+                        <span className="spacer" />
+                        <button
+                          className="btn btn-sm btn-danger"
+                          aria-label={`Annulla cambio ${nomeBreve(entrante)}`}
+                          onClick={() => {
+                            const nextCambi = { ...cambi }
+                            delete nextCambi[slotIndex]
+                            setCambi(nextCambi)
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            )
+          ) : slotSel ? (
             <div className="card" style={{ marginTop: 10 }}>
               <div className="row" style={{ marginBottom: 8 }}>
                 <strong>
