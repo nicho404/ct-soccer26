@@ -24,6 +24,17 @@ import { IconBall } from '../components/icons'
 const VUOTO = (formato) => Array(formato).fill(null)
 const OVERRIDE_VUOTO = () => ({ possesso: {}, nonPossesso: {} })
 
+// Perché un cambio previsto scatta: libero abbastanza da coprire i casi reali
+// ("dentro Rossi al 60'", "se siamo in vantaggio", "se non ingrana"), il
+// dettaglio libero fa il resto.
+const TRIGGER_CAMBIO = [
+  { value: 'minuto', label: 'Al minuto' },
+  { value: 'risultato', label: 'Se il risultato è' },
+  { value: 'prestazione', label: 'Se la prestazione è' },
+]
+
+const nuovoIdRiga = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+
 const DEFAULT_BY_FORMATO = () =>
   Object.fromEntries(
     FORMATI.map((f) => [f, { modulo: MODULO_DEFAULT[f], slots: VUOTO(f), slotRuoliOverride: OVERRIDE_VUOTO(), cambi: {} }])
@@ -45,6 +56,8 @@ export default function ModuloPage() {
   const [esitoExport, setEsitoExport] = useState(null)
   // partita selezionata: filtra disponibili/panchina sui presenti; null = tutti gli attivi
   const [matchId, setMatchId] = useState(null)
+  // form inline di "+ Salva assetto": null = chiuso
+  const [salvaForm, setSalvaForm] = useState(null)
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const intese = useLiveQuery(() => db.intese.toArray(), [])
@@ -147,13 +160,33 @@ export default function ModuloPage() {
     }
   }
 
-  const salvaCorrente = async () => {
-    const nome = window.prompt('Nome per questo assetto (es. Titolari, Anti-pressing):')
-    if (!nome?.trim()) return
+  const apriSalvaCorrente = () => setSalvaForm({ nome: '', cambiPrevisti: [] })
+
+  const aggiungiRigaCambio = () =>
+    setSalvaForm((f) => ({
+      ...f,
+      cambiPrevisti: [
+        ...f.cambiPrevisti,
+        { id: nuovoIdRiga(), escePlayerId: null, entraPlayerId: null, trigger: 'minuto', dettaglio: '' },
+      ],
+    }))
+
+  const modificaRigaCambio = (rid, patch) =>
+    setSalvaForm((f) => ({
+      ...f,
+      cambiPrevisti: f.cambiPrevisti.map((r) => (r.id === rid ? { ...r, ...patch } : r)),
+    }))
+
+  const rimuoviRigaCambio = (rid) =>
+    setSalvaForm((f) => ({ ...f, cambiPrevisti: f.cambiPrevisti.filter((r) => r.id !== rid) }))
+
+  const confermaSalvaCorrente = async () => {
+    const nome = salvaForm.nome.trim()
+    if (!nome) return
     const tutti = salvati?.value ?? []
     const nuovo = {
       id: Date.now(),
-      nome: nome.trim(),
+      nome,
       formato,
       modulo: moduloKey,
       slots: [...slots],
@@ -164,8 +197,11 @@ export default function ModuloPage() {
         possesso: { ...(slotRuoliOverride?.possesso ?? {}) },
         nonPossesso: { ...(slotRuoliOverride?.nonPossesso ?? {}) },
       },
+      // una riga senza chi entra non è un cambio previsto, solo rumore
+      cambiPrevisti: salvaForm.cambiPrevisti.filter((r) => r.entraPlayerId != null),
     }
     await db.meta.put({ key: 'moduliSalvati', value: [...tutti, nuovo] })
+    setSalvaForm(null)
   }
 
   const caricaSalvato = (s) => {
@@ -717,8 +753,95 @@ export default function ModuloPage() {
 
           <div className="section-title row" style={{ paddingLeft: 6 }}>
             <span style={{ flex: 1 }}>Gestione squadra</span>
-            <button className="btn btn-sm" onClick={salvaCorrente}>+ Salva assetto</button>
+            {!salvaForm && (
+              <button className="btn btn-sm" onClick={apriSalvaCorrente}>+ Salva assetto</button>
+            )}
           </div>
+
+          {salvaForm && (
+            <div className="card" style={{ marginLeft: 6, marginRight: 6, marginBottom: 10 }}>
+              <div className="field">
+                <label>Nome assetto</label>
+                <input
+                  className="input"
+                  value={salvaForm.nome}
+                  onChange={(e) => setSalvaForm((f) => ({ ...f, nome: e.target.value }))}
+                  placeholder="Es. Titolari, Anti-pressing"
+                />
+              </div>
+
+              <div className="section-title row" style={{ padding: 0 }}>
+                <span style={{ flex: 1 }}>Cambi previsti</span>
+                <button className="btn btn-sm" onClick={aggiungiRigaCambio}>+ Aggiungi cambio</button>
+              </div>
+              {salvaForm.cambiPrevisti.length === 0 && (
+                <p className="muted small" style={{ margin: '0 0 8px' }}>
+                  Facoltativo: chi esce, chi entra e quando o perché.
+                </p>
+              )}
+              {salvaForm.cambiPrevisti.map((r) => (
+                <div className="card" key={r.id} style={{ marginBottom: 8 }}>
+                  <div className="row" style={{ gap: 8 }}>
+                    <select
+                      className="select"
+                      style={{ flex: 1 }}
+                      value={r.escePlayerId ?? ''}
+                      onChange={(e) => modificaRigaCambio(r.id, { escePlayerId: e.target.value ? Number(e.target.value) : null })}
+                    >
+                      <option value="">Esce — chi?</option>
+                      {slots.filter(Boolean).map((pid) => (
+                        <option key={pid} value={pid}>{nomeBreve(players.find((p) => p.id === pid))}</option>
+                      ))}
+                    </select>
+                    <select
+                      className="select"
+                      style={{ flex: 1 }}
+                      value={r.entraPlayerId ?? ''}
+                      onChange={(e) => modificaRigaCambio(r.id, { entraPlayerId: e.target.value ? Number(e.target.value) : null })}
+                    >
+                      <option value="">Entra — chi?</option>
+                      {panchina.map((p) => (
+                        <option key={p.id} value={p.id}>{nomeBreve(p)}</option>
+                      ))}
+                    </select>
+                    <button
+                      className="btn btn-sm"
+                      aria-label="Rimuovi cambio"
+                      onClick={() => rimuoviRigaCambio(r.id)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="chip-row" style={{ marginTop: 8 }}>
+                    {TRIGGER_CAMBIO.map((t) => (
+                      <button
+                        key={t.value}
+                        className={`chip chip-sm ${r.trigger === t.value ? 'selected' : ''}`}
+                        onClick={() => modificaRigaCambio(r.id, { trigger: t.value })}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    className="input"
+                    style={{ marginTop: 8 }}
+                    value={r.dettaglio}
+                    onChange={(e) => modificaRigaCambio(r.id, { dettaglio: e.target.value })}
+                    placeholder="Es. inizio ripresa, se in vantaggio, se prestazione non convince…"
+                  />
+                </div>
+              ))}
+
+              <div className="row" style={{ gap: 10, marginTop: 10 }}>
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={confermaSalvaCorrente}>
+                  Salva
+                </button>
+                <button className="btn" onClick={() => setSalvaForm(null)}>Annulla</button>
+              </div>
+            </div>
+          )}
+
           {listaSalvati.length === 0 ? (
             <div className="card muted small" style={{ marginLeft: 6, marginRight: 6 }}>
               Salva l'assetto attuale (modulo, undici, tattica, costruzione e linea) con un nome:
@@ -749,6 +872,20 @@ export default function ModuloPage() {
                   {' · '}
                   {s.slots.filter(Boolean).length}/{s.formato} schierati
                 </div>
+                {(s.cambiPrevisti ?? []).length > 0 && (
+                  <div className="muted small" style={{ marginTop: 6 }}>
+                    {s.cambiPrevisti.map((r) => (
+                      <div key={r.id}>
+                        🔁 {r.escePlayerId != null ? nomeBreve(players.find((p) => p.id === r.escePlayerId)) : '?'}
+                        {' → '}
+                        {nomeBreve(players.find((p) => p.id === r.entraPlayerId))}
+                        {' · '}
+                        {TRIGGER_CAMBIO.find((t) => t.value === r.trigger)?.label}
+                        {r.dettaglio ? ` (${r.dettaglio})` : ''}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))
           )}

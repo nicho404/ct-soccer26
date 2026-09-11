@@ -25,6 +25,7 @@ import AvversarioFormPage from './pages/AvversarioFormPage'
 import ManualePage from './pages/ManualePage'
 import ManualeFormPage from './pages/ManualeFormPage'
 import CapitanoPage from './pages/CapitanoPage'
+import ChecklistPage from './pages/ChecklistPage'
 
 export default function App() {
   // ?? null: distingue "record assente" (null) da "query in corso" (undefined),
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="/manuale/nuova" element={<ManualeFormPage />} />
           <Route path="/manuale/:id" element={<ManualeFormPage />} />
           <Route path="/capitano" element={<CapitanoPage />} />
+          <Route path="/checklist" element={<ChecklistPage />} />
           <Route path="/altro" element={<AltroPage />} />
           <Route path="/impostazioni" element={<ImpostazioniPage />} />
           <Route path="*" element={<Navigate to="/home" replace />} />

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   calcolaMinuti, golDaEventi, disallineamentoRisultato, refertoCompilato,
-  portiereIniziale, aggregaGiocatori, classificaMarcatori,
+  portiereIniziale, aggregaGiocatori, classificaMarcatori, occupantiPerSlot,
 } from './storico'
 
 const SIGLE_7 = ['POR', 'DC', 'DC', 'ES', 'CC', 'ED', 'ATT']
@@ -133,6 +133,58 @@ describe('referto e risultato', () => {
   it('tace se manca il risultato o non ci sono eventi', () => {
     expect(disallineamentoRisultato({ eventi: [{ tipo: 'gol' }] })).toBe(null)
     expect(disallineamentoRisultato({ golFatti: 1, golSubiti: 0, eventi: [] })).toBe(null)
+  })
+})
+
+describe('occupantiPerSlot', () => {
+  const modulo = { slots: [{ sigla: 'POR' }, { sigla: 'DC' }, { sigla: 'ED' }] }
+
+  it('senza cambi, ogni slot ha solo il titolare', () => {
+    const match = { formazione: { slots: [1, 2, 3] }, eventi: [] }
+    expect(occupantiPerSlot(match, modulo)).toEqual([
+      { slotIndex: 0, sigla: 'POR', playerIds: [1] },
+      { slotIndex: 1, sigla: 'DC', playerIds: [2] },
+      { slotIndex: 2, sigla: 'ED', playerIds: [3] },
+    ])
+  })
+
+  it('un cambio aggiunge il subentrato allo stesso slot di chi esce', () => {
+    const match = {
+      formazione: { slots: [1, 2, 3] },
+      eventi: [{ tipo: 'cambio', minuto: 40, outId: 3, inId: 4 }],
+    }
+    const ed = occupantiPerSlot(match, modulo).find((s) => s.slotIndex === 2)
+    expect(ed).toEqual({ slotIndex: 2, sigla: 'ED', playerIds: [3, 4] })
+  })
+
+  it('due cambi sullo stesso slot in sequenza si incatenano', () => {
+    const match = {
+      formazione: { slots: [1, 2, 3] },
+      eventi: [
+        { tipo: 'cambio', minuto: 50, outId: 4, inId: 5 },
+        { tipo: 'cambio', minuto: 20, outId: 3, inId: 4 },
+      ],
+    }
+    const ed = occupantiPerSlot(match, modulo).find((s) => s.slotIndex === 2)
+    expect(ed.playerIds).toEqual([3, 4, 5])
+  })
+
+  it('un cambio senza uscente riconoscibile in nessuno slot non si aggancia a niente', () => {
+    const match = {
+      formazione: { slots: [1, 2, 3] },
+      eventi: [{ tipo: 'cambio', minuto: 40, outId: 99, inId: 4 }],
+    }
+    expect(occupantiPerSlot(match, modulo).flatMap((s) => s.playerIds)).toEqual([1, 2, 3])
+  })
+
+  it('uno slot mai schierato non compare nel risultato', () => {
+    const match = { formazione: { slots: [1, null, 3] }, eventi: [] }
+    expect(occupantiPerSlot(match, modulo).map((s) => s.slotIndex)).toEqual([0, 2])
+  })
+
+  it('senza formazione ritorna un elenco vuoto, non crasha', () => {
+    expect(occupantiPerSlot({}, modulo)).toEqual([])
+    expect(occupantiPerSlot(undefined, modulo)).toEqual([])
   })
 })
 

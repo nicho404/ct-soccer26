@@ -104,6 +104,13 @@ export const IconClipboardCheck = (p) => (
   </Icon>
 )
 
+export const IconCheckSquare = (p) => (
+  <Icon {...p}>
+    <rect x="3.5" y="3.5" width="17" height="17" rx="2.5" />
+    <path d="m8 12.5 2.5 2.5 5.5-6" />
+  </Icon>
+)
+
 export const IconTarget = (p) => (
   <Icon {...p}>
     <circle cx="12" cy="12" r="9" />

@@ -84,6 +84,38 @@ export function calcolaMinuti({
   return { minuti, portaMinuti }
 }
 
+// Chi ha occupato ogni slot durante la partita: titolare, e ogni sostituto
+// che ne ha ereditato la posizione via evento 'cambio' (stessa logica della
+// porta in calcolaMinuti, generalizzata a tutti gli slot). Un cambio senza
+// un uscente riconoscibile in nessuno slot (dato incoerente, o inId senza
+// outId) non si può agganciare a una posizione: resta fuori.
+// Ritorna un elemento per ogni slot con almeno un occupante, in ordine
+// cronologico di occupazione.
+export function occupantiPerSlot(match, modulo) {
+  const slotsIniziali = match?.formazione?.slots ?? []
+  const occupante = new Map() // slotIndex -> playerId attuale
+  const storia = slotsIniziali.map((pid) => (pid != null ? [pid] : []))
+  slotsIniziali.forEach((pid, i) => { if (pid != null) occupante.set(i, pid) })
+
+  const eventi = [...(match?.eventi ?? [])].sort((a, b) => (a.minuto ?? 0) - (b.minuto ?? 0))
+  for (const ev of eventi) {
+    if (ev.tipo !== 'cambio' || ev.outId == null) continue
+    const voce = [...occupante.entries()].find(([, pid]) => pid === ev.outId)
+    if (!voce) continue
+    const [slotIndex] = voce
+    if (ev.inId != null) {
+      occupante.set(slotIndex, ev.inId)
+      storia[slotIndex].push(ev.inId)
+    } else {
+      occupante.delete(slotIndex)
+    }
+  }
+
+  return storia
+    .map((playerIds, i) => ({ slotIndex: i, sigla: modulo?.slots?.[i]?.sigla, playerIds }))
+    .filter((r) => r.playerIds.length > 0)
+}
+
 // Gol contati dagli eventi, da confrontare col risultato scritto a mano in M3.
 export function golDaEventi(eventi = []) {
   let fatti = 0

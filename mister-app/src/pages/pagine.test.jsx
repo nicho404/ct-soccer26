@@ -21,6 +21,7 @@ import AvversarioFormPage from './AvversarioFormPage'
 import ManualePage from './ManualePage'
 import ManualeFormPage from './ManualeFormPage'
 import CapitanoPage from './CapitanoPage'
+import ChecklistPage from './ChecklistPage'
 import ObservationPage from './ObservationPage'
 import IntesePage from './IntesePage'
 import AltroPage from './AltroPage'
@@ -44,6 +45,7 @@ const PAGINE = [
   ['Manuale', ManualePage],
   ['Nuova voce manuale', ManualeFormPage],
   ['Capitano', CapitanoPage],
+  ['Checklist ruoli', ChecklistPage],
   ['Osservazione', ObservationPage],
   ['Intese', IntesePage],
   ['Altro', AltroPage],

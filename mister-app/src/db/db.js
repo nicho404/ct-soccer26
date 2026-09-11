@@ -286,3 +286,11 @@ export async function migrazioneV9PresenzePartite(scope) {
 db.version(9)
   .stores({})
   .upgrade((tx) => migrazioneV9PresenzePartite(tx))
+
+// Checklist di lettura per ruolo (M9): un record per giocatore che ha
+// occupato uno slot in una partita (titolare o subentrato), mai uno per
+// slot — se c'è stato un cambio sono letture di due giocatori diversi, non
+// un duplicato da schiacciare. Nessuna migrazione: tabella nuova, vuota.
+db.version(10).stores({
+  letturePartita: '++id, matchId, playerId',
+})
