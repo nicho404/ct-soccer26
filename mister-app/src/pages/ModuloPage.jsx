@@ -364,6 +364,25 @@ export default function ModuloPage() {
         )}
       </div>
 
+      {/* Sempre visibile, anche a rosa vuota: altrimenti selezionare una
+          partita senza presenti segnati blocca la pagina senza via d'uscita
+          se non seguire il link "Vai alla partita". */}
+      <div style={{ margin: '0 6px 10px' }}>
+        <ArrowSelect
+          compact
+          label="Partita"
+          options={opzioniPartita}
+          value={matchId ?? '__nessuna__'}
+          onChange={cambiaPartita}
+        />
+      </div>
+      {matchSelezionata && (
+        <p className="muted small" style={{ margin: '0 6px 10px' }}>
+          Disponibili e panchina limitati ai {presentiIds(matchSelezionata).length} presenti per{' '}
+          {nomeAvversarioDi(matchSelezionata)}.
+        </p>
+      )}
+
       {attivi.length === 0 ? (
         <EmptyState
           icon={<IconBall />}
@@ -438,22 +457,6 @@ export default function ModuloPage() {
               }}
             />
           </div>
-
-          <div style={{ margin: '0 6px 10px' }}>
-            <ArrowSelect
-              compact
-              label="Partita"
-              options={opzioniPartita}
-              value={matchId ?? '__nessuna__'}
-              onChange={cambiaPartita}
-            />
-          </div>
-          {matchSelezionata && (
-            <p className="muted small" style={{ margin: '0 6px 10px' }}>
-              Disponibili e panchina limitati ai {presentiIds(matchSelezionata).length} presenti per{' '}
-              {nomeAvversarioDi(matchSelezionata)}.
-            </p>
-          )}
 
           {descDi && (() => {
             const box = {
