@@ -9,6 +9,7 @@ import { nomeBreve } from '../lib/nomi'
 import { formatDataPartita } from '../lib/partite'
 import {
   DURATA_DEFAULT, calcolaMinuti, portiereIniziale, golDaEventi, disallineamentoRisultato,
+  occupantiPerSlot,
 } from '../lib/storico'
 import { presentiIds } from '../lib/presenze'
 import PitchView from '../components/PitchView'
@@ -33,6 +34,10 @@ export default function PartitaRefertoPage() {
   const [sel, setSel] = useState(null)
   const [bozza, setBozza] = useState(null) // evento in composizione
   const [loaded, setLoaded] = useState(false)
+  // "Osserva in diretta": formazione bloccata, il tap apre un'osservazione
+  // invece di editare lo slot — separato per non rischiare di spostare un
+  // giocatore mentre si sta solo guardando la partita da bordo campo.
+  const [modoLive, setModoLive] = useState(false)
 
   // ?? null distingue "partita assente" da "query in corso": senza, il
   // referto di una partita cancellata resterebbe su schermo vuoto per sempre
@@ -115,6 +120,18 @@ export default function PartitaRefertoPage() {
     if (sel == null) return
     setSlots((s) => s.map((x, i) => (i === sel ? null : x)))
     setSel(null)
+  }
+
+  // Chi gioca davvero in quello slot ORA, non chi vi era stato schierato
+  // all'inizio: dopo un cambio loggato negli eventi è il subentrato, non il
+  // titolare originale — stessa logica di lib/storico.occupantiPerSlot,
+  // applicata allo stato in editing invece che a un referto già salvato.
+  const apriOsservazione = (i) => {
+    const occ = occupantiPerSlot({ formazione: { slots, modulo: moduloKey }, eventi }, modulo)
+      .find((s) => s.slotIndex === i)
+    const playerId = occ?.playerIds.at(-1)
+    if (playerId == null) return
+    navigate(`/osservazione?matchId=${partitaId}&playerId=${playerId}`)
   }
 
   const caricaAssetto = (a) => {
@@ -250,17 +267,34 @@ export default function PartitaRefertoPage() {
 
       <div className="section-title">Formazione schierata</div>
 
-      <div className="chip-row">
-        {Object.keys(MODULI).map((key) => (
-          <button
-            key={key}
-            className={`chip chip-sm ${moduloKey === key ? 'selected' : ''}`}
-            onClick={() => cambiaModulo(key)}
-          >
-            {key}
-          </button>
-        ))}
+      <div className="chip-row" style={{ marginBottom: 8 }}>
+        <button
+          className={`chip chip-sm ${!modoLive ? 'selected' : ''}`}
+          onClick={() => { setModoLive(false); setSel(null) }}
+        >
+          ✏️ Modifica formazione
+        </button>
+        <button
+          className={`chip chip-sm ${modoLive ? 'selected' : ''}`}
+          onClick={() => { setModoLive(true); setSel(null) }}
+        >
+          👁️ Osserva in diretta
+        </button>
       </div>
+
+      {!modoLive && (
+        <div className="chip-row">
+          {Object.keys(MODULI).map((key) => (
+            <button
+              key={key}
+              className={`chip chip-sm ${moduloKey === key ? 'selected' : ''}`}
+              onClick={() => cambiaModulo(key)}
+            >
+              {key}
+            </button>
+          ))}
+        </div>
+      )}
 
       <PitchView
         modulo={modulo}
@@ -269,10 +303,14 @@ export default function PartitaRefertoPage() {
         players={players}
         intese={[]}
         selected={sel}
-        onSlotTap={(i) => setSel(sel === i ? null : i)}
+        onSlotTap={modoLive ? apriOsservazione : (i) => setSel(sel === i ? null : i)}
       />
 
-      {sel == null ? (
+      {modoLive ? (
+        <p className="muted small">
+          Tocca un giocatore in campo per aprire la sua osservazione. Formazione bloccata.
+        </p>
+      ) : sel == null ? (
         <p className="muted small">
           Tocca uno slot sul campo per assegnarlo. {inCampo.length}/{formato} schierati.
         </p>

@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { convertiSlotRuoliOverride, migrazioneV8SlotRuoliOverride, migrazioneV9PresenzePartite } from './db'
+import {
+  convertiSlotRuoliOverride, migrazioneV8SlotRuoliOverride, migrazioneV9PresenzePartite,
+  migrazioneV12ChecklistInObservations,
+} from './db'
 
 // Piccolo scope Dexie-like: solo quanto basta per esercitare
-// `.table(nome).toCollection().modify(fn)` senza IndexedDB — le migration
-// vengono richiamate anche fuori da un upgrade Dexie reale (importBackup),
-// quindi vanno testabili senza un browser.
+// `.table(nome).toCollection().modify(fn)`, `.toArray()` e `.add()` senza
+// IndexedDB — le migration vengono richiamate anche fuori da un upgrade
+// Dexie reale (importBackup), quindi vanno testabili senza un browser.
 function scopeFinto(tabelle) {
   return {
     table: (nome) => ({
@@ -13,6 +16,11 @@ function scopeFinto(tabelle) {
           for (const row of tabelle[nome] ?? []) fn(row)
         },
       }),
+      toArray: async () => tabelle[nome] ?? [],
+      add: async (row) => {
+        tabelle[nome] = tabelle[nome] ?? []
+        tabelle[nome].push(row)
+      },
     }),
   }
 }
@@ -115,6 +123,70 @@ describe('migrazioneV9PresenzePartite — convocati (elenco) diventa presenze (a
     const scope = scopeFinto({ matches: [partita] })
     return migrazioneV9PresenzePartite(scope).then(() => {
       expect(partita.presenze).toEqual({ 10: 'giustificato' })
+    })
+  })
+})
+
+describe('migrazioneV12ChecklistInObservations — letturePartita confluisce in observations', () => {
+  it('una lettura con sì/no/altro diventa una observation con voti, note, matchId e data della partita', () => {
+    const letturePartita = [
+      {
+        id: 1,
+        matchId: 100,
+        playerId: 7,
+        risposte: [
+          { domandaId: 'dc_linea', risposta: 'si' },
+          { domandaId: 'dc_avanza_libero', risposta: 'no', altro: 'solo nel primo tempo' },
+        ],
+      },
+    ]
+    const matches = [{ id: 100, data: '2026-05-10' }]
+    const scope = scopeFinto({ letturePartita, matches, observations: [] })
+    return migrazioneV12ChecklistInObservations(scope).then(() => {
+      expect(scope.table('observations').toArray()).resolves.toEqual([
+        {
+          playerId: 7,
+          matchId: 100,
+          data: '2026-05-10',
+          contesto: 'partita',
+          voti: { dc_linea: 1, dc_avanza_libero: 0 },
+          noteCriteri: { dc_avanza_libero: 'solo nel primo tempo' },
+          notaGenerale: '',
+        },
+      ])
+    })
+  })
+
+  it('una lettura senza risposte utili non genera una observation vuota', () => {
+    const letturePartita = [{ id: 2, matchId: 101, playerId: 8, risposte: [] }]
+    const scope = scopeFinto({ letturePartita, matches: [], observations: [] })
+    return migrazioneV12ChecklistInObservations(scope).then(() => {
+      expect(scope.table('observations').toArray()).resolves.toEqual([])
+    })
+  })
+
+  it('senza letturePartita non fa nulla, non crasha', () => {
+    const scope = scopeFinto({ observations: [] })
+    return migrazioneV12ChecklistInObservations(scope).then(() => {
+      expect(scope.table('observations').toArray()).resolves.toEqual([])
+    })
+  })
+
+  it('con lettureOverride (importBackup, tabella già rimossa dallo schema) legge da lì invece che da scope', () => {
+    const letture = [{ id: 3, matchId: 102, playerId: 9, risposte: [{ domandaId: 'cc_schermo', risposta: 'si' }] }]
+    const scope = scopeFinto({ matches: [{ id: 102, data: '2026-06-01' }], observations: [] })
+    return migrazioneV12ChecklistInObservations(scope, letture).then(() => {
+      expect(scope.table('observations').toArray()).resolves.toEqual([
+        {
+          playerId: 9,
+          matchId: 102,
+          data: '2026-06-01',
+          contesto: 'partita',
+          voti: { cc_schermo: 1 },
+          noteCriteri: {},
+          notaGenerale: '',
+        },
+      ])
     })
   })
 })

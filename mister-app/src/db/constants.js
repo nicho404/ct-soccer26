@@ -1,3 +1,5 @@
+import { criteriPerSlot } from '../lib/domandeRuolo'
+
 // Posizioni con le sigle stile FC26.
 // Colori per famiglia: giallo portiere, verde difesa, blu centrocampo, rosso attacco.
 export const RUOLI = [
@@ -186,16 +188,26 @@ export const CALCI_FISSI = [
   { key: 'rigori', label: 'Rigori' },
 ]
 
-// Criteri fissi di osservazione. `short` = intestazione tabella comparativa.
+// Criteri fissi di osservazione, sempre presenti qualunque contesto.
+// `short` = intestazione tabella comparativa. `tipo: 'scala'` = voto 1-5.
 export const CRITERI_OSSERVAZIONE = [
-  { key: 'lettura', label: 'Lettura del gioco', short: 'LET', hint: 'Si smarca, legge prima di ricevere' },
-  { key: 'piedeForte', label: 'Tecnica piede forte', short: 'PF', hint: '' },
-  { key: 'piedeDebole', label: 'Piede debole', short: 'PD', hint: '' },
-  { key: 'pressione', label: 'Sotto pressione', short: 'PRESS', hint: 'Si nasconde o si propone' },
-  { key: 'intensita', label: 'Intensità / corsa', short: 'INT', hint: '' },
-  { key: 'leadership', label: 'Leadership', short: 'LEAD', hint: 'Parla, organizza, viene ascoltato' },
-  { key: 'posizione', label: 'Disciplina posizionale', short: 'POS', hint: '' },
+  { key: 'lettura', label: 'Lettura del gioco', short: 'LET', hint: 'Si smarca, legge prima di ricevere', tipo: 'scala' },
+  { key: 'piedeForte', label: 'Tecnica piede forte', short: 'PF', hint: '', tipo: 'scala' },
+  { key: 'piedeDebole', label: 'Piede debole', short: 'PD', hint: '', tipo: 'scala' },
+  { key: 'pressione', label: 'Sotto pressione', short: 'PRESS', hint: 'Si nasconde o si propone', tipo: 'scala' },
+  { key: 'intensita', label: 'Intensità / corsa', short: 'INT', hint: '', tipo: 'scala' },
+  { key: 'leadership', label: 'Leadership', short: 'LEAD', hint: 'Parla, organizza, viene ascoltato', tipo: 'scala' },
+  { key: 'posizione', label: 'Disciplina posizionale', short: 'POS', hint: '', tipo: 'scala' },
 ]
+
+// Criteri di un'osservazione: i 7 generici sempre, più — solo in partita e
+// solo se si conosce lo slot occupato dal giocatore in quella gara — le
+// domande sì/no/altro del ruolo (lib/domandeRuolo.js). Si sommano ai
+// generici, non li sostituiscono mai.
+export function criteriOsservazione({ contesto, slot } = {}) {
+  if (contesto !== 'partita' || !slot) return CRITERI_OSSERVAZIONE
+  return [...CRITERI_OSSERVAZIONE, ...criteriPerSlot(slot)]
+}
 
 export const CONTESTI_OSSERVAZIONE = [
   { value: 'partitella', label: 'Partitella' },

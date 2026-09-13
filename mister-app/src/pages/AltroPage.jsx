@@ -1,12 +1,11 @@
 import { Link } from 'react-router-dom'
 import {
-  IconEye, IconLink, IconChart, IconClipboardCheck, IconCheckSquare,
+  IconEye, IconLink, IconChart, IconClipboardCheck,
   IconTarget, IconBook, IconStar, IconGear,
 } from '../components/icons'
 
 const VOCI = [
-  { to: '/osservazione', Icon: IconEye, label: 'Osservazione', desc: 'Voti e note da bordo campo' },
-  { to: '/checklist', Icon: IconCheckSquare, label: 'Checklist ruoli', desc: 'Letture sì/no per slot, partita per partita' },
+  { to: '/osservazione', Icon: IconEye, label: 'Osservazione', desc: 'Voti, sì/no di ruolo e note da bordo campo' },
   { to: '/intese', Icon: IconLink, label: 'Intese', desc: 'Coppie e catene che si capiscono' },
   { to: '/storico', Icon: IconChart, label: 'Storico', desc: 'Referti, minutaggio, marcatori' },
   { to: '/presenze', Icon: IconClipboardCheck, label: 'Presenze e sedute', desc: 'Appello, meritocrazia, allenamenti' },

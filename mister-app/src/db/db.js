@@ -294,3 +294,53 @@ db.version(9)
 db.version(10).stores({
   letturePartita: '++id, matchId, playerId',
 })
+
+// matchId su observations (M10): un solo campo nuovo per collegare
+// un'osservazione fatta in partita alla gara, invece di affidarsi al
+// confronto fragile data+contesto. Additivo e opzionale: non c'è modo di
+// ricostruire a ritroso a quale partita si riferisse un'osservazione già
+// salvata, quindi nessun backfill — resta undefined sulle righe vecchie.
+db.version(11).stores({
+  observations: '++id, playerId, data, contesto, matchId',
+})
+
+// Assorbimento della checklist di lettura per ruolo (M9) dentro le
+// osservazioni (M10): un solo sistema di voti/note invece di due tabelle
+// parallele. Ogni risposta sì/no diventa voti[domandaId] = 1|0, un "altro"
+// diventa noteCriteri[domandaId] — stessa forma delle osservazioni scala.
+// `lettureOverride` esiste per importBackup(): dopo questa versione la
+// tabella non c'è più nello schema live, quindi un backup vecchio deve
+// poter passare le sue righe direttamente invece che tramite `scope`.
+export async function migrazioneV12ChecklistInObservations(scope, lettureOverride) {
+  const letture = lettureOverride ?? await scope.table('letturePartita').toArray()
+  if (letture.length === 0) return
+  const matches = await scope.table('matches').toArray()
+  const dataDi = (matchId) => matches.find((m) => m.id === matchId)?.data ?? new Date().toISOString().slice(0, 10)
+
+  for (const l of letture) {
+    const voti = {}
+    const noteCriteri = {}
+    for (const r of l.risposte ?? []) {
+      if (r.risposta === 'si') voti[r.domandaId] = 1
+      else if (r.risposta === 'no') voti[r.domandaId] = 0
+      if (r.altro?.trim()) noteCriteri[r.domandaId] = r.altro.trim()
+    }
+    if (Object.keys(voti).length === 0 && Object.keys(noteCriteri).length === 0) continue
+    await scope.table('observations').add({
+      playerId: l.playerId,
+      matchId: l.matchId,
+      data: dataDi(l.matchId),
+      contesto: 'partita',
+      voti,
+      noteCriteri,
+      notaGenerale: '',
+    })
+  }
+}
+
+// letturePartita ritirata: il contenuto è già confluito in observations
+// dalla migrazione sopra. `stores({ letturePartita: null })` è il modo
+// documentato con cui Dexie elimina una tabella in una versione.
+db.version(12)
+  .stores({ letturePartita: null })
+  .upgrade((tx) => migrazioneV12ChecklistInObservations(tx))

@@ -1,13 +1,16 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import {
-  CRITERI_OSSERVAZIONE, CONTESTI_OSSERVAZIONE, famigliaRuolo, isAttivo,
+  CRITERI_OSSERVAZIONE, CONTESTI_OSSERVAZIONE, criteriOsservazione, famigliaRuolo, isAttivo,
 } from '../db/constants'
+import { MODULI_FORMATO, FORMATI } from '../lib/formazioni'
+import { refertoCompilato, occupantiPerSlot } from '../lib/storico'
 import EmptyState from '../components/EmptyState'
 import { IconEye, IconChart } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
+import { formatDataPartita } from '../lib/partite'
 
 const oggi = () => new Date().toISOString().slice(0, 10)
 
@@ -26,10 +29,15 @@ function ultimePerGiocatore(observations) {
 
 export default function ObservationPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const deepLinkMatchId = searchParams.get('matchId') ? Number(searchParams.get('matchId')) : null
+  const deepLinkPlayerId = searchParams.get('playerId') ? Number(searchParams.get('playerId')) : null
+
   const [vista, setVista] = useState('registra')
-  const [contesto, setContesto] = useState('partitella')
+  const [contesto, setContesto] = useState(deepLinkMatchId != null ? 'partita' : 'partitella')
   const [data, setData] = useState(oggi())
-  const [selId, setSelId] = useState(null)
+  const [selId, setSelId] = useState(deepLinkPlayerId)
+  const [matchId, setMatchId] = useState(deepLinkMatchId)
   const [voti, setVoti] = useState({})
   const [noteCriteri, setNoteCriteri] = useState({})
   const [notaAperta, setNotaAperta] = useState(null)
@@ -37,19 +45,49 @@ export default function ObservationPage() {
   const [sortKey, setSortKey] = useState('media')
 
   const players = useLiveQuery(() => db.players.toArray(), [])
+  const matches = useLiveQuery(() => db.matches.toArray(), [])
+  const team = useLiveQuery(() => db.meta.get('team').then((t) => t ?? null), [])
+  const matchSelezionatoPerData = matches && matchId != null ? matches.find((m) => m.id === matchId) : null
+  // In partita la "sessione" (data+contesto) segue la data della partita
+  // scelta, non l'input data (nascosto in quel contesto): è la stessa
+  // partita a determinare quale giorno si sta osservando.
+  const dataSessione = contesto === 'partita' ? matchSelezionatoPerData?.data ?? null : data
   const sessione = useLiveQuery(
     () =>
-      db.observations
-        .where('data')
-        .equals(data)
-        .filter((o) => o.contesto === contesto)
-        .toArray(),
-    [data, contesto]
+      dataSessione == null
+        ? []
+        : db.observations
+            .where('data')
+            .equals(dataSessione)
+            .filter((o) => o.contesto === contesto)
+            .toArray(),
+    [dataSessione, contesto]
   )
 
-  if (!players || !sessione) return null
+  if (!players || !sessione || !matches || team === undefined) return null
 
   const attivi = players.filter(isAttivo)
+
+  const cambiaContesto = (value) => {
+    setContesto(value)
+    if (value !== 'partita') setMatchId(null)
+  }
+
+  // Partite osservabili: serve un referto compilato, altrimenti non c'è
+  // una formazione+eventi autorevole da cui risalire allo slot del giocatore.
+  const partiteOsservabili = matches.filter(refertoCompilato)
+  const matchSelezionato = matchSelezionatoPerData
+
+  const formato = FORMATI.includes(team?.formato) ? team.formato : 7
+  const modulo = matchSelezionato
+    ? MODULI_FORMATO[formato]?.[matchSelezionato.formazione.modulo]
+    : null
+  const slotSelezionato =
+    matchSelezionato && modulo && selId != null
+      ? occupantiPerSlot(matchSelezionato, modulo).find((s) => s.playerIds.includes(selId))?.sigla ?? null
+      : null
+
+  const criteri = criteriOsservazione({ contesto, slot: slotSelezionato })
   const osservatiCount = new Map()
   for (const o of sessione) {
     osservatiCount.set(o.playerId, (osservatiCount.get(o.playerId) ?? 0) + 1)
@@ -79,8 +117,9 @@ export default function ObservationPage() {
     )
     await db.observations.add({
       playerId: selId,
-      data,
+      data: matchSelezionato ? matchSelezionato.data : data,
       contesto,
+      ...(contesto === 'partita' && matchId != null ? { matchId } : {}),
       voti: votiPieni,
       noteCriteri: notePiene,
       notaGenerale: notaGenerale.trim(),
@@ -124,20 +163,40 @@ export default function ObservationPage() {
             <button
               key={c.value}
               className={`chip chip-sm ${contesto === c.value ? 'selected' : ''}`}
-              onClick={() => setContesto(c.value)}
+              onClick={() => cambiaContesto(c.value)}
             >
               {c.label}
             </button>
           ))}
         </div>
-        <input
-          className="input"
-          type="date"
-          value={data}
-          onChange={(e) => setData(e.target.value)}
-          style={{ width: 150, minHeight: 40 }}
-        />
+        {contesto !== 'partita' && (
+          <input
+            className="input"
+            type="date"
+            value={data}
+            onChange={(e) => setData(e.target.value)}
+            style={{ width: 150, minHeight: 40 }}
+          />
+        )}
       </div>
+
+      {contesto === 'partita' && (
+        <div className="chip-row" style={{ marginBottom: 14 }}>
+          {partiteOsservabili.length === 0 ? (
+            <span className="muted small">Nessuna partita con referto compilato.</span>
+          ) : (
+            partiteOsservabili.map((m) => (
+              <button
+                key={m.id}
+                className={`chip chip-sm ${matchId === m.id ? 'selected' : ''}`}
+                onClick={() => setMatchId(matchId === m.id ? null : m.id)}
+              >
+                {formatDataPartita(m.data)}
+              </button>
+            ))
+          )}
+        </div>
+      )}
 
       <div className="chip-row" style={{ marginBottom: 14 }}>
         <button
@@ -194,7 +253,7 @@ export default function ObservationPage() {
                     <span className="muted"> “{selezionato.soprannome}”</span>
                   ) : null}
                 </strong>
-                {CRITERI_OSSERVAZIONE.map((c) => (
+                {criteri.map((c) => (
                   <div key={c.key}>
                     <div className="crit-row">
                       <div className="crit-label">
@@ -202,15 +261,32 @@ export default function ObservationPage() {
                         {c.hint && <span className="hint">{c.hint}</span>}
                       </div>
                       <div className="vote-row">
-                        {[1, 2, 3, 4, 5].map((v) => (
-                          <button
-                            key={v}
-                            className={`vote-btn ${voti[c.key] === v ? 'on' : ''}`}
-                            onClick={() => setVoto(c.key, v)}
-                          >
-                            {v}
-                          </button>
-                        ))}
+                        {c.tipo === 'si_no_altro' ? (
+                          <>
+                            <button
+                              className={`vote-btn ${voti[c.key] === 1 ? 'on' : ''}`}
+                              onClick={() => setVoto(c.key, 1)}
+                            >
+                              Sì
+                            </button>
+                            <button
+                              className={`vote-btn ${voti[c.key] === 0 ? 'on' : ''}`}
+                              onClick={() => setVoto(c.key, 0)}
+                            >
+                              No
+                            </button>
+                          </>
+                        ) : (
+                          [1, 2, 3, 4, 5].map((v) => (
+                            <button
+                              key={v}
+                              className={`vote-btn ${voti[c.key] === v ? 'on' : ''}`}
+                              onClick={() => setVoto(c.key, v)}
+                            >
+                              {v}
+                            </button>
+                          ))
+                        )}
                       </div>
                       <button
                         className={`note-btn ${noteCriteri[c.key]?.trim() || notaAperta === c.key ? 'on' : ''}`}

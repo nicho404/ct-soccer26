@@ -10,8 +10,16 @@ import {
 import { famigliaRuoloTattico } from '../tactics/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
 import { aggregaGiocatori } from '../lib/storico'
+import { DOMANDE_PER_SLOT } from '../lib/domandeRuolo'
 import Avatar from '../components/Avatar'
 import { nomeBreve } from '../lib/nomi'
+
+// Etichetta di ogni domanda di ruolo per id, per mostrare le risposte sì/no
+// nella card di un'osservazione senza dover risalire allo slot di quella
+// specifica gara (informazione che qui non serve, solo il testo della domanda).
+const LABEL_DOMANDA = Object.fromEntries(
+  Object.values(DOMANDE_PER_SLOT).flat().map((d) => [d.id, d.testo])
+)
 
 function InfoRow({ label, children }) {
   return (
@@ -69,8 +77,12 @@ export default function PlayerDetailPage() {
   const compNome = (cid) =>
     competitions.find((c) => c.id === cid)?.nome ?? 'Senza competizione'
 
-  // Overall stile FC26: media di tutti i voti delle ultime 3 osservazioni, scala 20-100
-  const votiRecenti = observations.slice(0, 3).flatMap((o) => Object.values(o.voti ?? {}))
+  // Overall stile FC26: media dei voti scala (1-5) delle ultime 3 osservazioni,
+  // scala 20-100. Le risposte sì/no di ruolo (0/1) restano fuori: mischiate
+  // ai voti 1-5 nella stessa media la falserebbero verso il basso.
+  const scalaKeys = new Set(CRITERI_OSSERVAZIONE.map((c) => c.key))
+  const votiRecenti = observations.slice(0, 3)
+    .flatMap((o) => Object.entries(o.voti ?? {}).filter(([k]) => scalaKeys.has(k)).map(([, v]) => v))
   const overall = votiRecenti.length
     ? Math.round((votiRecenti.reduce((a, b) => a + b, 0) / votiRecenti.length) * 20)
     : null
@@ -340,10 +352,20 @@ export default function PlayerDetailPage() {
                   {c.label}: {o.voti[c.key]}
                 </span>
               ))}
+              {Object.entries(o.voti ?? {}).filter(([k]) => !scalaKeys.has(k)).map(([k, v]) => (
+                <span className="badge" key={k}>
+                  {LABEL_DOMANDA[k] ?? k}: {v === 1 ? 'Sì' : 'No'}
+                </span>
+              ))}
             </div>
             {CRITERI_OSSERVAZIONE.filter((c) => o.noteCriteri?.[c.key]).map((c) => (
               <p className="small muted" style={{ margin: '6px 0 0' }} key={c.key}>
                 <strong>{c.label}:</strong> {o.noteCriteri[c.key]}
+              </p>
+            ))}
+            {Object.entries(o.noteCriteri ?? {}).filter(([k]) => !scalaKeys.has(k)).map(([k, testo]) => (
+              <p className="small muted" style={{ margin: '6px 0 0' }} key={k}>
+                <strong>{LABEL_DOMANDA[k] ?? k}:</strong> {testo}
               </p>
             ))}
             {o.notaGenerale && <p className="small" style={{ margin: '8px 0 0' }}>{o.notaGenerale}</p>}

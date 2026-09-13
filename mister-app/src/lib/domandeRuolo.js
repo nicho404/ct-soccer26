@@ -53,3 +53,15 @@ const ALIAS_SLOT = {
 export function domandePerSlot(sigla) {
   return DOMANDE_PER_SLOT[sigla] ?? DOMANDE_PER_SLOT[ALIAS_SLOT[sigla]] ?? []
 }
+
+// Criteri di osservazione derivati dalle domande di ruolo (M10): stessa
+// domanda, stesso id — solo nella forma { key, label, tipo } che il resto
+// del sistema di osservazione già usa, per non duplicare il testo altrove.
+export function criteriPerSlot(sigla) {
+  return domandePerSlot(sigla).map((d) => ({
+    key: d.id,
+    label: d.testo,
+    short: d.id.split('_').pop().slice(0, 5).toUpperCase(),
+    tipo: 'si_no_altro',
+  }))
+}

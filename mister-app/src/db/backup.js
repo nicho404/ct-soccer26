@@ -1,4 +1,7 @@
-import { db, migrazioneV7RuoliTattici, migrazioneV8SlotRuoliOverride, migrazioneV9PresenzePartite } from './db'
+import {
+  db, migrazioneV7RuoliTattici, migrazioneV8SlotRuoliOverride, migrazioneV9PresenzePartite,
+  migrazioneV12ChecklistInObservations,
+} from './db'
 
 const FORMAT = 'mister-app-backup'
 
@@ -65,6 +68,13 @@ export async function importBackup(file) {
     }
     if (payload.dbVersion < 9) {
       await migrazioneV9PresenzePartite(db)
+    }
+    // letturePartita non esiste più nello schema corrente (v12 l'ha ritirata
+    // dentro observations): un backup che la conteneva ancora non la scrive
+    // mai tramite il loop qui sopra, quindi le sue righe vanno lette dal
+    // payload direttamente, non da `db`.
+    if (payload.dbVersion < 12) {
+      await migrazioneV12ChecklistInObservations(db, payload.tables.letturePartita ?? [])
     }
   })
 }
