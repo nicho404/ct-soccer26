@@ -160,7 +160,20 @@ export default function ModuloPage() {
     }
   }
 
-  const apriSalvaCorrente = () => setSalvaForm({ nome: '', cambiPrevisti: [] })
+  // Precompila dai cambi già pianificati sul campo (scheda "Cambi"): senza
+  // questo, un cambio impostato lì e mai ritoccato nel form andrebbe perso,
+  // perché sono due elenchi distinti (slot->playerId vs righe con trigger).
+  const apriSalvaCorrente = () =>
+    setSalvaForm({
+      nome: '',
+      cambiPrevisti: Object.entries(cambi).map(([slotIndex, playerId]) => ({
+        id: nuovoIdRiga(),
+        escePlayerId: slots[Number(slotIndex)] ?? null,
+        entraPlayerId: playerId,
+        trigger: 'minuto',
+        dettaglio: '',
+      })),
+    })
 
   const aggiungiRigaCambio = () =>
     setSalvaForm((f) => ({
