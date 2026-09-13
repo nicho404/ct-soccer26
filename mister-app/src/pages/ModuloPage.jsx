@@ -220,13 +220,18 @@ export default function ModuloPage() {
   const caricaSalvato = (s) => {
     const next = {
       ...byFormato,
-      // i cambi pianificati restano legati all'undici corrente: caricare un
-      // assetto salvato ne cambia gli slot, quindi si riparte da zero
+      // i cambi previsti sono salvati per giocatore (chi esce/entra), non per
+      // slot: si ritrova lo slot cercando dove l'uscente era schierato in
+      // *questo* assetto salvato, non in quello attualmente in campo
       [formato]: {
         modulo: s.modulo,
         slots: [...s.slots],
         slotRuoliOverride: convertiSlotRuoliOverride(s.slotRuoliOverride),
-        cambi: {},
+        cambi: Object.fromEntries(
+          (s.cambiPrevisti ?? [])
+            .map((r) => [s.slots.indexOf(r.escePlayerId), r.entraPlayerId])
+            .filter(([idx, entra]) => idx !== -1 && entra != null)
+        ),
       },
     }
     const imp = IMPOSTAZIONI.some((i) => i.value === s.impostazione) ? s.impostazione : impostazione

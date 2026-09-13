@@ -188,11 +188,11 @@ export default function PitchView({
                 <text x="0" y="45" textAnchor="middle" fill="rgba(255,255,255,0.78)" fontSize="7.5">
                   {ruolo.nome}
                 </text>
-                {fase === 'cambi' && cambi[i] != null && (() => {
+                {cambi[i] != null && (() => {
                   const entrante = players.find((pl) => pl.id === cambi[i])
                   if (!entrante) return null
                   return (
-                    <text x="0" y="57" textAnchor="middle" fill="#a78bfa" fontSize="8.5" fontWeight="800">
+                    <text x="0" y="57" textAnchor="middle" fill="#ef4444" fontSize="8.5" fontWeight="800">
                       🔁 {nomeCorto(entrante)}
                     </text>
                   )
