@@ -264,6 +264,13 @@ Non tutte le combinazioni stanno in piedi. Il sistema deve **avvisare**, mai blo
 - Nessun esterno puro: l'ampiezza è a carico dei DC laterali e dei CC che allargano.
 - I due CC si dividono per forza: uno `M-E`, uno `CC-M`.
 
+### 4-2-1 (formato 8)
+`POR — 4 DC — 2 CC — PUNTA`
+- Reparto arretrato più numeroso fra tutti i moduli: 4 difensivi coprono qualunque richiesta di `REQUISITI_IMPOSTAZIONE.oltranza` con ampio margine.
+- Nessun esterno puro (0 slot `ESTERNO_OFFENSIVO`) → **gioco sulle ali** è strutturalmente `❌` (`REQUISITI_IMPOSTAZIONE`).
+- Un solo centrocampista davanti alla difesa e uno più avanzato, come in 2-4-1: nessun mediano dedicato, il primo CC assorbe il compito.
+- Più adatto a: **difesa a oltranza**, **contropiede**. Fragile su **possesso** (pochi uomini per il palleggio) e **palla lunga** (punta isolata sulla sponda).
+
 ### Tabella modulo × impostazione
 
 ✅ coerente · ⚠️ fragile (il sistema avvisa, non impedisce) · ❌ rotto (il modulo non ha gli slot per eseguire l'impostazione).
@@ -286,6 +293,7 @@ Le ❌ sono **derivate dalla struttura** del modulo (quante zone possiede, non q
 | 2-4-1 (c.8) | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
 | 3-2-1-1 (c.8) | ✅ | ❌ | ✅ | ✅ | ✅ |
 | 3-1-3 (c.8) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 4-2-1 (c.8) | ⚠️ | ❌ | ⚠️ | ✅ | ✅ |
 
 Le ❌ su "Ali" sono tutti i moduli senza almeno 2 slot in zona esterno offensivo (nessuna sigla `ED`/`ES`/`AD`/`AS`); le ❌ su "Oltranza" sono i moduli con meno di 3 slot fra difensori centrali e terzini sommati. I moduli del calcio a 7 non compaiono in `ECCEZIONI_MODULO`: la copertura strutturale basta, nessuna fragilità documentata per ora.
 

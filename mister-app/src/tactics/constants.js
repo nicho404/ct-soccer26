@@ -264,6 +264,10 @@ export const ECCEZIONI_MODULO = {
     lunga: { livello: 'warn', messaggio: 'La punta è sola sulla sponda e la difesa a due è lontanissima dalla seconda palla: ogni rimbalzo è una ripartenza avversaria.' },
     contropiede: { livello: 'warn', messaggio: 'Quattro centrocampisti in ripartenza sono un vantaggio, ma la difesa a due resta in parità numerica su ogni recupero fallito.' },
   },
+  '4-2-1': {
+    possesso: { livello: 'warn', messaggio: 'Solo due centrocampisti e nessun esterno puro: il palleggio si stringe al centro e con un minimo di pressione diventa prevedibile.' },
+    lunga: { livello: 'warn', messaggio: 'La punta è sola sulla sponda e i due centrocampisti sono lontani dalla seconda palla: il lancio raramente produce una vera ripartenza.' },
+  },
 }
 
 // Matrice C — linea difensiva → fase di non possesso (mappa-tattica.md §3-bis).

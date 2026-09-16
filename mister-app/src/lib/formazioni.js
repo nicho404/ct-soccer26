@@ -195,6 +195,20 @@ const MODULI_8 = {
       { sigla: 'AD', u: 0.85, t: 0.78 },
     ],
   },
+  '4-2-1': {
+    nome: '4-2-1',
+    descrizione: 'Il più difensivo del calcio a 8: quattro difensori bloccano il centro dell\'area e lasciano l\'iniziativa all\'avversario. Ideale per difendere un risultato o arginare una squadra più forte. I due centrocampisti coprono tantissimo campo da soli, la punta lavora quasi sempre isolata.',
+    slots: [
+      { sigla: 'POR', u: 0.5, t: 0.07 },
+      { sigla: 'DC', u: 0.1, t: 0.28 },
+      { sigla: 'DC', u: 0.37, t: 0.24 },
+      { sigla: 'DC', u: 0.63, t: 0.24 },
+      { sigla: 'DC', u: 0.9, t: 0.28 },
+      { sigla: 'CC', u: 0.3, t: 0.52 },
+      { sigla: 'CC', u: 0.7, t: 0.52 },
+      { sigla: 'ATT', u: 0.5, t: 0.84 },
+    ],
+  },
 }
 
 // Formati disponibili: numero di giocatori in campo → set di moduli
