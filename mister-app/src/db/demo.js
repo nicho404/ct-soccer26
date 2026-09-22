@@ -1,6 +1,7 @@
 import { db } from './db'
 import { MODULI_FORMATO, FORMATI, MODULO_DEFAULT } from '../lib/formazioni'
 import { calcolaMinuti, portiereIniziale, DURATA_DEFAULT } from '../lib/storico'
+import { oggiISO } from '../lib/partite'
 
 // Dati finti per provare l'app. Tutte le righe hanno demo: true
 // così lo svuotamento tocca solo i dati demo, mai quelli reali.
@@ -176,7 +177,7 @@ const DEMO_TRAININGS = [
 const dataRelativa = (giorni) => {
   const d = new Date()
   d.setDate(d.getDate() + giorni)
-  return d.toISOString().slice(0, 10)
+  return oggiISO(d)
 }
 
 // Voci di manuale demo: il tipo di cose che un mister si dimentica di aver
@@ -316,7 +317,7 @@ export async function seedDemoData() {
     }))
   )
 
-  const oggi = new Date().toISOString().slice(0, 10)
+  const oggi = oggiISO()
   await db.observations.bulkAdd(
     DEMO_OBSERVATIONS.map(({ idx, ...o }) => ({
       ...o,

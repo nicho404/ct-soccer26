@@ -1,7 +1,13 @@
 // Helper puri sulle partite (M3). Le date sono stringhe ISO "YYYY-MM-DD":
 // confrontabili lessicograficamente, così niente fusi orari di mezzo.
 
-export const oggiISO = () => new Date().toISOString().slice(0, 10)
+// Data *locale*: toISOString() darebbe quella UTC, e in Italia tra mezzanotte
+// e le 2 l'app crederebbe di essere ancora al giorno prima.
+export function oggiISO(d = new Date()) {
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const gg = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${mm}-${gg}`
+}
 
 // Una partita è "giocata" quando ha entrambi i risultati compilati.
 // 0-0 è un risultato valido: conta il tipo, non la verità del numero.
@@ -29,16 +35,35 @@ const chiave = (m) => `${m.data ?? ''} ${m.ora ?? ''}`
 export const perDataCrescente = (a, b) => chiave(a).localeCompare(chiave(b))
 export const perDataDecrescente = (a, b) => chiave(b).localeCompare(chiave(a))
 
-// In calendario: da oggi in avanti, ordine crescente (la più vicina per prima).
+// Criterio unico per le due liste, così restano complementari: una partita è
+// archiviata se è passata, oppure se è di oggi e ha già il risultato.
 // Una partita di ieri senza risultato resta nello storico, non risale in cima:
 // va compilata, non aspettata.
+function archiviata(m, oggi) {
+  const data = m.data ?? ''
+  return data < oggi || (data === oggi && partitaGiocata(m))
+}
+
+// In calendario: da oggi in avanti, ordine crescente (la più vicina per prima).
 export function partiteInProgramma(partite, oggi = oggiISO()) {
-  return partite.filter((m) => (m.data ?? '') >= oggi).sort(perDataCrescente)
+  return partite.filter((m) => !archiviata(m, oggi)).sort(perDataCrescente)
 }
 
 // Archivio: tutto ciò che non è in programma, dalla più recente.
 export function partiteGiocate(partite, oggi = oggiISO()) {
-  return partite.filter((m) => (m.data ?? '') < oggi).sort(perDataDecrescente)
+  return partite.filter((m) => archiviata(m, oggi)).sort(perDataDecrescente)
+}
+
+// Campi gestiti dal form partita: in modifica si salvano solo questi, così
+// eventi, minuti, formazione e durata scritti dal referto non vengono
+// sovrascritti con la copia letta all'apertura del form.
+const CAMPI_FORM = [
+  'data', 'ora', 'campo', 'luogo', 'competitionId', 'opponentId',
+  'golFatti', 'golSubiti', 'note', 'presenze',
+]
+
+export function campiForm(form) {
+  return Object.fromEntries(CAMPI_FORM.filter((k) => k in form).map((k) => [k, form[k]]))
 }
 
 export function prossimaPartita(partite, oggi = oggiISO()) {

@@ -10,9 +10,9 @@ import { refertoCompilato, occupantiPerSlot } from '../lib/storico'
 import EmptyState from '../components/EmptyState'
 import { IconEye, IconChart } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
-import { formatDataPartita } from '../lib/partite'
+import { formatDataPartita, oggiISO } from '../lib/partite'
 
-const oggi = () => new Date().toISOString().slice(0, 10)
+const oggi = () => oggiISO()
 
 function nomeCorto(p) {
   return nomeBreve(p)

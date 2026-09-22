@@ -2,6 +2,7 @@ import {
   db, migrazioneV7RuoliTattici, migrazioneV8SlotRuoliOverride, migrazioneV9PresenzePartite,
   migrazioneV12ChecklistInObservations,
 } from './db'
+import { oggiISO } from '../lib/partite'
 
 const FORMAT = 'mister-app-backup'
 
@@ -25,7 +26,7 @@ export async function exportBackup() {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `mister-backup-${new Date().toISOString().slice(0, 10)}.json`
+  a.download = `mister-backup-${oggiISO()}.json`
   a.click()
   URL.revokeObjectURL(url)
 }

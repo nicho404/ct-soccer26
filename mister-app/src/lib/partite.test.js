@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from 'vitest'
 import {
   partitaGiocata, esitoPartita, partiteInProgramma, partiteGiocate,
   prossimaPartita, bilancio, formatDataPartita, quandoPartita, partiteContro,
+  oggiISO, campiForm,
 } from './partite'
 
 const OGGI = '2026-10-10'
@@ -56,6 +57,73 @@ describe('calendario', () => {
     const conBuco = [P('2026-10-05'), ...partite]
     expect(prossimaPartita(conBuco, OGGI).data).toBe(OGGI)
     expect(partiteGiocate(conBuco, OGGI)[0].data).toBe('2026-10-05')
+  })
+})
+
+describe('partite di oggi', () => {
+  it('con il risultato è giocata, non più in programma', () => {
+    const m = P(OGGI, { golFatti: 2, golSubiti: 1 })
+    expect(partiteGiocate([m], OGGI)).toEqual([m])
+    expect(partiteInProgramma([m], OGGI)).toEqual([])
+  })
+
+  it('senza risultato resta in programma', () => {
+    const m = P(OGGI, { golFatti: 2 })
+    expect(partiteInProgramma([m], OGGI)).toEqual([m])
+    expect(partiteGiocate([m], OGGI)).toEqual([])
+  })
+
+  it('le due liste sono complementari', () => {
+    const tutte = [
+      P('2026-10-09'), P('2026-10-09', { golFatti: 0, golSubiti: 0 }),
+      P(OGGI), P(OGGI, { golFatti: 1, golSubiti: 1 }),
+      P('2026-10-11'), P(undefined),
+    ]
+    const prog = partiteInProgramma(tutte, OGGI)
+    const gioc = partiteGiocate(tutte, OGGI)
+    expect(prog.length + gioc.length).toBe(tutte.length)
+    expect(prog.filter((m) => gioc.includes(m))).toEqual([])
+  })
+})
+
+describe('oggiISO', () => {
+  const tzOriginale = process.env.TZ
+  beforeAll(() => { process.env.TZ = 'Europe/Rome' })
+  afterAll(() => { process.env.TZ = tzOriginale })
+  afterEach(() => { vi.useRealTimers() })
+
+  it("all'01:00 in Italia restituisce il giorno locale, non quello UTC", () => {
+    vi.useFakeTimers()
+    // 23/09 01:00 a Roma (CEST) = 22/09 23:00 UTC
+    vi.setSystemTime(new Date('2026-09-22T23:00:00Z'))
+    expect(oggiISO()).toBe('2026-09-23')
+  })
+
+  it('fa lo zero-padding di mese e giorno', () => {
+    expect(oggiISO(new Date(2026, 0, 5, 12))).toBe('2026-01-05')
+  })
+})
+
+describe('campiForm', () => {
+  it('tiene solo i campi del form, non quelli del referto', () => {
+    const form = {
+      id: 7, data: OGGI, ora: '21:00', campo: 'casa', luogo: 'CS', competitionId: 1,
+      opponentId: 2, golFatti: 1, golSubiti: 0, note: '', presenze: { 3: 'presente' },
+      eventi: [{ tipo: 'gol' }], minuti: { 3: 60 }, portaMinuti: {}, formazione: {}, durata: 60,
+    }
+    const dati = campiForm(form)
+    expect(Object.keys(dati).sort()).toEqual([
+      'campo', 'competitionId', 'data', 'golFatti', 'golSubiti', 'luogo', 'note',
+      'opponentId', 'ora', 'presenze',
+    ])
+    expect(dati).not.toHaveProperty('eventi')
+    expect(dati).not.toHaveProperty('minuti')
+  })
+
+  it('conserva i valori null, che cancellano un risultato', () => {
+    expect(campiForm({ data: OGGI, golFatti: null, golSubiti: null })).toEqual({
+      data: OGGI, golFatti: null, golSubiti: null,
+    })
   })
 })
 

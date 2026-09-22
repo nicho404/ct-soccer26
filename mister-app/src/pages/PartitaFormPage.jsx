@@ -5,7 +5,7 @@ import { db } from '../db/db'
 import {
   CAMPI_PARTITA, TIPI_COMPETIZIONE, isAttivo, ruoloOrdine,
 } from '../db/constants'
-import { oggiISO, esitoPartita, ESITO_INFO } from '../lib/partite'
+import { oggiISO, esitoPartita, ESITO_INFO, campiForm } from '../lib/partite'
 import { refertoCompilato, titolariDi } from '../lib/storico'
 import { contaSeduta } from '../lib/presenze'
 import AppelloPresenze from '../components/AppelloPresenze'
@@ -116,7 +116,7 @@ export default function PartitaFormPage() {
       competitionId: await risolviCompetizione(),
     }
     if (editing) {
-      await db.matches.update(Number(id), dati)
+      await db.matches.update(Number(id), campiForm(dati))
     } else {
       await db.matches.add(dati)
     }

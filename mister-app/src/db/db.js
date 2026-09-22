@@ -1,5 +1,6 @@
 import Dexie from 'dexie'
 import { RUOLI, ruoloInfo, ruoloNpInfo } from '../tactics/constants'
+import { oggiISO } from '../lib/partite'
 
 export const db = new Dexie('misterApp')
 
@@ -315,7 +316,7 @@ export async function migrazioneV12ChecklistInObservations(scope, lettureOverrid
   const letture = lettureOverride ?? await scope.table('letturePartita').toArray()
   if (letture.length === 0) return
   const matches = await scope.table('matches').toArray()
-  const dataDi = (matchId) => matches.find((m) => m.id === matchId)?.data ?? new Date().toISOString().slice(0, 10)
+  const dataDi = (matchId) => matches.find((m) => m.id === matchId)?.data ?? oggiISO()
 
   for (const l of letture) {
     const voti = {}

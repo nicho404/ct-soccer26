@@ -10,6 +10,8 @@ export default function ImpostazioniPage() {
   const navigate = useNavigate()
   const [demoOn, setDemoOn] = useState(null)
   const [backupMsg, setBackupMsg] = useState(null)
+  // null = in lettura, 'na' = API non supportata, altrimenti true/false
+  const [persistito, setPersistito] = useState(null)
   const fileInputRef = useRef(null)
   const logoInputRef = useRef(null)
 
@@ -18,6 +20,22 @@ export default function ImpostazioniPage() {
   useEffect(() => {
     hasDemoData().then(setDemoOn)
   }, [])
+
+  useEffect(() => {
+    if (!navigator.storage?.persisted) {
+      setPersistito('na')
+      return
+    }
+    navigator.storage.persisted().then(setPersistito, () => setPersistito('na'))
+  }, [])
+
+  const chiediPersistenza = async () => {
+    try {
+      setPersistito(await navigator.storage.persist())
+    } catch {
+      setPersistito(false)
+    }
+  }
 
   const saveTeam = async (patch) => {
     const cur = (await db.meta.get('team')) ?? { key: 'team', nome: '', torneo: '', logo: '' }
@@ -196,6 +214,24 @@ export default function ImpostazioniPage() {
         {backupMsg && (
           <p className="small" style={{ marginBottom: 0, color: backupMsg.ok ? undefined : '#e05555' }}>
             {backupMsg.text}
+          </p>
+        )}
+        {persistito === true && (
+          <p className="small muted" style={{ marginBottom: 0 }}>
+            Dati protetti dalla pulizia del browser
+          </p>
+        )}
+        {persistito === false && (
+          <>
+            <p className="small" style={{ marginBottom: 8, color: '#e05555' }}>
+              Il browser può cancellare i dati: esporta un backup dopo ogni partita
+            </p>
+            <button className="btn btn-sm" onClick={chiediPersistenza}>Proteggi i dati</button>
+          </>
+        )}
+        {persistito === 'na' && (
+          <p className="small" style={{ marginBottom: 0, color: '#e05555' }}>
+            Questo browser non permette di proteggere i dati: esporta un backup dopo ogni partita
           </p>
         )}
       </div>
