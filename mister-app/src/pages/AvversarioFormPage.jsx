@@ -5,6 +5,7 @@ import { db } from '../db/db'
 import { RUOLI } from '../db/constants'
 import { MODULI_FORMATO, FORMATI } from '../lib/formazioni'
 import { partiteContro, bilancio, esitoPartita, ESITO_INFO, formatDataPartita } from '../lib/partite'
+import { gare, conRisultato, marcatori, cartellini, nomeSquadra } from '../lib/girone'
 
 const EMPTY = {
   nome: '',
@@ -28,6 +29,10 @@ export default function AvversarioFormPage() {
 
   const partite = useLiveQuery(() => db.matches.toArray(), [])
   const team = useLiveQuery(() => db.meta.get('team').then((t) => t ?? null), [])
+  const opponents = useLiveQuery(() => db.opponents.toArray(), [])
+  const partiteGirone = useLiveQuery(() => db.partiteGirone.toArray(), [])
+  const giocatoriAvversari = useLiveQuery(() => db.giocatoriAvversari.toArray(), [])
+  const competitions = useLiveQuery(() => db.competitions.toArray(), [])
 
   useEffect(() => {
     if (!editing) return
@@ -43,7 +48,10 @@ export default function AvversarioFormPage() {
     })
   }, [opponentId, editing])
 
-  if (!partite || team === undefined || !loaded) return null
+  if (
+    !partite || team === undefined || !opponents || !partiteGirone || !giocatoriAvversari ||
+    !competitions || !loaded
+  ) return null
 
   const formato = FORMATI.includes(team?.formato) ? team.formato : 7
   const moduli = Object.keys(MODULI_FORMATO[formato])
@@ -83,6 +91,25 @@ export default function AvversarioFormPage() {
 
   const scontri = editing ? partiteContro(partite, opponentId) : []
 
+  // Dal girone: le partite di questa squadra contro le altre (le nostre sono
+  // già negli scontri diretti) e la sua rosa con gol e cartellini
+  const datiGirone = { partiteGirone, matches: partite, opponents, giocatoriAvversari, nomeNostro: team?.nome ?? '' }
+  const inGirone = editing
+    ? gare({ partiteGirone }).filter((g) => g.casaId === opponentId || g.ospiteId === opponentId)
+      .sort((a, b) => (a.competitionId - b.competitionId) || ((a.giornata ?? 0) - (b.giornata ?? 0)))
+    : []
+  const golDi = new Map(
+    marcatori(null, datiGirone, { tutteLeCompetizioni: true }).map((r) => [r.giocatoreId, r.gol])
+  )
+  const cartelliniDi = new Map(cartellini(datiGirone).map((r) => [r.giocatoreId, r]))
+  const rosa = editing
+    ? giocatoriAvversari
+      .filter((g) => g.opponentId === opponentId)
+      .map((g) => ({ ...g, gol: golDi.get(g.id) ?? 0, c: cartelliniDi.get(g.id) }))
+      .sort((a, b) => b.gol - a.gol || a.nome.localeCompare(b.nome))
+    : []
+  const nomeCompetizione = (id) => competitions.find((c) => c.id === id)?.nome ?? ''
+
   const elimina = async () => {
     // La partita punta all'avversario per id: cancellarlo lascerebbe in
     // calendario partite senza nome. Prima si sganciano le partite.
@@ -93,8 +120,19 @@ export default function AvversarioFormPage() {
       )
       return
     }
+    // stessa cosa per le partite del girone, che la citano come casa o ospite
+    if (inGirone.length > 0) {
+      alert(
+        `${form.nome} compare in ${inGirone.length} partite del girone. ` +
+        'Eliminale dal Girone prima di eliminare la squadra.'
+      )
+      return
+    }
     if (!window.confirm(`Eliminare ${form.nome}?`)) return
-    await db.opponents.delete(opponentId)
+    await db.transaction('rw', db.opponents, db.giocatoriAvversari, async () => {
+      await db.giocatoriAvversari.where('opponentId').equals(opponentId).delete()
+      await db.opponents.delete(opponentId)
+    })
     navigate('/avversari', { replace: true })
   }
 
@@ -238,6 +276,55 @@ export default function AvversarioFormPage() {
               </Link>
             )
           })}
+        </>
+      )}
+
+      {rosa.length > 0 && (
+        <>
+          <div className="section-title">Giocatori dal girone ({rosa.length})</div>
+          <div className="obs-table-wrap">
+            <table className="obs-table">
+              <thead>
+                <tr><th>Giocatore</th><th title="Gol">G</th><th title="Gialli">🟨</th><th title="Rossi">🟥</th><th></th></tr>
+              </thead>
+              <tbody>
+                {rosa.map((g) => (
+                  <tr key={g.id}>
+                    <td>{g.nome}</td>
+                    <td>{g.gol || ''}</td>
+                    <td>{g.c?.gialli || ''}</td>
+                    <td>{g.c?.rossi || ''}</td>
+                    <td>
+                      {g.c?.daScontare && <span className="badge badge-danger">Squalificato</span>}
+                      {g.c?.diffidato && <span className="badge badge-warn">Diffidato</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      {inGirone.length > 0 && (
+        <>
+          <div className="section-title">Risultati nel girone</div>
+          {inGirone.map((g) => (
+            <Link to={`/girone/${g.id}`} className="card tappable" key={g.id}>
+              <div className="row">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="small">
+                    {nomeSquadra(g.casaId, datiGirone)} – {nomeSquadra(g.ospiteId, datiGirone)}
+                  </div>
+                  <div className="muted small">
+                    {[nomeCompetizione(g.competitionId), g.giornata && `G${g.giornata}`, g.data && formatDataPartita(g.data)]
+                      .filter(Boolean).join(' · ')}
+                  </div>
+                </div>
+                <span className="badge">{conRisultato(g) ? `${g.golCasa}-${g.golOspite}` : 'da giocare'}</span>
+              </div>
+            </Link>
+          ))}
         </>
       )}
 

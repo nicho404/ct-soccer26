@@ -59,7 +59,7 @@ export function partiteGiocate(partite, oggi = oggiISO()) {
 // sovrascritti con la copia letta all'apertura del form.
 const CAMPI_FORM = [
   'data', 'ora', 'campo', 'luogo', 'competitionId', 'opponentId',
-  'golFatti', 'golSubiti', 'note', 'presenze',
+  'golFatti', 'golSubiti', 'note', 'presenze', 'giornata', 'eventiAvversari',
 ]
 
 export function campiForm(form) {

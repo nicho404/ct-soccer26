@@ -5,7 +5,10 @@ import { db } from '../db/db'
 import {
   CAMPI_PARTITA, TIPI_COMPETIZIONE, isAttivo, ruoloOrdine,
 } from '../db/constants'
-import { oggiISO, esitoPartita, ESITO_INFO, campiForm } from '../lib/partite'
+import { oggiISO, esitoPartita, ESITO_INFO, campiForm, partitaGiocata } from '../lib/partite'
+import { marcatori, cartellini, disallineamentoGirone, pulisciNome } from '../lib/girone'
+import { eventiPerForm, eventiPerDb } from '../db/girone'
+import EventiAvversari from '../components/EventiAvversari'
 import { refertoCompilato, titolariDi } from '../lib/storico'
 import { contaSeduta } from '../lib/presenze'
 import AppelloPresenze from '../components/AppelloPresenze'
@@ -21,6 +24,7 @@ const EMPTY = {
   golFatti: null,
   golSubiti: null,
   note: '',
+  giornata: '',
 }
 
 // Il campo numerico del risultato è "vuoto" finché non lo compili:
@@ -31,6 +35,11 @@ const toGol = (raw) => {
   return Number.isInteger(n) && n >= 0 ? n : null
 }
 
+const toGiornata = (raw) => {
+  const n = Number(raw)
+  return raw !== '' && raw != null && Number.isInteger(n) && n > 0 ? n : null
+}
+
 export default function PartitaFormPage() {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -39,23 +48,33 @@ export default function PartitaFormPage() {
   const [nomeAvversario, setNomeAvversario] = useState('')
   const [nuovaComp, setNuovaComp] = useState(null) // { nome, tipo } quando aperta
   const [loaded, setLoaded] = useState(!editing)
+  // marcatori e cartellini avversari nella forma del form ({ tipo, lato, nome })
+  const [eventiAvv, setEventiAvv] = useState([])
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const opponents = useLiveQuery(() => db.opponents.toArray(), [])
   const competitions = useLiveQuery(() => db.competitions.toArray(), [])
+  const giocatoriAvversari = useLiveQuery(() => db.giocatoriAvversari.toArray(), [])
+  const partiteGirone = useLiveQuery(() => db.partiteGirone.toArray(), [])
+  const matches = useLiveQuery(() => db.matches.toArray(), [])
 
   useEffect(() => {
     if (!editing) return
-    Promise.all([db.matches.get(Number(id)), db.opponents.toArray()]).then(([m, opps]) => {
+    Promise.all([
+      db.matches.get(Number(id)), db.opponents.toArray(), db.giocatoriAvversari.toArray(),
+    ]).then(([m, opps, gioc]) => {
       if (m) {
-        setForm({ ...EMPTY, ...m })
+        setForm({ ...EMPTY, ...m, giornata: m.giornata ?? '' })
         setNomeAvversario(opps.find((o) => o.id === m.opponentId)?.nome ?? '')
+        setEventiAvv(eventiPerForm(m.eventiAvversari, () => 'avversario', gioc))
       }
       setLoaded(true)
     })
   }, [id, editing])
 
-  if (!players || !opponents || !competitions || !loaded) return null
+  if (
+    !players || !opponents || !competitions || !giocatoriAvversari || !partiteGirone || !matches || !loaded
+  ) return null
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
 
@@ -108,12 +127,17 @@ export default function PartitaFormPage() {
       alert('Serve almeno la data della partita')
       return
     }
+    const opponentId = await risolviAvversario(nomeAvversario)
+    const eventiAvversari = (await eventiPerDb(eventiAvv, { avversario: opponentId }))
+      .map(({ tipo, giocatoreId }) => ({ tipo, giocatoreId }))
     const dati = {
       ...form,
       luogo: form.luogo.trim(),
       note: form.note.trim(),
-      opponentId: await risolviAvversario(nomeAvversario),
+      opponentId,
       competitionId: await risolviCompetizione(),
+      giornata: toGiornata(form.giornata),
+      eventiAvversari,
     }
     if (editing) {
       await db.matches.update(Number(id), campiForm(dati))
@@ -131,6 +155,23 @@ export default function PartitaFormPage() {
 
   const esito = esitoPartita(form)
   const conteggioPresenze = contaSeduta(form)
+
+  // L'avversario come lo vede il girone: quello scritto nel campo, se esiste già
+  const avversarioId = opponents.find(
+    (o) => pulisciNome(o.nome).toLowerCase() === pulisciNome(nomeAvversario).toLowerCase()
+  )?.id ?? null
+  const datiGirone = { partiteGirone, matches, opponents, giocatoriAvversari }
+  const scheda = avversarioId != null && !partitaGiocata(form)
+    ? {
+        bomber: marcatori(null, datiGirone, { tutteLeCompetizioni: true })
+          .filter((r) => r.squadraId === avversarioId)
+          .slice(0, 3),
+        cartellini: cartellini(datiGirone).filter((r) => r.squadraId === avversarioId),
+      }
+    : null
+  const squalificati = scheda?.cartellini.filter((r) => r.daScontare) ?? []
+  const diffidati = scheda?.cartellini.filter((r) => r.diffidato) ?? []
+  const storti = disallineamentoGirone({ golSubiti: form.golSubiti, eventiAvversari: eventiAvv })
 
   return (
     <div className="page">
@@ -157,6 +198,27 @@ export default function PartitaFormPage() {
           Se il nome è nuovo viene creata la squadra: lo scouting completo arriva con M7.
         </p>
       </div>
+
+      {scheda && (scheda.bomber.length > 0 || squalificati.length > 0 || diffidati.length > 0) && (
+        <div className="card">
+          <strong className="small">Dal girone</strong>
+          {scheda.bomber.length > 0 && (
+            <div className="small" style={{ marginTop: 6 }}>
+              ⚽ {scheda.bomber.map((r) => `${r.nome} ${r.gol}`).join(' · ')}
+            </div>
+          )}
+          {squalificati.length > 0 && (
+            <div className="small" style={{ marginTop: 6, color: 'var(--danger)' }}>
+              Squalificati: {squalificati.map((r) => `${r.nome} (${r.squalifica.motivo.toLowerCase()})`).join(' · ')}
+            </div>
+          )}
+          {diffidati.length > 0 && (
+            <div className="small" style={{ marginTop: 6, color: 'var(--warn)' }}>
+              Diffidati: {diffidati.map((r) => r.nome).join(' · ')}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="row" style={{ gap: 10, alignItems: 'flex-start' }}>
         <div className="field" style={{ flex: 1 }}>
@@ -256,6 +318,22 @@ export default function PartitaFormPage() {
         )}
       </div>
 
+      <div className="field">
+        <label>Giornata</label>
+        <input
+          className="input"
+          style={{ width: 110 }}
+          type="number"
+          min="1"
+          inputMode="numeric"
+          value={form.giornata}
+          onChange={(e) => set('giornata', e.target.value)}
+        />
+        <p className="muted small" style={{ margin: '6px 0 0' }}>
+          Con la competizione, mette la partita nella classifica del Girone.
+        </p>
+      </div>
+
       <div className="section-title row">
         <span style={{ flex: 1 }}>
           Presenze ({conteggioPresenze.presenti}/{conteggioPresenze.totale})
@@ -307,6 +385,20 @@ export default function PartitaFormPage() {
             : 'Lascia vuoto finché la partita non è giocata.'}
         </p>
       </div>
+
+      <div className="section-title">Marcatori e cartellini avversari</div>
+      <EventiAvversari
+        eventi={eventiAvv}
+        onChange={setEventiAvv}
+        lati={[{ key: 'avversario', nome: nomeAvversario, opponentId: avversarioId }]}
+        giocatori={giocatoriAvversari}
+      />
+      {storti && (
+        <div className="alert-card" style={{ marginTop: 10 }}>
+          {storti[0].eventi} marcatori avversari su {storti[0].risultato ?? 'nessun'} gol subiti:
+          controlla prima di salvare, o salva lo stesso.
+        </div>
+      )}
 
       {editing && (
         <>

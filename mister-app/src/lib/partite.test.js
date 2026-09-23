@@ -110,11 +110,12 @@ describe('campiForm', () => {
       id: 7, data: OGGI, ora: '21:00', campo: 'casa', luogo: 'CS', competitionId: 1,
       opponentId: 2, golFatti: 1, golSubiti: 0, note: '', presenze: { 3: 'presente' },
       eventi: [{ tipo: 'gol' }], minuti: { 3: 60 }, portaMinuti: {}, formazione: {}, durata: 60,
+      giornata: 4, eventiAvversari: [{ tipo: 'giallo', giocatoreId: 1 }],
     }
     const dati = campiForm(form)
     expect(Object.keys(dati).sort()).toEqual([
-      'campo', 'competitionId', 'data', 'golFatti', 'golSubiti', 'luogo', 'note',
-      'opponentId', 'ora', 'presenze',
+      'campo', 'competitionId', 'data', 'eventiAvversari', 'giornata', 'golFatti', 'golSubiti',
+      'luogo', 'note', 'opponentId', 'ora', 'presenze',
     ])
     expect(dati).not.toHaveProperty('eventi')
     expect(dati).not.toHaveProperty('minuti')
