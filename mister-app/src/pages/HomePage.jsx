@@ -7,6 +7,8 @@ import { IconBolt, IconBall } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
 import { prossimaPartita, formatDataPartita, quandoPartita } from '../lib/partite'
 import { presentiIds } from '../lib/presenze'
+import { ultimaAnalisi, normalizzaAnalisi } from '../lib/analisi'
+import { AnalisiInEvidenza } from '../components/Analisi'
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -15,8 +17,11 @@ export default function HomePage() {
   const partite = useLiveQuery(() => db.matches.toArray(), [])
   const opponents = useLiveQuery(() => db.opponents.toArray(), [])
   const capitano = useLiveQuery(() => db.meta.get('capitano').then((c) => c ?? null), [])
+  const analisi = useLiveQuery(() => db.analisi.toArray(), [])
 
-  if (!players || !partite || !opponents || capitano === undefined) return null
+  if (!players || !partite || !opponents || capitano === undefined || !analisi) return null
+
+  const inEvidenza = ultimaAnalisi(analisi)
 
   const prossima = prossimaPartita(partite)
   const avversario = prossima
@@ -118,6 +123,13 @@ export default function HomePage() {
                 + Metti in calendario
               </button>
             </div>
+          )}
+
+          {inEvidenza && (
+            <>
+              <div className="section-title">Rotta del mister</div>
+              <AnalisiInEvidenza analisi={normalizzaAnalisi(inEvidenza)} />
+            </>
           )}
 
           <div className="section-title">La rosa oggi</div>

@@ -27,6 +27,9 @@ import AltroPage from './AltroPage'
 import ImpostazioniPage from './ImpostazioniPage'
 import GironePage from './GironePage'
 import GironePartitaFormPage from './GironePartitaFormPage'
+import AnalisiPage from './AnalisiPage'
+import AnalisiDettaglioPage from './AnalisiDettaglioPage'
+import AnalisiFormPage from './AnalisiFormPage'
 
 // Una schermata nera è un errore di render non intercettato: qui lo si
 // trasforma in un test che fallisce, montando ogni pagina per davvero.
@@ -52,6 +55,9 @@ const PAGINE = [
   ['Impostazioni', ImpostazioniPage],
   ['Girone', GironePage],
   ['Partita del girone', GironePartitaFormPage],
+  ['Analisi', AnalisiPage],
+  ['Dettaglio analisi', AnalisiDettaglioPage],
+  ['Modifica analisi', AnalisiFormPage],
 ]
 
 // useLiveQuery risolve in modo asincrono: la pagina passa da null al
@@ -114,7 +120,7 @@ describe('girone con dati', () => {
     if (!db.isOpen()) await db.open()
     await Promise.all(db.tables.map((t) => t.clear()))
     await db.meta.put({ key: 'team', nome: 'Aquile', formato: 7, setupDone: true })
-    await db.competitions.add({ id: 1, nome: 'Precampionato', tipo: 'campionato', penalita: [{ squadraId: 2, punti: 1, motivo: 'Ritardo' }] })
+    await db.competitions.add({ id: 1, nome: 'Contesto', tipo: 'campionato', penalita: [{ squadraId: 2, punti: 1, motivo: 'Ritardo' }] })
     await db.opponents.bulkAdd([{ id: 1, nome: 'Bisonti' }, { id: 2, nome: 'Delfini United' }])
     await db.giocatoriAvversari.bulkAdd([
       { id: 1, opponentId: 1, nome: 'Testa', sportxId: null },
@@ -225,5 +231,57 @@ describe('girone con dati', () => {
     expect(await screen.findByText(/Giocatori dal girone/)).toBeTruthy()
     expect(screen.getByText('Testa')).toBeTruthy()
     expect(screen.getByText('Risultati nel girone')).toBeTruthy()
+  })
+})
+
+describe('analisi in Home', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 8, setupDone: true })
+    await db.players.add({ nome: 'Mario Rossi', ruoloNaturale: 'CC', statoAttivita: 'sicuro' })
+    await db.analisi.bulkAdd([
+      { id: 1, data: '2026-08-01', titolo: 'Vecchia analisi', obiettivi: [] },
+      {
+        id: 2, data: '2026-09-23', titolo: 'Analisi di prova', contesto: 'Contesto di prova',
+        sintesi: 'Sintesi di prova.',
+        puntiChiave: [
+          { tipo: 'problema', testo: 'Primo punto' }, { tipo: 'forza', testo: 'Secondo punto' },
+          { tipo: 'novita', testo: 'Terzo punto' }, { tipo: 'problema', testo: 'Quarto punto' },
+          { tipo: 'forza', testo: 'Quinto punto, solo nel dettaglio' },
+        ],
+        obiettivi: [{ testo: 'Obiettivo uno', fatto: false }, { testo: 'Obiettivo due', fatto: false }],
+        sezioni: [{ titolo: 'Sezione di prova', punti: ['Voce di sezione'] }],
+      },
+    ])
+  })
+
+  afterEach(cleanup)
+
+  it('mostra la più recente, con quattro punti chiave e gli obiettivi', async () => {
+    montaPagina(HomePage)
+    expect(await screen.findByText('Analisi di prova')).toBeTruthy()
+    expect(screen.queryByText('Vecchia analisi')).toBeNull()
+    expect(screen.getByText('Primo punto')).toBeTruthy()
+    expect(screen.queryByText('Quinto punto, solo nel dettaglio')).toBeNull()
+    expect(screen.getByText('Obiettivo uno')).toBeTruthy()
+  })
+
+  it('un obiettivo spuntato dalla Home resta salvato', async () => {
+    montaPagina(HomePage)
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Obiettivo due' }))
+    await waitFor(async () => expect((await db.analisi.get(2)).obiettivi[1].fatto).toBe(true))
+    expect((await db.analisi.get(2)).obiettivi[0].fatto).toBe(false)
+  })
+
+  it('il dettaglio mostra tutti i punti, divisi per tipo, e le sezioni', async () => {
+    render(
+      <MemoryRouter initialEntries={['/analisi/2']}>
+        <Routes><Route path="/analisi/:id" element={<AnalisiDettaglioPage />} /></Routes>
+      </MemoryRouter>
+    )
+    expect(await screen.findByText('Quinto punto, solo nel dettaglio')).toBeTruthy()
+    expect(screen.getByText('⚠️ Da risolvere')).toBeTruthy()
+    expect(screen.getByText('Sezione di prova')).toBeTruthy()
   })
 })

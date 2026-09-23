@@ -27,6 +27,9 @@ import ManualeFormPage from './pages/ManualeFormPage'
 import CapitanoPage from './pages/CapitanoPage'
 import GironePage from './pages/GironePage'
 import GironePartitaFormPage from './pages/GironePartitaFormPage'
+import AnalisiPage from './pages/AnalisiPage'
+import AnalisiDettaglioPage from './pages/AnalisiDettaglioPage'
+import AnalisiFormPage from './pages/AnalisiFormPage'
 
 export default function App() {
   // ?? null: distingue "record assente" (null) da "query in corso" (undefined),
@@ -70,6 +73,10 @@ export default function App() {
           <Route path="/girone" element={<GironePage />} />
           <Route path="/girone/nuova" element={<GironePartitaFormPage />} />
           <Route path="/girone/:id" element={<GironePartitaFormPage />} />
+          <Route path="/analisi" element={<AnalisiPage />} />
+          <Route path="/analisi/nuova" element={<AnalisiFormPage />} />
+          <Route path="/analisi/:id" element={<AnalisiDettaglioPage />} />
+          <Route path="/analisi/:id/modifica" element={<AnalisiFormPage />} />
           <Route path="/altro" element={<AltroPage />} />
           <Route path="/impostazioni" element={<ImpostazioniPage />} />
           <Route path="*" element={<Navigate to="/home" replace />} />

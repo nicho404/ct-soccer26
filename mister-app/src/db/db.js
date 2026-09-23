@@ -355,3 +355,10 @@ db.version(13).stores({
   giocatoriAvversari: '++id, opponentId, sportxId',
   partiteGirone: '++id, competitionId, giornata, casaId, ospiteId',
 })
+
+// Analisi del mister (M12): punti chiave, obiettivi e rotta dopo un blocco
+// di partite e allenamenti, da tenere sotto gli occhi in Home. Tabella
+// nuova, vuota: il contenuto arriva dall'app o da un backup, mai dal codice.
+db.version(14).stores({
+  analisi: '++id, data',
+})

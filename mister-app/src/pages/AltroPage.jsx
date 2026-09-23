@@ -9,6 +9,7 @@ const VOCI = [
   { to: '/intese', Icon: IconLink, label: 'Intese', desc: 'Coppie e catene che si capiscono' },
   { to: '/storico', Icon: IconChart, label: 'Storico', desc: 'Referti, minutaggio, marcatori' },
   { to: '/presenze', Icon: IconClipboardCheck, label: 'Presenze e sedute', desc: 'Appello, meritocrazia, allenamenti' },
+  { to: '/analisi', Icon: IconChart, label: 'Analisi', desc: 'Punti chiave e obiettivi: la più recente resta in Home' },
   { to: '/girone', Icon: IconGrid, label: 'Girone', desc: 'Risultati, classifica, marcatori e cartellini avversari' },
   { to: '/avversari', Icon: IconTarget, label: 'Avversari', desc: 'Scouting squadre del girone' },
   { to: '/manuale', Icon: IconBook, label: 'Manuale', desc: 'La tua knowledge base tattica' },
