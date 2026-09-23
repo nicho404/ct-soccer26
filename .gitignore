@@ -1,0 +1,8 @@
+# Dati riservati della squadra: il repo è pubblico e l'app è su GitHub Pages.
+# Report e analisi generati (giocatori, strategia, avversari)
+analisi/
+# Backup esportati dall'app (Impostazioni → Esporta backup)
+mister-backup*.json
+# Cartella per i dati privati da importare nell'app (es. report in JSON)
+dati-privati/
+*.privato.json
