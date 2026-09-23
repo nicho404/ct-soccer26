@@ -1019,6 +1019,10 @@ a.card {
   border-bottom: none;
 }
 
+/* Girone: la nostra squadra in classifica e nei risultati */
+.obs-table tr.riga-nostra td { color: var(--accent); font-weight: 700; }
+.nostra { color: var(--accent); font-weight: 700; }
+
 .vote-cell-1, .vote-cell-2 { color: var(--danger); font-weight: 700; }
 .vote-cell-3 { color: var(--warn); font-weight: 700; }
 .vote-cell-4, .vote-cell-5 { color: var(--ok); font-weight: 700; }

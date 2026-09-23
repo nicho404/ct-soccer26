@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import {
   IconEye, IconLink, IconChart, IconClipboardCheck,
-  IconTarget, IconBook, IconStar, IconGear,
+  IconTarget, IconBook, IconStar, IconGear, IconGrid,
 } from '../components/icons'
 
 const VOCI = [
@@ -9,6 +9,7 @@ const VOCI = [
   { to: '/intese', Icon: IconLink, label: 'Intese', desc: 'Coppie e catene che si capiscono' },
   { to: '/storico', Icon: IconChart, label: 'Storico', desc: 'Referti, minutaggio, marcatori' },
   { to: '/presenze', Icon: IconClipboardCheck, label: 'Presenze e sedute', desc: 'Appello, meritocrazia, allenamenti' },
+  { to: '/girone', Icon: IconGrid, label: 'Girone', desc: 'Risultati, classifica, marcatori e cartellini avversari' },
   { to: '/avversari', Icon: IconTarget, label: 'Avversari', desc: 'Scouting squadre del girone' },
   { to: '/manuale', Icon: IconBook, label: 'Manuale', desc: 'La tua knowledge base tattica' },
   { to: '/capitano', Icon: IconStar, label: 'Capitano', desc: 'Criteri comparati per la scelta' },
