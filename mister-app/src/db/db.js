@@ -345,3 +345,13 @@ export async function migrazioneV12ChecklistInObservations(scope, lettureOverrid
 db.version(12)
   .stores({ letturePartita: null })
   .upgrade((tx) => migrazioneV12ChecklistInObservations(tx))
+
+// Girone (M11): risultati tra le altre squadre della competizione, con
+// marcatori e cartellini degli avversari. Tabelle nuove, vuote: nessuna
+// migrazione. Le nostre partite restano in matches, che guadagna due campi
+// opzionali non indicizzati (giornata, eventiAvversari) — come penalita su
+// competitions — quindi il suo schema non cambia.
+db.version(13).stores({
+  giocatoriAvversari: '++id, opponentId, sportxId',
+  partiteGirone: '++id, competitionId, giornata, casaId, ospiteId',
+})
