@@ -32,8 +32,6 @@ L'ultima milestone (M7) ha chiuso gli ultimi tre segnaposto:
 
 Idee emerse strada facendo e non ancora affrontate:
 
-- Sostituzioni per slot nel referto: oggi un cambio è "esce X, entra Y", senza dire in
-  quale posizione. Basta per i minuti, non per ricostruire la forma della squadra.
 - Scontri diretti dentro la scheda partita (oggi si vedono solo dalla scheda avversario).
 - Esportazione della convocazione come immagine, come già si fa per il modulo.
 

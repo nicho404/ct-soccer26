@@ -263,9 +263,22 @@ export const TIPI_EVENTO = [
   { value: 'gol', label: 'Gol', icona: '⚽', conGiocatore: true, conAssist: true },
   { value: 'golSubito', label: 'Gol subito', icona: '🥅' },
   { value: 'cambio', label: 'Cambio', icona: '🔁', conCambio: true },
+  { value: 'spostamento', label: 'Cambio posizione', icona: '🔀', conSpostamento: true },
   { value: 'giallo', label: 'Ammonizione', icona: '🟨', conGiocatore: true },
   { value: 'rosso', label: 'Espulsione', icona: '🟥', conGiocatore: true },
 ]
 
 export const tipoEventoInfo = (value) =>
   TIPI_EVENTO.find((t) => t.value === value) ?? TIPI_EVENTO[0]
+
+// Incarico in campo di un giocatore, deciso dal mister per la singola
+// formazione (non è una caratteristica fissa del giocatore): su quale fase
+// deve concentrarsi. Salvato per playerId, così segue il giocatore negli
+// scambi di posizione.
+export const INCARICHI_FASE = [
+  { value: 'offensivo', label: 'Offensivo', icona: '⚔️' },
+  { value: 'difensivo', label: 'Difensivo', icona: '🛡️' },
+  { value: 'entrambe', label: 'Entrambe le fasi', icona: '🔄' },
+]
+
+export const incaricoInfo = (value) => INCARICHI_FASE.find((i) => i.value === value) ?? null

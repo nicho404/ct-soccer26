@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   calcolaMinuti, golDaEventi, disallineamentoRisultato, refertoCompilato,
   portiereIniziale, aggregaGiocatori, classificaMarcatori, occupantiPerSlot,
+  campoAlMinuto, espulsiAlMinuto,
 } from './storico'
 
 const SIGLE_7 = ['POR', 'DC', 'DC', 'ES', 'CC', 'ED', 'ATT']
@@ -185,6 +186,65 @@ describe('occupantiPerSlot', () => {
   it('senza formazione ritorna un elenco vuoto, non crasha', () => {
     expect(occupantiPerSlot({}, modulo)).toEqual([])
     expect(occupantiPerSlot(undefined, modulo)).toEqual([])
+  })
+})
+
+describe('cambi volanti e posizioni', () => {
+  const modulo = { slots: [{ sigla: 'POR' }, { sigla: 'DC' }, { sigla: 'ED' }] }
+
+  it('chi è uscito può rientrare e i minuti si sommano', () => {
+    const { minuti } = calcolaMinuti({
+      titolari: [1, 2, 3],
+      durata: 60,
+      eventi: [
+        { tipo: 'cambio', minuto: 15, outId: 3, inId: 4 },
+        { tipo: 'cambio', minuto: 30, outId: 4, inId: 3 },
+        { tipo: 'cambio', minuto: 45, outId: 3, inId: 4 },
+      ],
+    })
+    expect(minuti).toEqual({ 1: 60, 2: 60, 3: 30, 4: 30 })
+  })
+
+  it('il campo al minuto rimette in panchina chi è uscito', () => {
+    const eventi = [
+      { tipo: 'cambio', minuto: 15, outId: 3, inId: 4 },
+      { tipo: 'cambio', minuto: 30, outId: 4, inId: 3 },
+    ]
+    expect(campoAlMinuto([1, 2, 3], eventi, 10)).toEqual([1, 2, 3])
+    expect(campoAlMinuto([1, 2, 3], eventi, 20)).toEqual([1, 2, 4])
+    expect(campoAlMinuto([1, 2, 3], eventi)).toEqual([1, 2, 3])
+  })
+
+  it("chi entra in una posizione occupata fa scalare chi c'era nel posto di chi esce", () => {
+    const eventi = [{ tipo: 'cambio', minuto: 20, outId: 2, inId: 4, slotIndex: 2 }]
+    expect(campoAlMinuto([1, 2, 3], eventi)).toEqual([1, 3, 4])
+    const occ = occupantiPerSlot({ formazione: { slots: [1, 2, 3] }, eventi }, modulo)
+    expect(occ.map((s) => s.playerIds)).toEqual([[1], [2, 3], [3, 4]])
+  })
+
+  it('lo spostamento scambia due giocatori senza toccare i minuti', () => {
+    const eventi = [{ tipo: 'spostamento', minuto: 10, playerId: 3, slotIndex: 1 }]
+    expect(campoAlMinuto([1, 2, 3], eventi)).toEqual([1, 3, 2])
+    const { minuti } = calcolaMinuti({ titolari: [1, 2, 3], eventi, durata: 60 })
+    expect(minuti).toEqual({ 1: 60, 2: 60, 3: 60 })
+  })
+
+  it('con lo slot POR noto, la porta segue chi ci viene spostato', () => {
+    const { portaMinuti } = calcolaMinuti({
+      titolari: [1, 2, 3],
+      slots: [1, 2, 3],
+      slotPortiere: 0,
+      durata: 60,
+      eventi: [{ tipo: 'spostamento', minuto: 40, playerId: 2, slotIndex: 0 }],
+    })
+    expect(portaMinuti).toEqual({ 1: 40, 2: 20 })
+  })
+
+  it("l'espulso resta fuori e non è più tra chi può entrare", () => {
+    const eventi = [{ tipo: 'rosso', minuto: 25, playerId: 2 }]
+    expect(campoAlMinuto([1, 2, 3], eventi)).toEqual([1, null, 3])
+    expect([...espulsiAlMinuto(eventi, 30)]).toEqual([2])
+    expect([...espulsiAlMinuto(eventi, 20)]).toEqual([])
   })
 })
 

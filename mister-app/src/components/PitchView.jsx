@@ -1,4 +1,4 @@
-import { COLORI_FAMIGLIA, famigliaRuolo, TIPI_INTESA } from '../db/constants'
+import { COLORI_FAMIGLIA, famigliaRuolo, TIPI_INTESA, incaricoInfo } from '../db/constants'
 import { compatibilitaGiocatore } from '../tactics/engine'
 import { nomeBreve } from '../lib/nomi'
 import { pt, poly, areaPoly } from '../lib/pitchGeometry'
@@ -38,7 +38,7 @@ function BadgeCompatibilita({ x, y, livello }) {
 // nascondere (intese, badge di compatibilità), mai per ricalcolare qualcosa.
 export default function PitchView({
   modulo, ruoli, assignments, players, intese, selected, onSlotTap, badgeInfo,
-  coordinate, fase = 'possesso', cambi = {},
+  coordinate, fase = 'possesso', cambi = {}, incarichi = {},
 }) {
   const slots = modulo.slots
   const coords = coordinate ?? slots.map((s) => ({ u: s.u, t: s.t }))
@@ -178,6 +178,9 @@ export default function PitchView({
                   <text x="14" y="-14" fontSize="12">⚠️</text>
                 )}
                 {compat && <BadgeCompatibilita x={13} y={-14} livello={compat.livello} />}
+                {incaricoInfo(incarichi[p.id]) && (
+                  <text x="-22" y="-12" fontSize="11">{incaricoInfo(incarichi[p.id]).icona}</text>
+                )}
                 <text x="0" y="25" textAnchor="middle" fill="#ececf1" fontSize="10.5" fontWeight="700">
                   {nomeCorto(p)}
                 </text>

@@ -285,3 +285,60 @@ describe('analisi in Home', () => {
     expect(screen.getByText('Sezione di prova')).toBeTruthy()
   })
 })
+
+describe('referto: cambi volanti, posizioni e incarichi', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+    await db.players.bulkAdd(
+      ['Uno', 'Due', 'Tre', 'Quattro', 'Cinque', 'Sei', 'Sette', 'Otto'].map((n, i) => ({
+        id: i + 1, nome: n, ruoloNaturale: 'CC', statoAttivita: 'sicuro',
+      }))
+    )
+    await db.matches.add({
+      id: 1, data: '2026-09-27', golFatti: 0, golSubiti: 0,
+      presenze: Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8].map((id) => [id, 'presente'])),
+      formazione: { formato: 7, modulo: '2-3-1', slots: [1, 2, 3, 4, 5, 6, 7] },
+      eventi: [{ id: 1, tipo: 'cambio', minuto: 15, outId: 7, inId: 8 }],
+    })
+  })
+
+  afterEach(cleanup)
+
+  it('chi è uscito torna tra chi può entrare, e il rientro si salva con posizione e incarico', async () => {
+    render(
+      <MemoryRouter initialEntries={['/partite/1/referto']}>
+        <Routes><Route path="/partite/:id/referto" element={<PartitaRefertoPage />} /></Routes>
+      </MemoryRouter>
+    )
+    fireEvent.click(await screen.findByText('+ Aggiungi evento'))
+    fireEvent.click(screen.getByRole('button', { name: '🔁 Cambio' }))
+    const minuto = screen.getByText('Minuto').parentElement.querySelector('input')
+    fireEvent.change(minuto, { target: { value: '30' } })
+
+    const esce = screen.getByText('Esce').parentElement.querySelector('select')
+    const entra = screen.getByText('Entra').parentElement.querySelector('select')
+    const opzioni = (sel) => [...sel.options].map((o) => o.textContent)
+    // al 30′ in campo c'è Otto, non Sette; Sette è tornato disponibile
+    expect(opzioni(esce).some((t) => t.startsWith('Otto'))).toBe(true)
+    expect(opzioni(esce).some((t) => t.startsWith('Sette'))).toBe(false)
+    expect(opzioni(entra)).toContain('Sette')
+
+    fireEvent.change(esce, { target: { value: '8' } })
+    fireEvent.change(entra, { target: { value: '7' } })
+    const posizione = screen.getByText('Posizione di chi entra').parentElement.querySelector('select')
+    fireEvent.change(posizione, { target: { value: '0' } })
+    fireEvent.click(screen.getByText(/Difensivo/))
+    fireEvent.click(screen.getByText('Aggiungi'))
+    fireEvent.click(screen.getByText('Salva referto'))
+
+    await waitFor(async () => expect((await db.matches.get(1)).eventi).toHaveLength(2))
+    const m = await db.matches.get(1)
+    expect(m.eventi[1]).toMatchObject({ tipo: 'cambio', minuto: 30, outId: 8, inId: 7, slotIndex: 0 })
+    expect(m.formazione.incarichi).toEqual({ 7: 'difensivo' })
+    // Sette: 15′ + 30′; Otto: dal 15′ al 30′
+    expect(m.minuti[7]).toBe(45)
+    expect(m.minuti[8]).toBe(15)
+  })
+})

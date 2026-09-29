@@ -10,7 +10,7 @@ import { nomeBreve } from '../lib/nomi'
 import { partiteInProgramma, partiteGiocate, formatDataPartita } from '../lib/partite'
 import { presentiIds } from '../lib/presenze'
 import { esportaModulo } from '../lib/esportaModulo'
-import { famigliaRuolo, isAttivo } from '../db/constants'
+import { famigliaRuolo, isAttivo, incaricoInfo } from '../db/constants'
 import { ruoliZona, ruoliNpZona, ruoloInfo, ruoloNpInfo, TRANSIZIONE } from '../tactics/constants'
 import {
   risolviRuoli, risolviRuoliNonPossesso, geometriaNonPossesso,
@@ -19,6 +19,7 @@ import {
 import PitchView from '../components/PitchView'
 import EmptyState from '../components/EmptyState'
 import ArrowSelect from '../components/ArrowSelect'
+import IncaricoPicker from '../components/IncaricoPicker'
 import { IconBall } from '../components/icons'
 
 const VUOTO = (formato) => Array(formato).fill(null)
@@ -37,7 +38,7 @@ const nuovoIdRiga = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7
 
 const DEFAULT_BY_FORMATO = () =>
   Object.fromEntries(
-    FORMATI.map((f) => [f, { modulo: MODULO_DEFAULT[f], slots: VUOTO(f), slotRuoliOverride: OVERRIDE_VUOTO(), cambi: {} }])
+    FORMATI.map((f) => [f, { modulo: MODULO_DEFAULT[f], slots: VUOTO(f), slotRuoliOverride: OVERRIDE_VUOTO(), cambi: {}, incarichi: {} }])
   )
 
 export default function ModuloPage() {
@@ -81,6 +82,7 @@ export default function ModuloPage() {
             // mano) non deve mai far crashare il caricamento
             base[f].slotRuoliOverride = convertiSlotRuoliOverride(cfg.slotRuoliOverride)
             if (cfg.cambi && typeof cfg.cambi === 'object') base[f].cambi = cfg.cambi
+            if (cfg.incarichi && typeof cfg.incarichi === 'object') base[f].incarichi = cfg.incarichi
           }
         } else {
           // dati salvati prima dello switch di formato: erano solo calcio a 7
@@ -113,6 +115,7 @@ export default function ModuloPage() {
 
   const MODULI = MODULI_FORMATO[formato]
   const { modulo: moduloKey, slots, slotRuoliOverride, cambi } = byFormato[formato]
+  const incarichi = byFormato[formato].incarichi ?? {}
   const modulo = MODULI[moduloKey]
 
   // Se è selezionata una partita, disponibili e panchina arrivano da chi era
@@ -172,6 +175,7 @@ export default function ModuloPage() {
         entraPlayerId: playerId,
         trigger: 'minuto',
         dettaglio: '',
+        slotIndex: null,
       })),
     })
 
@@ -180,7 +184,7 @@ export default function ModuloPage() {
       ...f,
       cambiPrevisti: [
         ...f.cambiPrevisti,
-        { id: nuovoIdRiga(), escePlayerId: null, entraPlayerId: null, trigger: 'minuto', dettaglio: '' },
+        { id: nuovoIdRiga(), escePlayerId: null, entraPlayerId: null, trigger: 'minuto', dettaglio: '', slotIndex: null },
       ],
     }))
 
@@ -210,6 +214,7 @@ export default function ModuloPage() {
         possesso: { ...(slotRuoliOverride?.possesso ?? {}) },
         nonPossesso: { ...(slotRuoliOverride?.nonPossesso ?? {}) },
       },
+      incarichi: { ...incarichi },
       // una riga senza chi entra non è un cambio previsto, solo rumore
       cambiPrevisti: salvaForm.cambiPrevisti.filter((r) => r.entraPlayerId != null),
     }
@@ -227,6 +232,7 @@ export default function ModuloPage() {
         modulo: s.modulo,
         slots: [...s.slots],
         slotRuoliOverride: convertiSlotRuoliOverride(s.slotRuoliOverride),
+        incarichi: s.incarichi && typeof s.incarichi === 'object' ? { ...s.incarichi } : {},
         cambi: Object.fromEntries(
           (s.cambiPrevisti ?? [])
             .map((r) => [s.slots.indexOf(r.escePlayerId), r.entraPlayerId])
@@ -276,6 +282,15 @@ export default function ModuloPage() {
   const setSlots2 = (nextSlots) => updateFormato({ slots: nextSlots })
 
   const setCambi = (nextCambi) => updateFormato({ cambi: nextCambi })
+
+  // Incarico per fase: per giocatore, non per slot, così segue il giocatore
+  // negli scambi e vale anche per chi entra dalla panchina.
+  const setIncarico = (playerId, valore) => {
+    const next = { ...incarichi }
+    if (valore) next[playerId] = valore
+    else delete next[playerId]
+    updateFormato({ incarichi: next })
+  }
 
   const setOverride = (codice) => {
     if (sel === null) return
@@ -570,6 +585,7 @@ export default function ModuloPage() {
               coordinate={coordinate}
               fase={fase}
               cambi={cambi}
+              incarichi={incarichi}
               assignments={slots}
               players={players}
               intese={intese}
@@ -622,6 +638,13 @@ export default function ModuloPage() {
                         ? `${nomeBreve(cambioSel)} entra al posto di ${nomeBreve(playerSel)}.`
                         : `Tocca un giocatore dalla panchina per farlo entrare al posto di ${nomeBreve(playerSel)}.`}
                     </p>
+                    {cambioSel && (
+                      <IncaricoPicker
+                        label={`Incarico di ${nomeBreve(cambioSel)}`}
+                        value={incarichi[cambioSel.id] ?? null}
+                        onChange={(v) => setIncarico(cambioSel.id, v)}
+                      />
+                    )}
                     <div className="chip-row">
                       {panchina.length === 0 ? (
                         <span className="muted small">Nessun giocatore disponibile in panchina.</span>
@@ -696,6 +719,14 @@ export default function ModuloPage() {
               </div>
               {ruoloSel.compito && (
                 <p className="muted small" style={{ margin: '0 0 8px' }}>{ruoloSel.compito}</p>
+              )}
+
+              {playerSel && (
+                <IncaricoPicker
+                  label={`Incarico di ${nomeBreve(playerSel)}`}
+                  value={incarichi[playerSel.id] ?? null}
+                  onChange={(v) => setIncarico(playerSel.id, v)}
+                />
               )}
 
               <div className="row" style={{ marginBottom: 8 }}>
@@ -797,7 +828,21 @@ export default function ModuloPage() {
                   Facoltativo: chi esce, chi entra e quando o perché.
                 </p>
               )}
-              {salvaForm.cambiPrevisti.map((r) => (
+              {salvaForm.cambiPrevisti.map((r) => {
+                // Cambi volanti: può uscire anche chi è entrato in un'altra
+                // riga, e può entrare anche chi è uscito in un'altra riga.
+                const altre = salvaForm.cambiPrevisti.filter((x) => x.id !== r.id)
+                const titolari = slots.filter(Boolean)
+                const esceIds = [...new Set([
+                  ...titolari,
+                  ...altre.map((x) => x.entraPlayerId).filter((pid) => pid != null),
+                ])]
+                const entraIds = [...new Set([
+                  ...panchina.map((p) => p.id),
+                  ...altre.map((x) => x.escePlayerId).filter((pid) => pid != null),
+                ])].filter((pid) => pid !== r.escePlayerId)
+                const nome = (pid) => nomeBreve(players.find((p) => p.id === pid))
+                return (
                 <div className="card" key={r.id} style={{ marginBottom: 8 }}>
                   <div className="row" style={{ gap: 8 }}>
                     <select
@@ -807,8 +852,8 @@ export default function ModuloPage() {
                       onChange={(e) => modificaRigaCambio(r.id, { escePlayerId: e.target.value ? Number(e.target.value) : null })}
                     >
                       <option value="">Esce — chi?</option>
-                      {slots.filter(Boolean).map((pid) => (
-                        <option key={pid} value={pid}>{nomeBreve(players.find((p) => p.id === pid))}</option>
+                      {esceIds.map((pid) => (
+                        <option key={pid} value={pid}>{nome(pid)}</option>
                       ))}
                     </select>
                     <select
@@ -818,8 +863,8 @@ export default function ModuloPage() {
                       onChange={(e) => modificaRigaCambio(r.id, { entraPlayerId: e.target.value ? Number(e.target.value) : null })}
                     >
                       <option value="">Entra — chi?</option>
-                      {panchina.map((p) => (
-                        <option key={p.id} value={p.id}>{nomeBreve(p)}</option>
+                      {entraIds.map((pid) => (
+                        <option key={pid} value={pid}>{nome(pid)}</option>
                       ))}
                     </select>
                     <button
@@ -848,8 +893,31 @@ export default function ModuloPage() {
                     onChange={(e) => modificaRigaCambio(r.id, { dettaglio: e.target.value })}
                     placeholder="Es. inizio ripresa, se in vantaggio, se prestazione non convince…"
                   />
+                  <select
+                    className="select"
+                    style={{ marginTop: 8 }}
+                    value={r.slotIndex ?? ''}
+                    onChange={(e) => modificaRigaCambio(r.id, { slotIndex: e.target.value !== '' ? Number(e.target.value) : null })}
+                  >
+                    <option value="">Posizione: al posto di chi esce</option>
+                    {modulo.slots.map((sl, i) => (
+                      <option key={i} value={i}>
+                        Posizione: {sl.sigla}{slots[i] != null ? ` (oggi ${nome(slots[i])})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {r.entraPlayerId != null && (
+                    <div style={{ marginTop: 8 }}>
+                      <IncaricoPicker
+                        label={`Incarico di ${nome(r.entraPlayerId)}`}
+                        value={incarichi[r.entraPlayerId] ?? null}
+                        onChange={(v) => setIncarico(r.entraPlayerId, v)}
+                      />
+                    </div>
+                  )}
                 </div>
-              ))}
+                )
+              })}
 
               <div className="row" style={{ gap: 10, marginTop: 10 }}>
                 <button className="btn btn-primary" style={{ flex: 1 }} onClick={confermaSalvaCorrente}>
@@ -890,6 +958,18 @@ export default function ModuloPage() {
                   {' · '}
                   {s.slots.filter(Boolean).length}/{s.formato} schierati
                 </div>
+                {Object.keys(s.incarichi ?? {}).length > 0 && (
+                  <div className="muted small" style={{ marginTop: 6 }}>
+                    {Object.entries(s.incarichi)
+                      .map(([pid, v]) => {
+                        const pl = players.find((p) => p.id === Number(pid))
+                        const info = incaricoInfo(v)
+                        return pl && info ? `${info.icona} ${nomeBreve(pl)}` : null
+                      })
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </div>
+                )}
                 {(s.cambiPrevisti ?? []).length > 0 && (
                   <div className="muted small" style={{ marginTop: 6 }}>
                     {s.cambiPrevisti.map((r) => (
@@ -897,6 +977,9 @@ export default function ModuloPage() {
                         🔁 {r.escePlayerId != null ? nomeBreve(players.find((p) => p.id === r.escePlayerId)) : '?'}
                         {' → '}
                         {nomeBreve(players.find((p) => p.id === r.entraPlayerId))}
+                        {r.slotIndex != null && MODULI[s.modulo]?.slots[r.slotIndex]
+                          ? ` (${MODULI[s.modulo].slots[r.slotIndex].sigla})`
+                          : ''}
                         {' · '}
                         {TRIGGER_CAMBIO.find((t) => t.value === r.trigger)?.label}
                         {r.dettaglio ? ` (${r.dettaglio})` : ''}

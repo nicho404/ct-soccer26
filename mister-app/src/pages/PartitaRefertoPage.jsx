@@ -9,10 +9,11 @@ import { nomeBreve } from '../lib/nomi'
 import { formatDataPartita } from '../lib/partite'
 import {
   DURATA_DEFAULT, calcolaMinuti, portiereIniziale, golDaEventi, disallineamentoRisultato,
-  occupantiPerSlot,
+  occupantiPerSlot, campoAlMinuto, espulsiAlMinuto,
 } from '../lib/storico'
 import { presentiIds } from '../lib/presenze'
 import PitchView from '../components/PitchView'
+import IncaricoPicker from '../components/IncaricoPicker'
 
 const VUOTO = (n) => Array(n).fill(null)
 
@@ -31,6 +32,7 @@ export default function PartitaRefertoPage() {
   const [tattica, setTattica] = useState(TATTICA_DEFAULT)
   const [durata, setDurata] = useState(DURATA_DEFAULT)
   const [eventi, setEventi] = useState([])
+  const [incarichi, setIncarichi] = useState({}) // playerId -> incarico per fase
   const [sel, setSel] = useState(null)
   const [bozza, setBozza] = useState(null) // evento in composizione
   const [loaded, setLoaded] = useState(false)
@@ -69,6 +71,7 @@ export default function PartitaRefertoPage() {
     })
     setDurata(partita?.durata ?? DURATA_DEFAULT)
     setEventi(Array.isArray(partita?.eventi) ? [...partita.eventi] : [])
+    setIncarichi(f?.incarichi && typeof f.incarichi === 'object' ? { ...f.incarichi } : {})
     setLoaded(true)
   }, [partita, team, loaded])
 
@@ -101,7 +104,6 @@ export default function PartitaRefertoPage() {
   // un banner sopra a dirlo, non un ripiego silenzioso sull'intera rosa.
   const presenti = players.filter((p) => presentiIds(partita).includes(p.id))
   const inCampo = slots.filter(Boolean)
-  const panchina = presenti.filter((p) => !inCampo.includes(p.id))
 
   const assegna = (pid) => {
     if (sel == null) return
@@ -140,6 +142,9 @@ export default function PartitaRefertoPage() {
     // tiene solo i giocatori che erano davvero presenti a questa partita
     const ammessi = new Set(presenti.map((p) => p.id))
     setSlots(a.slots.map((pid) => (pid != null && ammessi.has(pid) ? pid : null)))
+    setIncarichi(Object.fromEntries(
+      Object.entries(a.incarichi ?? {}).filter(([pid]) => ammessi.has(Number(pid)))
+    ))
     setTattica({
       impostazione: a.impostazione ?? TATTICA_DEFAULT.impostazione,
       costruzione: a.costruzione ?? TATTICA_DEFAULT.costruzione,
@@ -161,7 +166,27 @@ export default function PartitaRefertoPage() {
     setSel(null)
   }
 
+  const setIncarico = (pid, valore) =>
+    setIncarichi((m) => {
+      const next = { ...m }
+      if (valore) next[pid] = valore
+      else delete next[pid]
+      return next
+    })
+
   // --- eventi ---------------------------------------------------------------
+
+  // Chi è in campo al minuto dell'evento in composizione, dopo tutti gli
+  // eventi già registrati fino a quel minuto: "esce" si sceglie tra loro,
+  // "entra" tra tutti gli altri presenti — compreso chi era uscito prima
+  // (cambi volanti), escluso chi è stato espulso.
+  const campoBozza = bozza ? campoAlMinuto(slots, eventi, bozza.minuto) : slots
+  const inCampoBozza = campoBozza.filter(Boolean)
+  const espulsiBozza = bozza ? espulsiAlMinuto(eventi, bozza.minuto) : new Set()
+  const disponibiliBozza = presenti.filter(
+    (p) => !inCampoBozza.includes(p.id) && !espulsiBozza.has(p.id)
+  )
+  const etichettaSlot = (i) => `${sigle[i]} — ${campoBozza[i] != null ? nomeDi(campoBozza[i]) : 'libero'}`
 
   const aggiungiEvento = () => {
     if (!bozza) return
@@ -174,7 +199,21 @@ export default function PartitaRefertoPage() {
       alert('Indica chi esce, chi entra o entrambi')
       return
     }
-    setEventi((e) => [...e, { ...bozza, id: Date.now() }])
+    if (info.conCambio && bozza.outId != null && !inCampoBozza.includes(bozza.outId)) {
+      alert(`${nomeDi(bozza.outId)} non è in campo al ${bozza.minuto}′`)
+      return
+    }
+    if (info.conSpostamento && (bozza.playerId == null || bozza.slotIndex == null)) {
+      alert('Scegli il giocatore e la nuova posizione')
+      return
+    }
+    if (info.conSpostamento && !inCampoBozza.includes(bozza.playerId)) {
+      alert(`${nomeDi(bozza.playerId)} non è in campo al ${bozza.minuto}′`)
+      return
+    }
+    const { incarico, ...ev } = bozza
+    if (info.conCambio && ev.inId != null && incarico !== undefined) setIncarico(ev.inId, incarico)
+    setEventi((e) => [...e, { ...ev, id: Date.now() }])
     setBozza(null)
   }
 
@@ -183,9 +222,11 @@ export default function PartitaRefertoPage() {
   const eventiOrdinati = [...eventi].sort((a, b) => (a.minuto ?? 0) - (b.minuto ?? 0))
 
   const descriviEvento = (ev) => {
+    const dove = ev.slotIndex != null && sigle[ev.slotIndex] ? ` (${sigle[ev.slotIndex]})` : ''
     if (ev.tipo === 'cambio') {
-      return `${nomeDi(ev.outId)} → ${nomeDi(ev.inId)}`
+      return `${nomeDi(ev.outId)} → ${nomeDi(ev.inId)}${dove}`
     }
+    if (ev.tipo === 'spostamento') return `${nomeDi(ev.playerId)} va in${dove || ' —'}`
     if (ev.tipo === 'golSubito') return 'Gol degli avversari'
     const base = nomeDi(ev.playerId)
     return ev.assistId != null ? `${base} (assist ${nomeDi(ev.assistId)})` : base
@@ -204,9 +245,19 @@ export default function PartitaRefertoPage() {
       eventi,
       durata,
       portiereIniziale: portiereIniziale({ slots }, sigle),
+      slots,
+      slotPortiere: sigle.indexOf('POR'),
     })
+    // incarichi solo di chi ha giocato: un titolare tolto dallo slot non
+    // si porta dietro l'incarico nel referto salvato
+    const giocato = new Set([...titolari, ...Object.keys(minuti).map(Number)])
     await db.matches.update(partitaId, {
-      formazione: { formato, modulo: moduloKey, slots: [...slots], ...tattica },
+      formazione: {
+        formato, modulo: moduloKey, slots: [...slots], ...tattica,
+        incarichi: Object.fromEntries(
+          Object.entries(incarichi).filter(([pid]) => giocato.has(Number(pid)))
+        ),
+      },
       durata,
       eventi,
       minuti,
@@ -302,6 +353,7 @@ export default function PartitaRefertoPage() {
         assignments={slots}
         players={players}
         intese={[]}
+        incarichi={incarichi}
         selected={sel}
         onSlotTap={modoLive ? apriOsservazione : (i) => setSel(sel === i ? null : i)}
       />
@@ -335,6 +387,15 @@ export default function PartitaRefertoPage() {
           <button className="btn btn-sm" style={{ marginTop: 8 }} onClick={svuotaSlot}>
             Lascia vuoto
           </button>
+          {slots[sel] != null && (
+            <div style={{ marginTop: 12 }}>
+              <IncaricoPicker
+                label={`Incarico di ${nomeDi(slots[sel])}`}
+                value={incarichi[slots[sel]] ?? null}
+                onChange={(v) => setIncarico(slots[sel], v)}
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -418,6 +479,7 @@ export default function PartitaRefertoPage() {
                   className={`chip chip-sm ${bozza.tipo === t.value ? 'selected' : ''}`}
                   onClick={() => setBozza((b) => ({
                     ...b, tipo: t.value, playerId: null, assistId: null, outId: null, inId: null,
+                    slotIndex: null, incarico: undefined,
                   }))}
                 >
                   {t.icona} {t.label}
@@ -439,7 +501,7 @@ export default function PartitaRefertoPage() {
             />
           </div>
 
-          {tipoEventoInfo(bozza.tipo).conGiocatore && (
+          {(tipoEventoInfo(bozza.tipo).conGiocatore || tipoEventoInfo(bozza.tipo).conSpostamento) && (
             <div className="field">
               <label>Giocatore</label>
               <select
@@ -450,10 +512,35 @@ export default function PartitaRefertoPage() {
                 }))}
               >
                 <option value="">— Scegli —</option>
-                {presenti.map((p) => (
-                  <option key={p.id} value={p.id}>{nomeBreve(p)}</option>
+                {tipoEventoInfo(bozza.tipo).conSpostamento
+                  ? inCampoBozza.map((pid) => (
+                    <option key={pid} value={pid}>{nomeDi(pid)} ({sigle[campoBozza.indexOf(pid)]})</option>
+                  ))
+                  : presenti.map((p) => (
+                    <option key={p.id} value={p.id}>{nomeBreve(p)}</option>
+                  ))}
+              </select>
+            </div>
+          )}
+
+          {tipoEventoInfo(bozza.tipo).conSpostamento && (
+            <div className="field">
+              <label>Nuova posizione</label>
+              <select
+                className="select"
+                value={bozza.slotIndex ?? ''}
+                onChange={(e) => setBozza((b) => ({
+                  ...b, slotIndex: e.target.value !== '' ? Number(e.target.value) : null,
+                }))}
+              >
+                <option value="">— Scegli —</option>
+                {sigle.map((_, i) => (
+                  <option key={i} value={i}>{etichettaSlot(i)}</option>
                 ))}
               </select>
+              <p className="muted small" style={{ margin: '6px 0 0' }}>
+                Se la posizione è occupata, i due giocatori si scambiano di posto.
+              </p>
             </div>
           )}
 
@@ -487,8 +574,8 @@ export default function PartitaRefertoPage() {
                   }))}
                 >
                   <option value="">— Nessuno —</option>
-                  {inCampo.map((pid) => (
-                    <option key={pid} value={pid}>{nomeDi(pid)}</option>
+                  {inCampoBozza.map((pid) => (
+                    <option key={pid} value={pid}>{nomeDi(pid)} ({sigle[campoBozza.indexOf(pid)]})</option>
                   ))}
                 </select>
               </div>
@@ -502,11 +589,36 @@ export default function PartitaRefertoPage() {
                   }))}
                 >
                   <option value="">— Nessuno —</option>
-                  {panchina.map((p) => (
+                  {disponibiliBozza.map((p) => (
                     <option key={p.id} value={p.id}>{nomeBreve(p)}</option>
                   ))}
                 </select>
               </div>
+              <div className="field">
+                <label>Posizione di chi entra</label>
+                <select
+                  className="select"
+                  value={bozza.slotIndex ?? ''}
+                  onChange={(e) => setBozza((b) => ({
+                    ...b, slotIndex: e.target.value !== '' ? Number(e.target.value) : null,
+                  }))}
+                >
+                  <option value="">Al posto di chi esce</option>
+                  {sigle.map((_, i) => (
+                    <option key={i} value={i}>{etichettaSlot(i)}</option>
+                  ))}
+                </select>
+                <p className="muted small" style={{ margin: '6px 0 0' }}>
+                  Chi occupa quella posizione scala nel posto lasciato libero da chi esce.
+                </p>
+              </div>
+              {bozza.inId != null && (
+                <IncaricoPicker
+                  label={`Incarico di ${nomeDi(bozza.inId)}`}
+                  value={bozza.incarico !== undefined ? bozza.incarico : incarichi[bozza.inId] ?? null}
+                  onChange={(v) => setBozza((b) => ({ ...b, incarico: v }))}
+                />
+              )}
             </>
           )}
 
@@ -520,7 +632,9 @@ export default function PartitaRefertoPage() {
       ) : (
         <button
           className="btn btn-block"
-          onClick={() => setBozza({ tipo: 'gol', minuto: 0, playerId: null, assistId: null, outId: null, inId: null })}
+          onClick={() => setBozza({
+            tipo: 'gol', minuto: 0, playerId: null, assistId: null, outId: null, inId: null, slotIndex: null,
+          })}
         >
           + Aggiungi evento
         </button>
