@@ -137,14 +137,14 @@ export default function RosaPage() {
         />
       ) : (
         <>
-          <div className="stat-grid">
+          <div className="stat-grid compatto">
             <div className="stat-tile">
               <div className="value">{disponibili.length}</div>
               <div className="label">Disponibili</div>
             </div>
             <div className={`stat-tile ${inPorta.length === 0 ? 'stat-tile-allarme' : ''}`}>
               <div className="value">{inPorta.length}</div>
-              <div className="label">🧤 Coprono la porta</div>
+              <div className="label">🧤 In porta</div>
             </div>
             <div className={`stat-tile ${scontenti.length > 0 ? 'stat-tile-allarme' : ''}`}>
               <div className="value">{scontenti.length}</div>

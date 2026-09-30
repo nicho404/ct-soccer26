@@ -9,40 +9,40 @@ import {
   formatDataPartita, quandoPartita, bilancio,
 } from '../lib/partite'
 import { presentiIds } from '../lib/presenze'
+import { refertoCompilato } from '../lib/storico'
 
-function CardPartita({ partita, nomeAvversario, nomeCompetizione, inProgramma }) {
+// Una riga per partita: a sinistra com'è finita (o quando si gioca), al
+// centro avversario e data, a destra solo ciò che resta da fare.
+function RigaPartita({ partita, nomeAvversario, nomeCompetizione, futura }) {
   const esito = esitoPartita(partita)
   const campo = campoPartitaInfo(partita.campo)
+  const daFare = !futura && (!esito ? 'Risultato' : !refertoCompilato(partita) ? 'Referto' : null)
 
   return (
-    <Link to={`/partite/${partita.id}`} className="card tappable">
-      <div className="row">
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <strong>{nomeAvversario || 'Avversario da definire'}</strong>
-          <div className="muted small">
-            {[
-              formatDataPartita(partita.data),
-              partita.ora,
-              campo.label,
-            ].filter(Boolean).join(' · ')}
-          </div>
-        </div>
+    <Link to={`/partite/${partita.id}`} className="card tappable partita-riga">
+      <span className="partita-riga-esito">
         {esito ? (
-          <span className={`badge ${ESITO_INFO[esito].badge}`}>
-            {partita.golFatti}-{partita.golSubiti}
-          </span>
-        ) : inProgramma ? (
+          <span className={`badge ${ESITO_INFO[esito].badge}`}>{partita.golFatti}-{partita.golSubiti}</span>
+        ) : futura ? (
           <span className="badge badge-accent">{quandoPartita(partita.data)}</span>
         ) : (
-          <span className="badge badge-warn">Da compilare</span>
+          <span className="badge badge-warn">?</span>
         )}
-      </div>
-      <div className="muted small" style={{ marginTop: 6, opacity: 0.75 }}>
-        {[
-          nomeCompetizione,
-          inProgramma ? `${presentiIds(partita).length} presenti` : null,
-        ].filter(Boolean).join(' · ')}
-      </div>
+      </span>
+      <span className="partita-riga-testo">
+        <strong>{nomeAvversario || 'Avversario da definire'}</strong>
+        <span className="muted small">
+          {[
+            formatDataPartita(partita.data),
+            partita.ora,
+            campo.label,
+            partita.giornata ? `G${partita.giornata}` : '',
+            nomeCompetizione,
+            futura ? `${presentiIds(partita).length} presenti` : '',
+          ].filter(Boolean).join(' · ')}
+        </span>
+      </span>
+      {daFare && <span className="badge badge-warn">{daFare} da fare</span>}
     </Link>
   )
 }
@@ -56,19 +56,25 @@ export default function PartitePage() {
   if (!partite || !opponents || !competitions) return null
 
   const nomeAvversario = (id) => opponents.find((o) => o.id === id)?.nome ?? ''
-  const nomeCompetizione = (id) => competitions.find((c) => c.id === id)?.nome ?? ''
+  // Il nome della competizione compare sulla riga solo se ce n'è più d'una:
+  // ripeterlo identico su ogni partita è rumore.
+  const usate = new Set(partite.map((m) => m.competitionId ?? null))
+  const nomeCompetizione = (id) =>
+    usate.size > 1 ? competitions.find((c) => c.id === id)?.nome ?? '' : ''
+  const unica = usate.size === 1 ? competitions.find((c) => usate.has(c.id))?.nome : null
 
   const inProgramma = partiteInProgramma(partite)
   const giocate = partiteGiocate(partite)
   const b = bilancio(partite)
+  const refertiMancanti = giocate.filter((m) => esitoPartita(m) && !refertoCompilato(m)).length
 
-  const card = (partita, futura) => (
-    <CardPartita
+  const riga = (partita, futura) => (
+    <RigaPartita
       key={partita.id}
       partita={partita}
       nomeAvversario={nomeAvversario(partita.opponentId)}
       nomeCompetizione={nomeCompetizione(partita.competitionId)}
-      inProgramma={futura}
+      futura={futura}
     />
   )
 
@@ -76,7 +82,7 @@ export default function PartitePage() {
     <div className="page">
       <div className="page-header">
         <h1>Partite</h1>
-        <span className="muted small">{partite.length}</span>
+        <span className="muted small">{unica ?? `${partite.length}`}</span>
       </div>
 
       {partite.length === 0 ? (
@@ -93,33 +99,39 @@ export default function PartitePage() {
       ) : (
         <>
           {b.giocate > 0 && (
-            <div className="stat-grid">
+            <div className="stat-grid compatto">
               <div className="stat-tile">
-                <div className="value">{b.vinte}-{b.pari}-{b.perse}</div>
-                <div className="label">V-N-P su {b.giocate}</div>
+                <div className="value">
+                  <span style={{ color: 'var(--ok)' }}>{b.vinte}</span>
+                  <span className="muted">-</span>
+                  <span style={{ color: 'var(--warn)' }}>{b.pari}</span>
+                  <span className="muted">-</span>
+                  <span style={{ color: 'var(--danger)' }}>{b.perse}</span>
+                </div>
+                <div className="label">V-N-P</div>
               </div>
               <div className="stat-tile">
-                <div className="value">{b.golFatti}</div>
-                <div className="label">Gol fatti</div>
+                <div className="value">{b.golFatti}:{b.golSubiti}</div>
+                <div className="label">Gol</div>
               </div>
-              <div className="stat-tile">
-                <div className="value">{b.golSubiti}</div>
-                <div className="label">Gol subiti</div>
+              <div className={`stat-tile ${refertiMancanti > 0 ? 'stat-tile-allarme' : ''}`}>
+                <div className="value">{refertiMancanti}</div>
+                <div className="label">Referti da fare</div>
               </div>
             </div>
           )}
 
           {inProgramma.length > 0 && (
             <>
-              <div className="section-title">In programma</div>
-              {inProgramma.map((m) => card(m, true))}
+              <div className="section-title">In programma ({inProgramma.length})</div>
+              {inProgramma.map((m) => riga(m, true))}
             </>
           )}
 
           {giocate.length > 0 && (
             <>
-              <div className="section-title">Storico</div>
-              {giocate.map((m) => card(m, false))}
+              <div className="section-title">Giocate ({giocate.length})</div>
+              {giocate.map((m) => riga(m, false))}
             </>
           )}
 

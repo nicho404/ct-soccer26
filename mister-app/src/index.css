@@ -396,6 +396,26 @@ a.card {
 .stat-tile-allarme { border-color: rgba(248, 113, 113, 0.5); }
 .stat-tile-allarme .value { color: var(--danger); }
 
+/* Riquadri compatti: stessa altezza, etichetta su una riga */
+.stat-grid.compatto { gap: 8px; margin-bottom: 12px; }
+.stat-grid.compatto .stat-tile { padding: 8px 4px; }
+.stat-grid.compatto .stat-tile .value { font-size: 1.25rem; }
+.stat-grid.compatto .stat-tile .label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Partite: righe e scheda */
+.card.partita-riga { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+.partita-riga-esito { width: 58px; flex-shrink: 0; display: flex; justify-content: center; }
+.partita-riga-esito .badge { width: 100%; text-align: center; font-weight: 800; }
+.partita-riga-testo { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.partita-riga-testo strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card.partita-voce {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+  font: inherit; color: inherit; cursor: pointer;
+}
+.partita-voce-icona { font-size: 1.2rem; width: 26px; text-align: center; flex-shrink: 0; }
+.partita-voce-testo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.risultato-input { width: 72px; text-align: center; font-size: 1.3rem; font-weight: 800; }
+
 /* Home: stagione e forma */
 .stagione-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
 .stagione-grid .stat-tile { padding: 10px 4px; text-decoration: none; color: inherit; }

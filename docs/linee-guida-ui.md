@@ -37,6 +37,14 @@ tocco. Prima di ridisegnare un'altra sezione, verificare questi punti.
   (stato, acciaccato, tesseramento) compaiono sotto il nome solo se ci sono.
 - **Home**: prossima partita (con la posizione dell'avversario), ultima partita, stagione in
   quattro numeri (posizione, punti, V-N-P, gol) e forma dalla più vecchia alla più recente.
+- **Partite**: riquadri compatti (V-N-P, gol, referti da fare), una riga per partita con il
+  risultato a sinistra; il nome della competizione solo se ce n'è più d'una; "da fare" solo se
+  manca qualcosa.
+- **Scheda partita**: riepilogo in cima (risultato, avversario, data, competizione) con ✎ per i
+  dati in finestra; risultato modificabile subito sotto; Presenze, Referto e Marcatori avversari
+  come righe con stato, il dettaglio in finestra o nel referto. In creazione i dati restano in
+  pagina, perché vanno compilati.
+- **Riquadri in cima**: classe `stat-grid compatto`, etichette di una parola.
 
 ## Componenti
 

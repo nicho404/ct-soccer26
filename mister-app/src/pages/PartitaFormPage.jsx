@@ -3,9 +3,11 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import {
-  CAMPI_PARTITA, TIPI_COMPETIZIONE, isAttivo, ruoloOrdine,
+  CAMPI_PARTITA, TIPI_COMPETIZIONE, isAttivo, ruoloOrdine, campoPartitaInfo,
 } from '../db/constants'
-import { oggiISO, esitoPartita, ESITO_INFO, campiForm, partitaGiocata } from '../lib/partite'
+import {
+  oggiISO, esitoPartita, ESITO_INFO, campiForm, partitaGiocata, formatDataPartita, quandoPartita,
+} from '../lib/partite'
 import { marcatori, cartellini, disallineamentoGirone, pulisciNome } from '../lib/girone'
 import { eventiPerForm, eventiPerDb } from '../db/girone'
 import EventiAvversari from '../components/EventiAvversari'
@@ -13,6 +15,7 @@ import { refertoCompilato, titolariDi } from '../lib/storico'
 import { contaSeduta } from '../lib/presenze'
 import AppelloPresenze from '../components/AppelloPresenze'
 import Scelta from '../components/Scelta'
+import Modal from '../components/Modal'
 
 const EMPTY = {
   data: '',
@@ -55,6 +58,8 @@ export default function PartitaFormPage() {
   const [loaded, setLoaded] = useState(!editing)
   // marcatori e cartellini avversari nella forma del form ({ tipo, lato, nome })
   const [eventiAvv, setEventiAvv] = useState([])
+  // finestra aperta: 'dati' | 'appello' | 'avversari' | null
+  const [finestra, setFinestra] = useState(null)
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const opponents = useLiveQuery(() => db.opponents.toArray(), [])
@@ -178,13 +183,10 @@ export default function PartitaFormPage() {
   const diffidati = scheda?.cartellini.filter((r) => r.diffidato) ?? []
   const storti = disallineamentoGirone({ golSubiti: form.golSubiti, eventiAvversari: eventiAvv })
 
-  return (
-    <div className="page">
-      <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
-        <h1>{editing ? 'Modifica partita' : 'Nuova partita'}</h1>
-      </div>
-
+  // Dati anagrafici della partita: in creazione stanno nella pagina (vanno
+  // compilati subito), in modifica in una finestra dietro al riepilogo.
+  const campiDati = (
+    <>
       <div className="field">
         <label>Avversario</label>
         <input
@@ -200,30 +202,9 @@ export default function PartitaFormPage() {
           ))}
         </datalist>
         <p className="muted small" style={{ margin: '6px 0 0' }}>
-          Se il nome è nuovo viene creata la squadra: lo scouting completo arriva con M7.
+          Se il nome è nuovo viene creata la squadra.
         </p>
       </div>
-
-      {scheda && (scheda.bomber.length > 0 || squalificati.length > 0 || diffidati.length > 0) && (
-        <div className="card">
-          <strong className="small">Dal girone</strong>
-          {scheda.bomber.length > 0 && (
-            <div className="small" style={{ marginTop: 6 }}>
-              ⚽ {scheda.bomber.map((r) => `${r.nome} ${r.gol}`).join(' · ')}
-            </div>
-          )}
-          {squalificati.length > 0 && (
-            <div className="small" style={{ marginTop: 6, color: 'var(--danger)' }}>
-              Squalificati: {squalificati.map((r) => `${r.nome} (${r.squalifica.motivo.toLowerCase()})`).join(' · ')}
-            </div>
-          )}
-          {diffidati.length > 0 && (
-            <div className="small" style={{ marginTop: 6, color: 'var(--warn)' }}>
-              Diffidati: {diffidati.map((r) => r.nome).join(' · ')}
-            </div>
-          )}
-        </div>
-      )}
 
       <div className="row" style={{ gap: 10, alignItems: 'flex-start' }}>
         <div className="field" style={{ flex: 1 }}>
@@ -292,39 +273,33 @@ export default function PartitaFormPage() {
                 </button>
               ))}
             </div>
-            <button
-              className="btn btn-sm"
-              style={{ marginTop: 8 }}
-              onClick={() => setNuovaComp(null)}
-            >
+            <button className="btn btn-sm" style={{ marginTop: 8 }} onClick={() => setNuovaComp(null)}>
               Annulla
             </button>
           </>
         ) : (
-          <>
-            <Scelta
-              titolo="Competizione"
-              className="select"
-              value={form.competitionId ?? ''}
-              onChange={(e) => set('competitionId', e.target.value ? Number(e.target.value) : null)}
-            >
-              <option value="">— Nessuna —</option>
-              {competitions.map((c) => (
-                <option key={c.id} value={c.id}>{c.nome}</option>
-              ))}
-            </Scelta>
-            <button
-              className="btn btn-sm"
-              style={{ marginTop: 8 }}
-              onClick={() => setNuovaComp({ nome: '', tipo: 'campionato' })}
-            >
-              + Nuova competizione
+          <div className="row" style={{ gap: 8 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Scelta
+                titolo="Competizione"
+                className="select"
+                value={form.competitionId ?? ''}
+                onChange={(e) => set('competitionId', e.target.value ? Number(e.target.value) : null)}
+              >
+                <option value="">— Nessuna —</option>
+                {competitions.map((c) => (
+                  <option key={c.id} value={c.id}>{c.nome}</option>
+                ))}
+              </Scelta>
+            </div>
+            <button className="btn btn-sm" onClick={() => setNuovaComp({ nome: '', tipo: 'campionato' })}>
+              + Nuova
             </button>
-          </>
+          </div>
         )}
       </div>
 
-      <div className="field">
+      <div className="field" style={{ marginBottom: 0 }}>
         <label>Giornata</label>
         <input
           className="input"
@@ -339,91 +314,156 @@ export default function PartitaFormPage() {
           Con la competizione, mette la partita nella classifica del Girone.
         </p>
       </div>
+    </>
+  )
 
-      <div className="section-title row">
-        <span style={{ flex: 1 }}>
-          Presenze ({conteggioPresenze.presenti}/{conteggioPresenze.totale})
-        </span>
-        <button className="btn btn-sm" onClick={tuttiPresenti}>Tutti presenti</button>
+  const nomeCompetizione = nuovaComp?.nome.trim()
+    || competitions.find((c) => c.id === form.competitionId)?.nome
+  const giustificati = Object.values(form.presenze).filter((x) => x === 'giustificato').length
+  const nEventiAvv = eventiAvv.length
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
+        <h1>{editing ? 'Partita' : 'Nuova partita'}</h1>
       </div>
 
-      <AppelloPresenze giocatori={convocabili} presenze={form.presenze} onSegna={segna} />
-      {conteggioPresenze.totale > 0 && (
-        <button className="btn btn-sm" style={{ marginTop: 10 }} onClick={svuotaAppello}>
-          Svuota appello
+      {editing ? (
+        // Riepilogo: chi, quando, dove e com'è finita. I dati si cambiano
+        // dalla finestra, non stanno aperti sotto gli occhi.
+        <div className="card partita-riepilogo">
+          <div className="row" style={{ gap: 10 }}>
+            {esito ? (
+              <span className={`badge risultato-grande ${ESITO_INFO[esito].badge}`}>
+                {form.golFatti}-{form.golSubiti}
+              </span>
+            ) : (
+              <span className="badge badge-accent">{quandoPartita(form.data) || 'Da giocare'}</span>
+            )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <strong>{nomeAvversario.trim() || 'Avversario da definire'}</strong>
+              <div className="muted small">
+                {[formatDataPartita(form.data), form.ora, campoPartitaInfo(form.campo).label].filter(Boolean).join(' · ')}
+              </div>
+              {(nomeCompetizione || form.giornata || form.luogo) && (
+                <div className="muted small">
+                  {[nomeCompetizione, form.giornata ? `G${form.giornata}` : '', form.luogo].filter(Boolean).join(' · ')}
+                </div>
+              )}
+            </div>
+            <button className="btn btn-sm" aria-label="Modifica dati partita" onClick={() => setFinestra('dati')}>✎</button>
+          </div>
+        </div>
+      ) : (
+        campiDati
+      )}
+
+      {scheda && (scheda.bomber.length > 0 || squalificati.length > 0 || diffidati.length > 0) && (
+        <div className="card">
+          <strong className="small">Dal girone</strong>
+          {scheda.bomber.length > 0 && (
+            <div className="small" style={{ marginTop: 6 }}>
+              ⚽ {scheda.bomber.map((r) => `${r.nome} ${r.gol}`).join(' · ')}
+            </div>
+          )}
+          {squalificati.length > 0 && (
+            <div className="small" style={{ marginTop: 6, color: 'var(--danger)' }}>
+              Squalificati: {squalificati.map((r) => `${r.nome} (${r.squalifica.motivo.toLowerCase()})`).join(' · ')}
+            </div>
+          )}
+          {diffidati.length > 0 && (
+            <div className="small" style={{ marginTop: 6, color: 'var(--warn)' }}>
+              Diffidati: {diffidati.map((r) => r.nome).join(' · ')}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="section-title">Risultato</div>
+      <div className="card row" style={{ gap: 10 }}>
+        <input
+          className="input risultato-input"
+          type="number"
+          min="0"
+          inputMode="numeric"
+          aria-label="Gol fatti"
+          placeholder="Noi"
+          value={form.golFatti ?? ''}
+          onChange={(e) => set('golFatti', toGol(e.target.value))}
+        />
+        <span className="muted" style={{ fontWeight: 800 }}>–</span>
+        <input
+          className="input risultato-input"
+          type="number"
+          min="0"
+          inputMode="numeric"
+          aria-label="Gol subiti"
+          placeholder="Loro"
+          value={form.golSubiti ?? ''}
+          onChange={(e) => set('golSubiti', toGol(e.target.value))}
+        />
+        <span className="muted small" style={{ flex: 1, textAlign: 'right' }}>
+          {esito ? ESITO_INFO[esito].label : 'Vuoto finché non si gioca'}
+        </span>
+      </div>
+
+      {/* Le tre cose da fare su una partita, una riga ciascuna: il
+          dettaglio si apre in finestra (o nel referto) solo quando serve */}
+      <div className="section-title">Compilazione</div>
+      <button type="button" className="card tappable partita-voce" onClick={() => setFinestra('appello')}>
+        <span className="partita-voce-icona">✅</span>
+        <span className="partita-voce-testo">
+          <strong>Presenze</strong>
+          <span className="muted small">
+            {conteggioPresenze.totale === 0
+              ? 'Appello da fare'
+              : `${conteggioPresenze.presenti} presenti su ${conteggioPresenze.totale}${giustificati ? ` · ${giustificati} giustificati` : ''}`}
+          </span>
+        </span>
+        <span className={`badge ${conteggioPresenze.totale === 0 ? 'badge-warn' : 'badge-ok'}`}>
+          {conteggioPresenze.totale === 0 ? 'Da fare' : `${conteggioPresenze.presenti}`}
+        </span>
+      </button>
+
+      {editing && (
+        <button
+          type="button"
+          className="card tappable partita-voce"
+          onClick={() => navigate(`/partite/${id}/referto`, { state: location.state })}
+        >
+          <span className="partita-voce-icona">📋</span>
+          <span className="partita-voce-testo">
+            <strong>Referto</strong>
+            <span className="muted small">
+              {refertoCompilato(form)
+                ? `${titolariDi(form).length} schierati · ${(form.eventi ?? []).length} eventi`
+                : 'Formazione, cambi, gol e minuti'}
+            </span>
+          </span>
+          <span className={`badge ${refertoCompilato(form) ? 'badge-ok' : 'badge-warn'}`}>
+            {refertoCompilato(form) ? 'Fatto' : 'Da fare'}
+          </span>
         </button>
       )}
 
-      <p className="muted small" style={{ margin: '10px 0 0' }}>
-        P presente · A assente · G giustificato. Sono i presenti a comparire come
-        candidati in Modulo e nel referto della partita.
-      </p>
-
-      <div className="section-title">Risultato</div>
-      <div className="card">
-        <div className="row" style={{ gap: 10 }}>
-          <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-            <label>Gol fatti</label>
-            <input
-              className="input"
-              type="number"
-              min="0"
-              inputMode="numeric"
-              value={form.golFatti ?? ''}
-              onChange={(e) => set('golFatti', toGol(e.target.value))}
-            />
-          </div>
-          <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-            <label>Gol subiti</label>
-            <input
-              className="input"
-              type="number"
-              min="0"
-              inputMode="numeric"
-              value={form.golSubiti ?? ''}
-              onChange={(e) => set('golSubiti', toGol(e.target.value))}
-            />
-          </div>
-        </div>
-        <p className="muted small" style={{ margin: '10px 0 0' }}>
-          {esito
-            ? `${ESITO_INFO[esito].label} ${form.golFatti}-${form.golSubiti}.`
-            : 'Lascia vuoto finché la partita non è giocata.'}
-        </p>
-      </div>
-
-      <div className="section-title">Marcatori e cartellini avversari</div>
-      <EventiAvversari
-        eventi={eventiAvv}
-        onChange={setEventiAvv}
-        lati={[{ key: 'avversario', nome: nomeAvversario, opponentId: avversarioId }]}
-        giocatori={giocatoriAvversari}
-      />
+      <button type="button" className="card tappable partita-voce" onClick={() => setFinestra('avversari')}>
+        <span className="partita-voce-icona">🟨</span>
+        <span className="partita-voce-testo">
+          <strong>Marcatori e cartellini avversari</strong>
+          <span className="muted small">
+            {nEventiAvv === 0
+              ? 'Per la classifica marcatori e le squalifiche del girone'
+              : eventiAvv.map((e) => e.nome).slice(0, 3).join(', ') + (nEventiAvv > 3 ? '…' : '')}
+          </span>
+        </span>
+        <span className="badge">{nEventiAvv}</span>
+      </button>
       {storti && (
         <div className="alert-card" style={{ marginTop: 10 }}>
           {storti[0].eventi} marcatori avversari su {storti[0].risultato ?? 'nessun'} gol subiti:
           controlla prima di salvare, o salva lo stesso.
         </div>
-      )}
-
-      {editing && (
-        <>
-          <div className="section-title">Referto</div>
-          <div className="card">
-            <div className="muted small">
-              {refertoCompilato(form)
-                ? `${titolariDi(form).length} schierati · ${(form.eventi ?? []).length} eventi registrati.`
-                : 'Formazione schierata, marcatori, cambi e minuti giocati.'}
-            </div>
-            <button
-              className="btn btn-sm"
-              style={{ marginTop: 10 }}
-              onClick={() => navigate(`/partite/${id}/referto`, { state: location.state })}
-            >
-              {refertoCompilato(form) ? 'Apri referto' : '+ Compila referto'}
-            </button>
-          </div>
-        </>
       )}
 
       <div className="field" style={{ marginTop: 14 }}>
@@ -444,6 +484,50 @@ export default function PartitaFormPage() {
         <button className="btn btn-danger btn-block" style={{ marginTop: 10 }} onClick={elimina}>
           Elimina partita
         </button>
+      )}
+
+      {finestra === 'dati' && (
+        <Modal titolo="Dati partita" onClose={() => setFinestra(null)}>
+          {campiDati}
+          <button className="btn btn-primary btn-block" style={{ marginTop: 14 }} onClick={() => setFinestra(null)}>
+            Fatto
+          </button>
+        </Modal>
+      )}
+
+      {finestra === 'appello' && (
+        <Modal
+          titolo={`Presenze (${conteggioPresenze.presenti}/${conteggioPresenze.totale})`}
+          onClose={() => setFinestra(null)}
+        >
+          <div className="row" style={{ gap: 8, marginBottom: 10 }}>
+            <button className="btn btn-sm" onClick={tuttiPresenti}>Tutti presenti</button>
+            {conteggioPresenze.totale > 0 && (
+              <button className="btn btn-sm" onClick={svuotaAppello}>Svuota</button>
+            )}
+          </div>
+          <AppelloPresenze giocatori={convocabili} presenze={form.presenze} onSegna={segna} />
+          <p className="muted small" style={{ margin: '10px 0 0' }}>
+            P presente · A assente · G giustificato. I presenti sono i candidati in Modulo e nel referto.
+          </p>
+          <button className="btn btn-primary btn-block" style={{ marginTop: 10 }} onClick={() => setFinestra(null)}>
+            Fatto
+          </button>
+        </Modal>
+      )}
+
+      {finestra === 'avversari' && (
+        <Modal titolo="Marcatori e cartellini avversari" onClose={() => setFinestra(null)}>
+          <EventiAvversari
+            eventi={eventiAvv}
+            onChange={setEventiAvv}
+            lati={[{ key: 'avversario', nome: nomeAvversario, opponentId: avversarioId }]}
+            giocatori={giocatoriAvversari}
+          />
+          <button className="btn btn-primary btn-block" style={{ marginTop: 10 }} onClick={() => setFinestra(null)}>
+            Fatto
+          </button>
+        </Modal>
       )}
     </div>
   )

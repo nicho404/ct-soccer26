@@ -204,10 +204,16 @@ describe('girone con dati', () => {
     await db.matches.update(1, { eventi: [{ tipo: 'gol', playerId: 7 }], minuti: { 7: 60 } })
     monta('/partite/1', '/partite/:id', PartitaFormPage)
     await attendiContenuto()
+    // dati e marcatori avversari stanno in finestra, dietro al riepilogo
+    fireEvent.click(await screen.findByRole('button', { name: 'Modifica dati partita' }))
     const giornata = await screen.findByText('Giornata')
     fireEvent.change(giornata.parentElement.querySelector('input'), { target: { value: '3' } })
+    fireEvent.click(screen.getByText('Fatto'))
+    fireEvent.click(screen.getByText('Marcatori e cartellini avversari'))
     fireEvent.change(screen.getByPlaceholderText('Cognome Nome'), { target: { value: 'Testa' } })
     fireEvent.click(screen.getByText('Aggiungi'))
+    fireEvent.click(screen.getByText('Fatto'))
+    expect(screen.queryByRole('dialog')).toBeNull()
     fireEvent.click(screen.getByText('Salva modifiche'))
 
     await waitFor(async () => expect((await db.matches.get(1)).giornata).toBe(3))
