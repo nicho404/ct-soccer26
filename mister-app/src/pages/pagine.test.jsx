@@ -638,3 +638,58 @@ describe('quaderno: analisi e manuale in una sezione', () => {
     expect(screen.getByRole('tab', { name: 'Manuale' }).getAttribute('aria-selected')).toBe('true')
   })
 })
+
+describe('osservazione da bordo campo', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+    await db.players.bulkAdd([
+      { id: 1, nome: 'Mario Rossi', soprannome: 'Rossi', ruoloNaturale: 'DC', statoAttivita: 'sicuro' },
+      { id: 2, nome: 'Luca Bianchi', soprannome: 'Bianchi', ruoloNaturale: 'ATT', statoAttivita: 'sicuro' },
+      { id: 3, nome: 'Paolo Verdi', soprannome: 'Verdi', ruoloNaturale: 'CC', statoAttivita: 'sicuro' },
+    ])
+    // in partita ha giocato solo Rossi (DC)
+    await db.matches.add({
+      id: 1, data: '2026-09-27', golFatti: 1, golSubiti: 0, durata: 50,
+      presenze: { 1: 'presente' },
+      formazione: { formato: 7, modulo: '2-3-1', slots: [null, 1, null, null, null, null, null] },
+      minuti: { 1: 50 },
+    })
+  })
+
+  afterEach(() => { cleanup(); vi.restoreAllMocks() })
+
+  it('nota e frecce rispetto al suo solito, salvate sulla scala di sempre', async () => {
+    montaPagina(ObservationPage)
+    fireEvent.click(await screen.findByRole('button', { name: /Bianchi/ }))
+    const finestra = screen.getByRole('dialog')
+    fireEvent.change(screen.getByLabelText('Nota'), { target: { value: 'Tiene palla e fa salire la squadra' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Lettura del gioco: Sopra il suo solito' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Intensità: Sotto il suo solito' }))
+    expect(finestra.textContent).not.toContain('Compiti del ruolo')
+    fireEvent.click(screen.getByRole('button', { name: 'Salva' }))
+
+    await waitFor(async () => expect(await db.observations.count()).toBe(1))
+    const [o] = await db.observations.toArray()
+    expect(o).toMatchObject({ playerId: 2, contesto: 'partitella', notaGenerale: 'Tiene palla e fa salire la squadra' })
+    expect(o.voti).toEqual({ lettura: 4, intensita: 2 })
+    expect(screen.queryByRole('dialog')).toBeNull()
+    // la tessera ora è segnata come osservata
+    expect(screen.getByRole('button', { name: /Bianchi/ }).textContent).toContain('✓')
+  })
+
+  it('in partita mostra solo chi ha giocato e le domande del suo ruolo', async () => {
+    render(
+      <MemoryRouter initialEntries={['/osservazione?matchId=1&playerId=1']}>
+        <Routes><Route path="/osservazione" element={<ObservationPage />} /></Routes>
+      </MemoryRouter>
+    )
+    const finestra = await screen.findByRole('dialog')
+    expect(finestra.textContent).toContain('Compiti del ruolo')
+    expect(finestra.textContent).toContain('Tiene la linea entro la metà campo?')
+    fireEvent.click(screen.getByRole('button', { name: 'Chiudi' }))
+    expect(screen.getByRole('button', { name: /Rossi/ })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /Bianchi/ })).toBeNull()
+  })
+})

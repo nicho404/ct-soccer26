@@ -55,6 +55,11 @@ tocco. Prima di ridisegnare un'altra sezione, verificare questi punti.
   su tutta la larghezza, anteprima tagliata a due righe dal CSS. Mai un badge accanto al
   titolo: gli ruba metà riga e lo manda a capo.
 - **Storico**: marcatori come righe in una sola card, referti come le righe di Partite.
+- **Osservazione**: pensata per bordo campo. Contesto in tre schede uguali, poi una riga (data o
+  partita). Giocatori in griglia da quattro (in partita solo chi ha giocato), ✓ su chi è già
+  osservato. Il tocco apre una finestra con la **nota in cima** (è ciò che si usa davvero) e,
+  facoltativi, gli aspetti **rispetto al suo solito** (▼ ● ▲, salvati come 2/3/4) al posto dei
+  voti 1-5, più i compiti del ruolo Sì/No in partita.
 - **Riquadri in cima**: classe `stat-grid compatto`, etichette di una parola.
 
 ## Componenti

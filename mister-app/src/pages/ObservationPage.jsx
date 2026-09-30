@@ -3,29 +3,44 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import {
-  CRITERI_OSSERVAZIONE, CONTESTI_OSSERVAZIONE, criteriOsservazione, famigliaRuolo, isAttivo,
+  CRITERI_OSSERVAZIONE, CONTESTI_OSSERVAZIONE, criteriOsservazione, famigliaRuolo, isAttivo, ruoloOrdine,
 } from '../db/constants'
 import { MODULI_FORMATO, FORMATI } from '../lib/formazioni'
 import { refertoCompilato, occupantiPerSlot } from '../lib/storico'
+import { presentiIds } from '../lib/presenze'
 import EmptyState from '../components/EmptyState'
-import { IconEye, IconChart } from '../components/icons'
+import Modal from '../components/Modal'
+import Scelta from '../components/Scelta'
+import Avatar from '../components/Avatar'
+import { IconEye } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
-import { formatDataPartita, oggiISO } from '../lib/partite'
+import { formatDataPartita, oggiISO, perDataDecrescente } from '../lib/partite'
 
-const oggi = () => oggiISO()
+// A bordo campo un voto da 1 a 5 è lento e cambia con chi lo dà. Qui si
+// confronta il giocatore con se stesso: sotto il suo solito, nella norma,
+// sopra. Si salva sulla stessa scala di prima (2, 3, 4), così scheda
+// giocatore e Capitano continuano a leggerlo senza cambiare niente.
+const LIVELLI = [
+  { voto: 2, icona: '▼', label: 'Sotto il suo solito', classe: 'sotto' },
+  { voto: 3, icona: '●', label: 'Nella norma', classe: 'norma' },
+  { voto: 4, icona: '▲', label: 'Sopra il suo solito', classe: 'sopra' },
+]
+// anche i voti 1-5 già salvati si leggono come freccia
+const livelloDi = (v) => (v == null ? null : v <= 2 ? LIVELLI[0] : v === 3 ? LIVELLI[1] : LIVELLI[2])
 
-function nomeCorto(p) {
-  return nomeBreve(p)
+// Etichette corte: stanno su una riga accanto ai tre pulsanti
+const ETICHETTE = {
+  lettura: 'Lettura del gioco',
+  piedeForte: 'Tecnica',
+  piedeDebole: 'Piede debole',
+  pressione: 'Sotto pressione',
+  intensita: 'Intensità',
+  leadership: 'Leadership',
+  posizione: 'Posizione',
 }
+const scalaKeys = new Set(CRITERI_OSSERVAZIONE.map((c) => c.key))
 
-// Ultima osservazione per giocatore nella sessione (data + contesto)
-function ultimePerGiocatore(observations) {
-  const map = new Map()
-  for (const o of observations) {
-    map.set(o.playerId, o) // le successive sovrascrivono: id crescente = più recente
-  }
-  return map
-}
+const VUOTA = () => ({ voti: {}, nota: '' })
 
 export default function ObservationPage() {
   const navigate = useNavigate()
@@ -33,384 +48,299 @@ export default function ObservationPage() {
   const deepLinkMatchId = searchParams.get('matchId') ? Number(searchParams.get('matchId')) : null
   const deepLinkPlayerId = searchParams.get('playerId') ? Number(searchParams.get('playerId')) : null
 
-  const [vista, setVista] = useState('registra')
   const [contesto, setContesto] = useState(deepLinkMatchId != null ? 'partita' : 'partitella')
-  const [data, setData] = useState(oggi())
-  const [selId, setSelId] = useState(deepLinkPlayerId)
+  const [data, setData] = useState(oggiISO())
   const [matchId, setMatchId] = useState(deepLinkMatchId)
-  const [voti, setVoti] = useState({})
-  const [noteCriteri, setNoteCriteri] = useState({})
-  const [notaAperta, setNotaAperta] = useState(null)
-  const [notaGenerale, setNotaGenerale] = useState('')
-  const [sortKey, setSortKey] = useState('media')
+  // giocatore aperto nella finestra e la sua osservazione in corso
+  const [selId, setSelId] = useState(deepLinkPlayerId)
+  const [bozza, setBozza] = useState(VUOTA)
+  const [vista, setVista] = useState('osserva')
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const matches = useLiveQuery(() => db.matches.toArray(), [])
   const team = useLiveQuery(() => db.meta.get('team').then((t) => t ?? null), [])
-  const matchSelezionatoPerData = matches && matchId != null ? matches.find((m) => m.id === matchId) : null
-  // In partita la "sessione" (data+contesto) segue la data della partita
-  // scelta, non l'input data (nascosto in quel contesto): è la stessa
-  // partita a determinare quale giorno si sta osservando.
-  const dataSessione = contesto === 'partita' ? matchSelezionatoPerData?.data ?? null : data
+  const partita = matches && matchId != null ? matches.find((m) => m.id === matchId) ?? null : null
+  // In partita la sessione segue la data della partita scelta
+  const dataSessione = contesto === 'partita' ? partita?.data ?? null : data
   const sessione = useLiveQuery(
     () =>
       dataSessione == null
         ? []
-        : db.observations
-            .where('data')
-            .equals(dataSessione)
-            .filter((o) => o.contesto === contesto)
-            .toArray(),
+        : db.observations.where('data').equals(dataSessione).filter((o) => o.contesto === contesto).toArray(),
     [dataSessione, contesto]
   )
 
   if (!players || !sessione || !matches || team === undefined) return null
 
-  const attivi = players.filter(isAttivo)
-
-  const cambiaContesto = (value) => {
-    setContesto(value)
-    if (value !== 'partita') setMatchId(null)
-  }
-
-  // Partite osservabili: serve un referto compilato, altrimenti non c'è
-  // una formazione+eventi autorevole da cui risalire allo slot del giocatore.
-  const partiteOsservabili = matches.filter(refertoCompilato)
-  const matchSelezionato = matchSelezionatoPerData
-
+  const partiteOsservabili = matches.filter(refertoCompilato).sort(perDataDecrescente)
   const formato = FORMATI.includes(team?.formato) ? team.formato : 7
-  const modulo = matchSelezionato
-    ? MODULI_FORMATO[formato]?.[matchSelezionato.formazione.modulo]
-    : null
-  const slotSelezionato =
-    matchSelezionato && modulo && selId != null
-      ? occupantiPerSlot(matchSelezionato, modulo).find((s) => s.playerIds.includes(selId))?.sigla ?? null
-      : null
+  const modulo = partita ? MODULI_FORMATO[formato]?.[partita.formazione?.modulo] : null
+  const occupanti = partita && modulo ? occupantiPerSlot(partita, modulo) : []
+  const slotDi = (pid) => occupanti.find((s) => s.playerIds.includes(pid))?.sigla ?? null
 
-  const criteri = criteriOsservazione({ contesto, slot: slotSelezionato })
-  const osservatiCount = new Map()
-  for (const o of sessione) {
-    osservatiCount.set(o.playerId, (osservatiCount.get(o.playerId) ?? 0) + 1)
-  }
+  // In partita: solo chi ha giocato (o almeno era presente). Altrimenti gli attivi.
+  const giocatori = (() => {
+    if (contesto === 'partita' && partita) {
+      const hannoGiocato = new Set([
+        ...Object.entries(partita.minuti ?? {}).filter(([, m]) => m > 0).map(([id]) => Number(id)),
+        ...presentiIds(partita),
+      ])
+      return players.filter((p) => hannoGiocato.has(p.id))
+    }
+    return players.filter(isAttivo)
+  })().sort((a, b) => ruoloOrdine(a.ruoloNaturale) - ruoloOrdine(b.ruoloNaturale) || nomeBreve(a).localeCompare(nomeBreve(b)))
 
-  const setVoto = (key, v) =>
-    setVoti((prev) => ({ ...prev, [key]: prev[key] === v ? undefined : v }))
+  const osservati = new Map()
+  for (const o of sessione) osservati.set(o.playerId, [...(osservati.get(o.playerId) ?? []), o])
 
-  const reset = () => {
+  const selezionato = selId != null ? players.find((p) => p.id === selId) : null
+  const criteri = selezionato
+    ? criteriOsservazione({ contesto, slot: contesto === 'partita' ? slotDi(selId) : null })
+    : []
+  const scala = criteri.filter((c) => scalaKeys.has(c.key))
+  const domande = criteri.filter((c) => !scalaKeys.has(c.key))
+
+  const apri = (pid) => { setSelId(pid); setBozza(VUOTA()) }
+  const chiudi = () => {
+    const pieno = bozza.nota.trim() || Object.keys(bozza.voti).length > 0
+    if (pieno && !window.confirm('Chiudere senza salvare questa osservazione?')) return
     setSelId(null)
-    setVoti({})
-    setNoteCriteri({})
-    setNotaAperta(null)
-    setNotaGenerale('')
+    setBozza(VUOTA())
   }
+  // ritoccare il pulsante già scelto lo toglie: tutto è facoltativo
+  const segna = (key, voto) =>
+    setBozza((b) => {
+      const voti = { ...b.voti }
+      if (voti[key] === voto) delete voti[key]
+      else voti[key] = voto
+      return { ...b, voti }
+    })
 
   const salva = async () => {
-    const votiPieni = Object.fromEntries(
-      Object.entries(voti).filter(([, v]) => v !== undefined)
-    )
-    if (Object.keys(votiPieni).length === 0 && !notaGenerale.trim()) {
-      alert('Dai almeno un voto o scrivi una nota')
+    if (!bozza.nota.trim() && Object.keys(bozza.voti).length === 0) {
+      alert('Scrivi una nota o segna almeno un aspetto')
       return
     }
-    const notePiene = Object.fromEntries(
-      Object.entries(noteCriteri).filter(([, t]) => t?.trim())
-    )
     await db.observations.add({
       playerId: selId,
-      data: matchSelezionato ? matchSelezionato.data : data,
+      data: dataSessione ?? data,
       contesto,
       ...(contesto === 'partita' && matchId != null ? { matchId } : {}),
-      voti: votiPieni,
-      noteCriteri: notePiene,
-      notaGenerale: notaGenerale.trim(),
+      voti: bozza.voti,
+      noteCriteri: {},
+      notaGenerale: bozza.nota.trim(),
     })
-    reset()
+    setSelId(null)
+    setBozza(VUOTA())
   }
 
-  const selezionato = selId ? players.find((p) => p.id === selId) : null
-
-  // --- dati comparativa ---
-  const ultime = ultimePerGiocatore(sessione)
-  const righe = [...ultime.entries()]
-    .map(([playerId, o]) => {
-      const p = players.find((x) => x.id === playerId)
-      if (!p) return null
-      const valori = CRITERI_OSSERVAZIONE.map((c) => o.voti?.[c.key]).filter(Boolean)
-      const media = valori.length
-        ? valori.reduce((a, b) => a + b, 0) / valori.length
-        : null
-      return { p, o, media }
-    })
-    .filter(Boolean)
-    .sort((a, b) => {
-      const va = sortKey === 'media' ? a.media : a.o.voti?.[sortKey]
-      const vb = sortKey === 'media' ? b.media : b.o.voti?.[sortKey]
-      return (vb ?? -1) - (va ?? -1)
-    })
+  const serveUnaPartita = contesto === 'partita' && !partita
 
   return (
     <div className="page">
       <div className="page-header">
         <h1>Osservazione</h1>
-        <button className="btn btn-sm" onClick={() => navigate('/intese/nuova')}>
-          🔗 Intesa
-        </button>
+        <button className="btn btn-sm" onClick={() => navigate('/intese/nuova')}>🔗 Intesa</button>
       </div>
 
-      <div className="row" style={{ marginBottom: 12, flexWrap: 'wrap' }}>
-        <div className="chip-row" style={{ flex: 1 }}>
-          {CONTESTI_OSSERVAZIONE.map((c) => (
-            <button
-              key={c.value}
-              className={`chip chip-sm ${contesto === c.value ? 'selected' : ''}`}
-              onClick={() => cambiaContesto(c.value)}
+      {/* Dove e quando: tre schede uguali, poi una riga sola */}
+      <div className="schede" role="tablist">
+        {CONTESTI_OSSERVAZIONE.map((c) => (
+          <button
+            key={c.value}
+            type="button"
+            role="tab"
+            aria-selected={contesto === c.value}
+            className={`scheda ${contesto === c.value ? 'attiva' : ''}`}
+            onClick={() => { setContesto(c.value); if (c.value !== 'partita') setMatchId(null) }}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ marginBottom: 12 }}>
+        {contesto === 'partita' ? (
+          partiteOsservabili.length === 0 ? (
+            <div className="card muted small">Serve una partita con il referto compilato.</div>
+          ) : (
+            <Scelta
+              titolo="Quale partita?"
+              className="select select-compatta"
+              value={matchId ?? ''}
+              onChange={(e) => setMatchId(e.target.value ? Number(e.target.value) : null)}
             >
-              {c.label}
-            </button>
-          ))}
-        </div>
-        {contesto !== 'partita' && (
+              <option value="">— Scegli la partita —</option>
+              {partiteOsservabili.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {formatDataPartita(m.data)}{m.golFatti != null ? ` · ${m.golFatti}-${m.golSubiti}` : ''}
+                </option>
+              ))}
+            </Scelta>
+          )
+        ) : (
           <input
-            className="input"
+            className="input select-compatta"
             type="date"
+            aria-label="Data"
             value={data}
             onChange={(e) => setData(e.target.value)}
-            style={{ width: 150, minHeight: 40 }}
           />
         )}
       </div>
 
-      {contesto === 'partita' && (
-        <div className="chip-row" style={{ marginBottom: 14 }}>
-          {partiteOsservabili.length === 0 ? (
-            <span className="muted small">Nessuna partita con referto compilato.</span>
-          ) : (
-            partiteOsservabili.map((m) => (
-              <button
-                key={m.id}
-                className={`chip chip-sm ${matchId === m.id ? 'selected' : ''}`}
-                onClick={() => setMatchId(matchId === m.id ? null : m.id)}
-              >
-                {formatDataPartita(m.data)}
-              </button>
-            ))
-          )}
-        </div>
-      )}
-
-      <div className="chip-row" style={{ marginBottom: 14 }}>
-        <button
-          className={`chip chip-sm ${vista === 'registra' ? 'selected' : ''}`}
-          onClick={() => setVista('registra')}
-        >
-          ✏️ Registra
-        </button>
-        <button
-          className={`chip chip-sm ${vista === 'confronta' ? 'selected' : ''}`}
-          onClick={() => setVista('confronta')}
-        >
-          📊 Confronta ({ultime.size})
-        </button>
-      </div>
-
-      {attivi.length === 0 ? (
+      {giocatori.length === 0 && !serveUnaPartita ? (
         <EmptyState
           icon={<IconEye />}
-          title="Nessun giocatore attivo"
-          text="Aggiungi prima i giocatori alla rosa: poi potrai osservarli e votarli da bordo campo."
-          action={
-            <button className="btn btn-primary" onClick={() => navigate('/rosa/nuovo')}>
-              Vai alla rosa
-            </button>
-          }
+          title="Nessun giocatore da osservare"
+          text="Aggiungi i giocatori alla rosa (o segna i presenti della partita) per osservarli da bordo campo."
+          action={<button className="btn btn-primary" onClick={() => navigate('/rosa/nuovo')}>Vai alla rosa</button>}
         />
-      ) : vista === 'registra' ? (
+      ) : serveUnaPartita ? null : (
         <>
-          <div className="section-title">Chi stai osservando?</div>
-          <div className="chip-row" style={{ marginBottom: 14 }}>
-            {attivi.map((p) => (
-              <button
-                key={p.id}
-                className={`chip chip-sm ${selId === p.id ? 'selected' : ''}`}
-                onClick={() => setSelId(selId === p.id ? null : p.id)}
-              >
-                <span
-                  className={`role-dot ${famigliaRuolo(p.ruoloNaturale)}`}
-                  style={{ marginRight: 6 }}
-                />
-                {nomeCorto(p)}
-                {osservatiCount.get(p.id) ? ` ✓${osservatiCount.get(p.id)}` : ''}
-              </button>
-            ))}
+          <div className="chip-row" style={{ marginBottom: 10 }}>
+            <button
+              className={`chip chip-sm ${vista === 'osserva' ? 'selected' : ''}`}
+              onClick={() => setVista('osserva')}
+            >
+              ✏️ Osserva
+            </button>
+            <button
+              className={`chip chip-sm ${vista === 'riepilogo' ? 'selected' : ''}`}
+              onClick={() => setVista('riepilogo')}
+            >
+              📋 Riepilogo ({osservati.size})
+            </button>
           </div>
 
-          {selezionato && (
+          {vista === 'osserva' ? (
             <>
-              <div className="card">
-                <strong style={{ display: 'block', marginBottom: 4 }}>
-                  {selezionato.nome}
-                  {selezionato.soprannome ? (
-                    <span className="muted"> “{selezionato.soprannome}”</span>
-                  ) : null}
-                </strong>
-                {criteri.map((c) => (
-                  <div key={c.key}>
-                    <div className="crit-row">
-                      <div className="crit-label">
-                        {c.label}
-                        {c.hint && <span className="hint">{c.hint}</span>}
+              <p className="muted small" style={{ margin: '0 0 8px' }}>
+                Tocca un giocatore per annotare quello che hai visto.
+              </p>
+              <div className="oss-griglia">
+                {giocatori.map((p) => {
+                  const n = osservati.get(p.id)?.length ?? 0
+                  const sigla = contesto === 'partita' ? slotDi(p.id) : p.ruoloNaturale
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={`oss-tessera ${n ? 'fatta' : ''}`}
+                      onClick={() => apri(p.id)}
+                    >
+                      <span className="oss-avatar">
+                        <Avatar src={p.foto} size={40} />
+                        {n > 0 && <span className="oss-conta">✓{n > 1 ? n : ''}</span>}
+                      </span>
+                      <strong>{nomeBreve(p)}</strong>
+                      {sigla && <span className={`badge oss-sigla badge-role-${famigliaRuolo(sigla) || 'none'}`}>{sigla}</span>}
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          ) : osservati.size === 0 ? (
+            <div className="card muted small">Nessuna osservazione in questa sessione.</div>
+          ) : (
+            [...osservati.entries()].map(([pid, lista]) => {
+              const p = players.find((x) => x.id === pid)
+              if (!p) return null
+              return (
+                <div className="card voce-lista" key={pid}>
+                  <strong>{nomeBreve(p)}{lista.length > 1 ? ` · ${lista.length} osservazioni` : ''}</strong>
+                  {lista.map((o) => (
+                    <div key={o.id} className="oss-riepilogo">
+                      <div className="chip-row" style={{ gap: 4 }}>
+                        {Object.entries(o.voti ?? {}).filter(([k]) => scalaKeys.has(k)).map(([k, v]) => {
+                          const l = livelloDi(v)
+                          return (
+                            <span key={k} className={`badge oss-badge ${l.classe}`} title={l.label}>
+                              {l.icona} {ETICHETTE[k] ?? k}
+                            </span>
+                          )
+                        })}
                       </div>
-                      <div className="vote-row">
-                        {c.tipo === 'si_no_altro' ? (
-                          <>
-                            <button
-                              className={`vote-btn ${voti[c.key] === 1 ? 'on' : ''}`}
-                              onClick={() => setVoto(c.key, 1)}
-                            >
-                              Sì
-                            </button>
-                            <button
-                              className={`vote-btn ${voti[c.key] === 0 ? 'on' : ''}`}
-                              onClick={() => setVoto(c.key, 0)}
-                            >
-                              No
-                            </button>
-                          </>
-                        ) : (
-                          [1, 2, 3, 4, 5].map((v) => (
-                            <button
-                              key={v}
-                              className={`vote-btn ${voti[c.key] === v ? 'on' : ''}`}
-                              onClick={() => setVoto(c.key, v)}
-                            >
-                              {v}
-                            </button>
-                          ))
-                        )}
-                      </div>
-                      <button
-                        className={`note-btn ${noteCriteri[c.key]?.trim() || notaAperta === c.key ? 'on' : ''}`}
-                        aria-label={`Nota su ${c.label}`}
-                        onClick={() => setNotaAperta(notaAperta === c.key ? null : c.key)}
-                      >
-                        ✎
-                      </button>
+                      {o.notaGenerale && <span className="voce-anteprima">{o.notaGenerale}</span>}
                     </div>
-                    {notaAperta === c.key && (
-                      <input
-                        className="input"
-                        style={{ marginBottom: 8 }}
-                        value={noteCriteri[c.key] ?? ''}
-                        onChange={(e) =>
-                          setNoteCriteri((prev) => ({ ...prev, [c.key]: e.target.value }))
-                        }
-                        placeholder={`Nota su ${c.label.toLowerCase()}…`}
-                        autoFocus
-                      />
-                    )}
-                  </div>
+                  ))}
+                </div>
+              )
+            })
+          )}
+        </>
+      )}
+
+      {selezionato && (
+        <Modal
+          titolo={`${nomeBreve(selezionato)}${contesto === 'partita' && slotDi(selId) ? ` · ${slotDi(selId)}` : ''}`}
+          onClose={chiudi}
+        >
+          <textarea
+            className="textarea"
+            style={{ minHeight: 76 }}
+            value={bozza.nota}
+            onChange={(e) => setBozza((b) => ({ ...b, nota: e.target.value }))}
+            placeholder="Cosa hai visto? Es. resta fermo sul rigore, si propone sempre…"
+            aria-label="Nota"
+          />
+
+          <div className="oss-sezione">
+            <span>Rispetto al suo solito</span>
+            <span className="muted small">facoltativo</span>
+          </div>
+          {scala.map((c) => (
+            <div className="oss-riga" key={c.key}>
+              <span className="oss-etichetta">{ETICHETTE[c.key] ?? c.label}</span>
+              <span className="oss-livelli">
+                {LIVELLI.map((l) => (
+                  <button
+                    key={l.voto}
+                    type="button"
+                    className={`oss-livello ${l.classe} ${bozza.voti[c.key] === l.voto ? 'on' : ''}`}
+                    aria-label={`${ETICHETTE[c.key] ?? c.label}: ${l.label}`}
+                    aria-pressed={bozza.voti[c.key] === l.voto}
+                    onClick={() => segna(c.key, l.voto)}
+                  >
+                    {l.icona}
+                  </button>
                 ))}
-              </div>
+              </span>
+            </div>
+          ))}
 
-              <div className="field">
-                <label>Nota sintetica</label>
-                <textarea
-                  className="textarea"
-                  style={{ minHeight: 64 }}
-                  value={notaGenerale}
-                  onChange={(e) => setNotaGenerale(e.target.value)}
-                  placeholder="Impressione generale in una riga…"
-                />
+          {domande.length > 0 && (
+            <>
+              <div className="oss-sezione">
+                <span>Compiti del ruolo</span>
+                <span className="muted small">{slotDi(selId)}</span>
               </div>
-
-              <div className="row">
-                <button className="btn" onClick={reset}>Annulla</button>
-                <button className="btn btn-primary" style={{ flex: 1 }} onClick={salva}>
-                  Salva osservazione
-                </button>
-              </div>
+              {domande.map((c) => (
+                <div className="oss-domanda" key={c.key}>
+                  <span className="small">{c.label}</span>
+                  <span className="oss-livelli">
+                    {[{ v: 1, t: 'Sì' }, { v: 0, t: 'No' }].map(({ v, t }) => (
+                      <button
+                        key={v}
+                        type="button"
+                        className={`oss-livello ${v ? 'sopra' : 'sotto'} ${bozza.voti[c.key] === v ? 'on' : ''}`}
+                        aria-pressed={bozza.voti[c.key] === v}
+                        onClick={() => segna(c.key, v)}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </span>
+                </div>
+              ))}
             </>
           )}
 
-          {!selezionato && sessione.length > 0 && (
-            <p className="muted small">
-              {sessione.length} osservazioni registrate in questa sessione. Passa a
-              “Confronta” per la tabella comparativa.
-            </p>
-          )}
-        </>
-      ) : ultime.size === 0 ? (
-        <EmptyState
-          icon={<IconChart />}
-          title="Nessuna osservazione in questa sessione"
-          text="Registra i voti dei giocatori con questa data e contesto: qui li confronterai fianco a fianco."
-        />
-      ) : (
-        <>
-          <p className="muted small" style={{ marginTop: 0 }}>
-            Tocca una colonna per ordinare. Per ogni giocatore vale l'ultima osservazione
-            della sessione.
-          </p>
-          <div className="obs-table-wrap">
-            <table className="obs-table">
-              <thead>
-                <tr>
-                  <th>Giocatore</th>
-                  <th
-                    className={sortKey === 'media' ? 'sorted' : ''}
-                    onClick={() => setSortKey('media')}
-                  >
-                    Media
-                  </th>
-                  {CRITERI_OSSERVAZIONE.map((c) => (
-                    <th
-                      key={c.key}
-                      title={c.label}
-                      className={sortKey === c.key ? 'sorted' : ''}
-                      onClick={() => setSortKey(c.key)}
-                    >
-                      {c.short}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {righe.map(({ p, o, media }) => (
-                  <tr key={p.id}>
-                    <td>
-                      <span
-                        className={`role-dot ${famigliaRuolo(p.ruoloNaturale)}`}
-                        style={{ display: 'inline-block', marginRight: 6 }}
-                      />
-                      {nomeCorto(p)}
-                    </td>
-                    <td className={media ? `vote-cell-${Math.round(media)}` : ''}>
-                      {media ? media.toFixed(1) : '—'}
-                    </td>
-                    {CRITERI_OSSERVAZIONE.map((c) => {
-                      const v = o.voti?.[c.key]
-                      return (
-                        <td key={c.key} className={v ? `vote-cell-${v}` : ''}>
-                          {v ?? '—'}
-                        </td>
-                      )
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="row" style={{ gap: 10, marginTop: 14 }}>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={salva}>Salva</button>
+            <button className="btn" onClick={chiudi}>Annulla</button>
           </div>
-          <p className="muted small">
-            Visti due che si cercano?{' '}
-            <button
-              className="btn btn-sm"
-              style={{ marginLeft: 6 }}
-              onClick={() => navigate('/intese/nuova')}
-            >
-              🔗 Crea intesa
-            </button>
-          </p>
-        </>
+        </Modal>
       )}
     </div>
   )
