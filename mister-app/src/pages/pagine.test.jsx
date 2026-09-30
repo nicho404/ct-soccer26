@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto'
-import { describe, it, expect, beforeAll, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
 import { render, cleanup, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { db } from '../db/db'
@@ -348,9 +348,13 @@ describe('referto: cambi volanti, posizioni e incarichi', () => {
     fireEvent.click(screen.getByText('Aggiungi'))
 
     // incarico svolto: Sette aveva il difensivo, ha fatto entrambe le fasi
-    const card = screen.getAllByText('Sette').find((el) => el.tagName === 'STRONG').closest('.card')
-    const svolto = [...card.querySelectorAll('label')].find((l) => l.textContent === 'Incarico svolto').parentElement
+    // la riga mostra assegnato → svolto; il tocco apre la finestra per segnarli
+    fireEvent.click(screen.getByRole('button', { name: 'Incarichi di Sette' }))
+    const finestra = screen.getByRole('dialog', { name: 'Incarichi di Sette' })
+    const svolto = [...finestra.querySelectorAll('label')].find((l) => l.textContent === 'Incarico svolto').parentElement
     fireEvent.click([...svolto.querySelectorAll('button')].find((b) => b.textContent.includes('Entrambe')))
+    fireEvent.click(screen.getByText('Fatto'))
+    expect(screen.getByRole('button', { name: 'Incarichi di Sette' }).textContent).toContain('Diverso')
     fireEvent.click(screen.getByText('Salva referto'))
 
     await waitFor(async () => expect((await db.matches.get(1)).eventi).toHaveLength(2))
@@ -505,5 +509,103 @@ describe('capitano scontento', () => {
     const avvisi = await screen.findAllByText(/Scontento del minutaggio/)
     expect(avvisi).toHaveLength(1)
     expect(avvisi[0].closest('.fascia-tessera').textContent).toContain('Rossi')
+  })
+})
+
+describe('durata partita da Impostazioni', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true, durataPartita: 50 })
+    await db.matches.bulkAdd([
+      { id: 1, data: '2026-10-06', presenze: {} },
+      { id: 2, data: '2026-09-20', presenze: {}, durata: 60, formazione: { slots: [1] } },
+    ])
+  })
+
+  afterEach(cleanup)
+
+  const apri = (id) => render(
+    <MemoryRouter initialEntries={[`/partite/${id}/referto`]}>
+      <Routes><Route path="/partite/:id/referto" element={<PartitaRefertoPage />} /></Routes>
+    </MemoryRouter>
+  )
+
+  it('un referto nuovo parte dalla durata della squadra', async () => {
+    apri(1)
+    expect(await screen.findByRole('button', { name: 'Durata della partita' })).toHaveProperty('textContent', '⏱ 50′')
+  })
+
+  it('un referto già salvato tiene la sua durata', async () => {
+    apri(2)
+    expect(await screen.findByRole('button', { name: 'Durata della partita' })).toHaveProperty('textContent', '⏱ 60′')
+  })
+})
+
+describe('impostazioni: si modifica solo con la matita e si salva con Salva', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+  })
+
+  afterEach(() => { cleanup(); vi.restoreAllMocks() })
+
+  it('niente modifiche finché non premi Salva, poi si salvano tutte insieme', async () => {
+    montaPagina(ImpostazioniPage)
+    // il nome squadra arriva solo a dati caricati: prima la matita è disattivata
+    expect(await screen.findByText('Test FC')).toBeTruthy()
+    expect(screen.getByText('60′')).toBeTruthy()
+    expect(screen.queryByRole('textbox')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Modifica dati squadra' }))
+    fireEvent.click(screen.getByRole('button', { name: '50′' }))
+    fireEvent.change(screen.getByPlaceholderText('Come ti chiami'), { target: { value: 'Nicholas' } })
+    expect((await db.meta.get('team')).durataPartita).toBeUndefined()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Salva' }))
+    await waitFor(async () => expect((await db.meta.get('team')).durataPartita).toBe(50))
+    expect((await db.meta.get('team')).mister).toBe('Nicholas')
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(await screen.findByText('50′')).toBeTruthy()
+  })
+
+  it('chiudendo senza salvare chiede conferma e non tocca niente', async () => {
+    const conferma = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    montaPagina(ImpostazioniPage)
+    expect(await screen.findByText('Test FC')).toBeTruthy()
+    expect(screen.getByText('50′')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Modifica dati squadra' }))
+    fireEvent.click(screen.getByRole('button', { name: '70′' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Chiudi' }))
+    expect(conferma).toHaveBeenCalledWith('Chiudere senza salvare le modifiche?')
+    expect((await db.meta.get('team')).durataPartita).toBe(50)
+  })
+})
+
+describe('dati demo accanto ai dati reali', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 8, setupDone: true })
+    await db.players.bulkAdd([
+      { id: 901, nome: 'Vero Capitano', ruoloNaturale: 'CC', statoAttivita: 'sicuro' },
+      { id: 902, nome: 'Vero Vice', ruoloNaturale: 'DC', statoAttivita: 'sicuro' },
+    ])
+    await db.meta.put({ key: 'capitano', value: 901 })
+    await db.meta.put({ key: 'vice', value: 902 })
+  })
+
+  it('attivare e togliere la demo non tocca giocatori e fasce veri', async () => {
+    const { clearDemoData } = await import('../db/demo')
+    await seedDemoData()
+    expect((await db.meta.get('capitano')).value).toBe(901)
+    expect((await db.meta.get('vice')).value).toBe(902)
+    expect(await db.players.count()).toBeGreaterThan(2)
+
+    await clearDemoData()
+    expect((await db.players.toArray()).map((p) => p.id).sort()).toEqual([901, 902])
+    expect((await db.meta.get('capitano')).value).toBe(901)
+    expect((await db.meta.get('vice')).value).toBe(902)
   })
 })

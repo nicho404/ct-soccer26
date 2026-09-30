@@ -416,6 +416,43 @@ a.card {
 .partita-voce-testo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .risultato-input { width: 72px; text-align: center; font-size: 1.3rem; font-weight: 800; }
 
+/* Referto */
+.referto-nota {
+  margin-top: 10px; padding: 8px 10px; border-radius: 8px; font-size: 0.82rem;
+  background: rgba(251, 191, 36, 0.1); color: var(--warn);
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
+}
+.select.select-compatta { min-height: 38px; padding: 6px 10px; font-size: 0.9rem; }
+.card.referto-cronologia { padding: 4px 12px; }
+.evento-riga, .incarico-riga {
+  display: flex; align-items: center; gap: 10px; padding: 8px 0; width: 100%;
+  border-bottom: 1px solid var(--border);
+}
+.evento-riga:last-child, .incarico-riga:last-child { border-bottom: 0; }
+.evento-minuto { width: 34px; flex-shrink: 0; font-weight: 800; font-size: 0.85rem; color: var(--muted); text-align: right; }
+.evento-icona { width: 22px; flex-shrink: 0; text-align: center; }
+.evento-testo { flex: 1; min-width: 0; font-size: 0.9rem; }
+.btn.evento-elimina { min-height: 32px; padding: 4px 10px; }
+.incarico-riga {
+  background: none; border-left: 0; border-right: 0; border-top: 0; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.incarico-nome { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.incarico-coppia { display: flex; align-items: center; gap: 6px; font-size: 1rem; }
+.salva-fisso {
+  position: sticky; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);
+  z-index: 30; margin-top: 14px;
+}
+.salva-fisso .btn { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); }
+
+/* Impostazioni: voci in sola lettura */
+.impostazioni-voci { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.impostazioni-voci > div {
+  display: flex; flex-direction: column; gap: 2px; padding: 8px; border-radius: 8px;
+  background: var(--surface-2); min-width: 0;
+}
+.impostazioni-voci strong { font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* Home: stagione e forma */
 .stagione-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
 .stagione-grid .stat-tile { padding: 10px 4px; text-decoration: none; color: inherit; }

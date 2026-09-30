@@ -44,6 +44,11 @@ tocco. Prima di ridisegnare un'altra sezione, verificare questi punti.
   dati in finestra; risultato modificabile subito sotto; Presenze, Referto e Marcatori avversari
   come righe con stato, il dettaglio in finestra o nel referto. In creazione i dati restano in
   pagina, perché vanno compilati.
+- **Referto**: riepilogo con il risultato ufficiale (non il conto degli eventi) e la durata in
+  finestra; modulo in `Scelta`, assetti pronti in finestra; eventi come cronologia compatta
+  (minuto, icona, descrizione); incarichi una riga per giocatore (assegnato → svolto) con i
+  dettagli in finestra; "Salva" fisso in basso. Le azioni che cambiano dati importanti (es.
+  "Usa il conto degli eventi") compaiono solo quando hanno senso.
 - **Riquadri in cima**: classe `stat-grid compatto`, etichette di una parola.
 
 ## Componenti

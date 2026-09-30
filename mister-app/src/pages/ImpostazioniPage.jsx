@@ -4,7 +4,11 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { hasDemoData, seedDemoData, clearDemoData } from '../db/demo'
 import { exportBackup, importBackup } from '../db/backup'
+import { durataSquadra } from '../lib/storico'
 import { resizeToDataUrl } from '../lib/image'
+import Modal from '../components/Modal'
+
+const DURATE_RAPIDE = [40, 50, 60, 70]
 
 export default function ImpostazioniPage() {
   const navigate = useNavigate()
@@ -14,6 +18,9 @@ export default function ImpostazioniPage() {
   const [persistito, setPersistito] = useState(null)
   const fileInputRef = useRef(null)
   const logoInputRef = useRef(null)
+  // copia dei dati squadra in modifica: null = finestra chiusa. Si salva
+  // tutto insieme con "Salva", niente scritture a ogni tasto.
+  const [bozza, setBozza] = useState(null)
 
   const team = useLiveQuery(() => db.meta.get('team').then((t) => t ?? null), [])
 
@@ -42,13 +49,50 @@ export default function ImpostazioniPage() {
     await db.meta.put({ ...cur, ...patch })
   }
 
+  const apriModifica = () => setBozza({
+    nome: team?.nome ?? '',
+    torneo: team?.torneo ?? '',
+    mister: team?.mister ?? '',
+    formato: team?.formato ?? 7,
+    durataPartita: String(durataSquadra(team)),
+    logo: team?.logo ?? '',
+  })
+  const setB = (patch) => setBozza((b) => ({ ...b, ...patch }))
+
+  const modificata = bozza != null && (
+    bozza.nome !== (team?.nome ?? '') || bozza.torneo !== (team?.torneo ?? '') ||
+    bozza.mister !== (team?.mister ?? '') || bozza.formato !== (team?.formato ?? 7) ||
+    Number(bozza.durataPartita) !== durataSquadra(team) || bozza.logo !== (team?.logo ?? '')
+  )
+
+  const chiudiModifica = () => {
+    if (modificata && !window.confirm('Chiudere senza salvare le modifiche?')) return
+    setBozza(null)
+  }
+
+  const salvaModifica = async () => {
+    const durata = Number(bozza.durataPartita)
+    if (!Number.isInteger(durata) || durata < 1 || durata > 150) {
+      alert('La durata deve essere un numero di minuti tra 1 e 150')
+      return
+    }
+    await saveTeam({
+      nome: bozza.nome.trim(),
+      torneo: bozza.torneo.trim(),
+      mister: bozza.mister.trim(),
+      formato: bozza.formato,
+      durataPartita: durata,
+      logo: bozza.logo,
+    })
+    setBozza(null)
+  }
+
   const onLogoFile = async (e) => {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
     try {
-      const logo = await resizeToDataUrl(file, 256, 'image/png')
-      await saveTeam({ logo })
+      setB({ logo: await resizeToDataUrl(file, 256, 'image/png') })
     } catch {
       alert('Immagine non leggibile')
     }
@@ -100,85 +144,148 @@ export default function ImpostazioniPage() {
       </div>
 
       <div className="section-title">Squadra</div>
-      {/* key: rimonta gli input quando i dati arrivano da IndexedDB,
-          così restano uncontrolled e la digitazione non perde caratteri */}
-      <div className="card" key={team === undefined ? 'loading' : 'loaded'}>
-        <div className="field">
-          <label>Nome mister</label>
-          <input
-            className="input"
-            defaultValue={team?.mister ?? ''}
-            onChange={(e) => saveTeam({ mister: e.target.value })}
-            placeholder="Come ti chiami"
-          />
-        </div>
-        <div className="field">
-          <label>Formato</label>
-          <div className="chip-row">
-            {[7, 8].map((f) => (
-              <button
-                key={f}
-                className={`chip chip-sm ${team?.formato === f ? 'selected' : ''}`}
-                onClick={() => saveTeam({ formato: f })}
-              >
-                Calcio a {f}
-              </button>
-            ))}
+      {/* In lettura: si cambia solo dalla matita, e si salva con "Salva" */}
+      <div className="card">
+        <div className="row" style={{ gap: 12, marginBottom: 10 }}>
+          {team?.logo ? (
+            <img src={team.logo} alt="Logo squadra" className="team-logo-preview" />
+          ) : (
+            <span className="team-logo-preview muted small" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>—</span>
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <strong>{team?.nome || 'Nome squadra da inserire'}</strong>
+            <div className="muted small">{team?.torneo || 'Torneo non indicato'}</div>
           </div>
-          <p className="muted small" style={{ marginBottom: 0 }}>
-            Determina i moduli disponibili nel builder tattico.
-          </p>
+          <button
+            className="btn btn-sm"
+            aria-label="Modifica dati squadra"
+            disabled={team === undefined}
+            onClick={apriModifica}
+          >
+            ✎
+          </button>
         </div>
-        <div className="field">
-          <label>Nome squadra</label>
-          <input
-            className="input"
-            defaultValue={team?.nome ?? ''}
-            onChange={(e) => saveTeam({ nome: e.target.value })}
-            placeholder="Es. Vecchia Guardia FC"
-          />
-        </div>
-        <div className="field">
-          <label>Torneo / campionato</label>
-          <input
-            className="input"
-            defaultValue={team?.torneo ?? ''}
-            onChange={(e) => saveTeam({ torneo: e.target.value })}
-            placeholder="Es. LC8 Milano – Serie C"
-          />
-        </div>
-        <div className="field" style={{ marginBottom: 0 }}>
-          <label>Logo squadra</label>
-          <div className="row">
-            {team?.logo ? (
-              <img src={team.logo} alt="Logo squadra" className="team-logo-preview" />
-            ) : (
-              <span className="team-logo-preview muted small" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>—</span>
-            )}
-            <button className="btn btn-sm" onClick={() => logoInputRef.current?.click()}>
-              {team?.logo ? 'Cambia logo' : 'Carica logo'}
-            </button>
-            {team?.logo && (
-              <button
-                className="btn btn-sm"
-                onClick={() => { if (window.confirm('Rimuovere il logo della squadra?')) saveTeam({ logo: '' }) }}
-              >
-                Rimuovi
-              </button>
-            )}
-            <input
-              ref={logoInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={onLogoFile}
-            />
-          </div>
-          <p className="muted small" style={{ marginBottom: 0 }}>
-            Compare in alto a sinistra e in Home. Meglio un'immagine quadrata.
-          </p>
+        <div className="impostazioni-voci">
+          <div><span className="muted small">Mister</span><strong>{team?.mister || '—'}</strong></div>
+          <div><span className="muted small">Formato</span><strong>Calcio a {team?.formato ?? 7}</strong></div>
+          <div><span className="muted small">Durata partita</span><strong>{durataSquadra(team)}′</strong></div>
         </div>
       </div>
+
+      {bozza && (
+        <Modal titolo="Modifica squadra" onClose={chiudiModifica}>
+          <div className="field">
+            <label>Nome squadra</label>
+            <input
+              className="input"
+              value={bozza.nome}
+              onChange={(e) => setB({ nome: e.target.value })}
+              placeholder="Es. Vecchia Guardia FC"
+            />
+          </div>
+          <div className="field">
+            <label>Torneo / campionato</label>
+            <input
+              className="input"
+              value={bozza.torneo}
+              onChange={(e) => setB({ torneo: e.target.value })}
+              placeholder="Es. LC8 Milano – Serie C"
+            />
+          </div>
+          <div className="field">
+            <label>Nome mister</label>
+            <input
+              className="input"
+              value={bozza.mister}
+              onChange={(e) => setB({ mister: e.target.value })}
+              placeholder="Come ti chiami"
+            />
+          </div>
+          <div className="field">
+            <label>Formato</label>
+            <div className="chip-row">
+              {[7, 8].map((f) => (
+                <button
+                  key={f}
+                  className={`chip chip-sm ${bozza.formato === f ? 'selected' : ''}`}
+                  onClick={() => setB({ formato: f })}
+                >
+                  Calcio a {f}
+                </button>
+              ))}
+            </div>
+            <p className="muted small" style={{ marginBottom: 0 }}>
+              Determina i moduli disponibili nel builder tattico.
+            </p>
+          </div>
+          <div className="field">
+            <label>Durata partita (minuti)</label>
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              {DURATE_RAPIDE.map((m) => (
+                <button
+                  key={m}
+                  className={`chip chip-sm ${Number(bozza.durataPartita) === m ? 'selected' : ''}`}
+                  onClick={() => setB({ durataPartita: String(m) })}
+                >
+                  {m}′
+                </button>
+              ))}
+              <input
+                className="input"
+                style={{ width: 90 }}
+                type="number"
+                min="1"
+                max="150"
+                inputMode="numeric"
+                aria-label="Durata partita in minuti"
+                value={bozza.durataPartita}
+                onChange={(e) => setB({ durataPartita: e.target.value })}
+              />
+            </div>
+            <p className="muted small" style={{ marginBottom: 0 }}>
+              Tempo di gioco totale, rigori esclusi. Ogni nuovo referto parte da qui; quelli già
+              salvati tengono la loro durata.
+            </p>
+          </div>
+          <div className="field">
+            <label>Logo squadra</label>
+            <div className="row">
+              {bozza.logo ? (
+                <img src={bozza.logo} alt="Logo squadra" className="team-logo-preview" />
+              ) : (
+                <span className="team-logo-preview muted small" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>—</span>
+              )}
+              <button className="btn btn-sm" onClick={() => logoInputRef.current?.click()}>
+                {bozza.logo ? 'Cambia' : 'Carica'}
+              </button>
+              {bozza.logo && (
+                <button
+                  className="btn btn-sm"
+                  onClick={() => { if (window.confirm('Rimuovere il logo della squadra?')) setB({ logo: '' }) }}
+                >
+                  Rimuovi
+                </button>
+              )}
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={onLogoFile}
+              />
+            </div>
+            <p className="muted small" style={{ marginBottom: 0 }}>
+              Compare in alto a sinistra e in Home. Meglio un'immagine quadrata.
+            </p>
+          </div>
+          <div className="row" style={{ gap: 10 }}>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={salvaModifica}>
+              Salva
+            </button>
+            <button className="btn" onClick={chiudiModifica}>Annulla</button>
+          </div>
+        </Modal>
+      )}
 
       <div className="section-title">Dati di prova</div>
       <div className="card">

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   calcolaMinuti, golDaEventi, disallineamentoRisultato, refertoCompilato,
   portiereIniziale, aggregaGiocatori, classificaMarcatori, occupantiPerSlot,
-  campoAlMinuto, espulsiAlMinuto, eventiIncoerenti, incarichiGiocatore,
+  campoAlMinuto, espulsiAlMinuto, durataSquadra, eventiIncoerenti, incarichiGiocatore,
 } from './storico'
 
 const SIGLE_7 = ['POR', 'DC', 'DC', 'ES', 'CC', 'ED', 'ATT']
@@ -331,5 +331,14 @@ describe('aggregati stagionali', () => {
 
   it('la classifica marcatori tiene solo chi ha gol o assist', () => {
     expect(classificaMarcatori(partite).map((r) => r.playerId)).toEqual([2, 4, 3])
+  })
+})
+
+describe('durataSquadra', () => {
+  it('usa la durata scelta in Impostazioni, altrimenti 60', () => {
+    expect(durataSquadra({ durataPartita: 50 })).toBe(50)
+    expect(durataSquadra({})).toBe(60)
+    expect(durataSquadra(null)).toBe(60)
+    expect(durataSquadra({ durataPartita: 0 })).toBe(60)
   })
 })

@@ -6,9 +6,9 @@ import { TIPI_EVENTO, tipoEventoInfo, famigliaRuolo, incaricoInfo } from '../db/
 import { MODULI_FORMATO, FORMATI, MODULO_DEFAULT } from '../lib/formazioni'
 import { risolviRuoli } from '../tactics/engine'
 import { nomeBreve } from '../lib/nomi'
-import { formatDataPartita } from '../lib/partite'
+import { formatDataPartita, esitoPartita, ESITO_INFO } from '../lib/partite'
 import {
-  DURATA_DEFAULT, calcolaMinuti, portiereIniziale, golDaEventi, disallineamentoRisultato,
+  DURATA_DEFAULT, durataSquadra, calcolaMinuti, portiereIniziale, golDaEventi, disallineamentoRisultato,
   occupantiPerSlot, campoAlMinuto, espulsiAlMinuto, eventiIncoerenti,
 } from '../lib/storico'
 import { presentiIds } from '../lib/presenze'
@@ -46,6 +46,9 @@ export default function PartitaRefertoPage() {
   // invece di editare lo slot — separato per non rischiare di spostare un
   // giocatore mentre si sta solo guardando la partita da bordo campo.
   const [modoLive, setModoLive] = useState(false)
+  // finestra aperta: 'durata' | 'assetti' | null; incarichi di un giocatore
+  const [finestra, setFinestra] = useState(null)
+  const [incaricoAperto, setIncaricoAperto] = useState(null)
 
   // ?? null distingue "partita assente" da "query in corso": senza, il
   // referto di una partita cancellata resterebbe su schermo vuoto per sempre
@@ -75,7 +78,7 @@ export default function PartitaRefertoPage() {
       costruzione: f?.costruzione ?? TATTICA_DEFAULT.costruzione,
       linea: f?.linea ?? TATTICA_DEFAULT.linea,
     })
-    setDurata(partita?.durata ?? DURATA_DEFAULT)
+    setDurata(partita?.durata ?? durataSquadra(team))
     setEventi(Array.isArray(partita?.eventi) ? [...partita.eventi] : [])
     setIncarichi(f?.incarichi && typeof f.incarichi === 'object' ? { ...f.incarichi } : {})
     setSvolti(f?.incarichiSvolti && typeof f.incarichiSvolti === 'object' ? { ...f.incarichiSvolti } : {})
@@ -306,6 +309,9 @@ export default function PartitaRefertoPage() {
   const disallineato = disallineamentoRisultato({ ...partita, eventi })
   const daEventi = golDaEventi(eventi)
 
+  const esitoUfficiale = esitoPartita(partita)
+  const golEventi = daEventi.fatti + daEventi.subiti
+
   return (
     <div className="page">
       <div className="page-header">
@@ -313,28 +319,39 @@ export default function PartitaRefertoPage() {
         <h1>Referto</h1>
       </div>
 
+      {/* Riepilogo: il risultato ufficiale (non il conto degli eventi, che
+          può essere incompleto) e la durata, che serve ai minuti */}
       <div className="card">
-        <div className="row">
+        <div className="row" style={{ gap: 10 }}>
+          {esitoUfficiale ? (
+            <span className={`badge risultato-grande ${ESITO_INFO[esitoUfficiale].badge}`}>
+              {partita.golFatti}-{partita.golSubiti}
+            </span>
+          ) : (
+            <span className="badge badge-warn">Risultato?</span>
+          )}
           <div style={{ flex: 1, minWidth: 0 }}>
             <strong>{avversario || 'Avversario da definire'}</strong>
             <div className="muted small">{formatDataPartita(partita.data)}</div>
           </div>
-          <span className="badge badge-accent">{daEventi.fatti}-{daEventi.subiti}</span>
+          <button className="btn btn-sm" aria-label="Durata della partita" onClick={() => setFinestra('durata')}>
+            ⏱ {durata}′
+          </button>
         </div>
+        {disallineato && (
+          <div className="referto-nota">
+            ⚖️ Gol negli eventi: {disallineato.eventi.fatti}-{disallineato.eventi.subiti}
+            {golEventi === 0 ? ' — marcatori ancora da inserire.' : ' — non tornano con il risultato.'}
+            {/* allineare ha senso solo se gli eventi hanno dei gol: con zero
+                porterebbe il risultato a 0-0 */}
+            {golEventi > 0 && (
+              <button className="btn btn-sm" style={{ marginLeft: 8 }} onClick={allineaRisultato}>
+                Usa {disallineato.eventi.fatti}-{disallineato.eventi.subiti}
+              </button>
+            )}
+          </div>
+        )}
       </div>
-
-      {disallineato && (
-        <div className="alert-card">
-          <span>⚖️</span>
-          <span>
-            Il risultato segnato è {disallineato.risultato.fatti}-{disallineato.risultato.subiti},
-            gli eventi dicono {disallineato.eventi.fatti}-{disallineato.eventi.subiti}.
-            <button className="btn btn-sm" style={{ marginTop: 8 }} onClick={allineaRisultato}>
-              Usa il conto degli eventi
-            </button>
-          </span>
-        </div>
-      )}
 
       {presenti.length === 0 && (
         <div className="alert-card">
@@ -348,36 +365,34 @@ export default function PartitaRefertoPage() {
         </div>
       )}
 
-      <div className="section-title">Formazione schierata</div>
+      <div className="section-title">Formazione ({inCampo.length}/{formato})</div>
 
-      <div className="chip-row" style={{ marginBottom: 8 }}>
+      <div className="row" style={{ gap: 8, marginBottom: 8 }}>
+        {!modoLive && (
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Scelta
+              titolo="Modulo"
+              className="select select-compatta"
+              value={moduloKey}
+              onChange={(e) => cambiaModulo(e.target.value)}
+            >
+              {Object.keys(MODULI).map((key) => (
+                <option key={key} value={key}>{key}</option>
+              ))}
+            </Scelta>
+          </div>
+        )}
+        {!modoLive && (assettoCorrente || listaSalvati.length > 0) && (
+          <button className="btn btn-sm" onClick={() => setFinestra('assetti')}>Carica assetto</button>
+        )}
         <button
-          className={`chip chip-sm ${!modoLive ? 'selected' : ''}`}
-          onClick={() => { setModoLive(false); setSel(null) }}
+          className={`btn btn-sm ${modoLive ? 'btn-primary' : ''}`}
+          style={modoLive ? { flex: 1 } : undefined}
+          onClick={() => { setModoLive((v) => !v); setSel(null) }}
         >
-          ✏️ Modifica formazione
-        </button>
-        <button
-          className={`chip chip-sm ${modoLive ? 'selected' : ''}`}
-          onClick={() => { setModoLive(true); setSel(null) }}
-        >
-          👁️ Osserva in diretta
+          {modoLive ? '✏️ Torna a modificare' : '👁️ Osserva'}
         </button>
       </div>
-
-      {!modoLive && (
-        <div className="chip-row">
-          {Object.keys(MODULI).map((key) => (
-            <button
-              key={key}
-              className={`chip chip-sm ${moduloKey === key ? 'selected' : ''}`}
-              onClick={() => cambiaModulo(key)}
-            >
-              {key}
-            </button>
-          ))}
-        </div>
-      )}
 
       <PitchView
         modulo={modulo}
@@ -395,9 +410,7 @@ export default function PartitaRefertoPage() {
           Tocca un giocatore in campo per aprire la sua osservazione. Formazione bloccata.
         </p>
       ) : sel == null ? (
-        <p className="muted small">
-          Tocca uno slot sul campo per assegnarlo. {inCampo.length}/{formato} schierati.
-        </p>
+        <p className="muted small">Tocca una posizione sul campo per assegnarla.</p>
       ) : (
         <div className="field">
           <label>Chi ha giocato {sigle[sel]}?</label>
@@ -419,61 +432,8 @@ export default function PartitaRefertoPage() {
           <button className="btn btn-sm" style={{ marginTop: 8 }} onClick={svuotaSlot}>
             Lascia vuoto
           </button>
-          {slots[sel] != null && (
-            <div style={{ marginTop: 12 }}>
-              <IncaricoPicker
-                label={`Incarico di ${nomeDi(slots[sel])}`}
-                value={incarichi[slots[sel]] ?? null}
-                onChange={(v) => setIncarico(slots[sel], v)}
-              />
-            </div>
-          )}
         </div>
       )}
-
-      {(assettoCorrente || listaSalvati.length > 0) && (
-        <div className="card">
-          <div className="muted small" style={{ marginBottom: 8 }}>
-            Parti da un assetto già pronto:
-          </div>
-          <div className="chip-row">
-            {assettoCorrente && (
-              <button
-                className="chip chip-sm"
-                onClick={() => caricaAssetto({ ...moduloCorrente.value, ...assettoCorrente })}
-              >
-                Modulo attuale
-              </button>
-            )}
-            {listaSalvati.map((s) => (
-              <button key={s.id} className="chip chip-sm" onClick={() => caricaAssetto(s)}>
-                {s.nome}
-              </button>
-            ))}
-          </div>
-          <p className="muted small" style={{ margin: '8px 0 0' }}>
-            Chi non era presente resta fuori: lo slot arriva vuoto.
-          </p>
-        </div>
-      )}
-
-      <div className="section-title">Durata</div>
-      <div className="card">
-        <div className="field" style={{ marginBottom: 0 }}>
-          <label>Minuti totali di gioco</label>
-          <input
-            className="input"
-            type="number"
-            min="1"
-            inputMode="numeric"
-            value={durata}
-            onChange={(e) => setDurata(Math.max(1, Number(e.target.value) || DURATA_DEFAULT))}
-          />
-        </div>
-        <p className="muted small" style={{ margin: '10px 0 0' }}>
-          Serve a calcolare i minuti di chi non è stato sostituito.
-        </p>
-      </div>
 
       <div className="section-title">Eventi ({eventi.length})</div>
 
@@ -487,31 +447,35 @@ export default function PartitaRefertoPage() {
         </div>
       )}
 
-      {eventiOrdinati.map((ev) => {
-        const info = tipoEventoInfo(ev.tipo)
-        return (
-          <div className="card" key={ev.id}>
-            <div className="row">
-              <span style={{ fontSize: '1.1rem' }}>{info.icona}</span>
-              <span className="badge">{ev.minuto ?? 0}′</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <strong className="small">{info.label}</strong>
-                <div className="muted small">{descriviEvento(ev)}</div>
-                {incoerenti.has(ev.id) && (
-                  <div className="small" style={{ color: 'var(--danger)' }}>⚠️ {incoerenti.get(ev.id)}</div>
-                )}
+      {/* Cronologia compatta: minuto, icona, cosa è successo */}
+      {eventiOrdinati.length > 0 && (
+        <div className="card referto-cronologia">
+          {eventiOrdinati.map((ev) => {
+            const info = tipoEventoInfo(ev.tipo)
+            return (
+              <div className="evento-riga" key={ev.id}>
+                <span className="evento-minuto">{ev.minuto ?? 0}′</span>
+                <span className="evento-icona" title={info.label}>{info.icona}</span>
+                <span className="evento-testo">
+                  {descriviEvento(ev)}
+                  {incoerenti.has(ev.id) && (
+                    <span className="small" style={{ color: 'var(--danger)', display: 'block' }}>
+                      ⚠️ {incoerenti.get(ev.id)}
+                    </span>
+                  )}
+                </span>
+                <button
+                  className="btn btn-sm evento-elimina"
+                  aria-label="Elimina evento"
+                  onClick={() => eliminaEvento(ev.id)}
+                >
+                  ✕
+                </button>
               </div>
-              <button
-                className="btn btn-sm"
-                aria-label="Elimina evento"
-                onClick={() => eliminaEvento(ev.id)}
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        )
-      })}
+            )
+          })}
+        </div>
+      )}
 
       <button
         className="btn btn-block"
@@ -695,42 +659,114 @@ export default function PartitaRefertoPage() {
         <>
           <div className="section-title">Incarichi</div>
           <p className="muted small" style={{ margin: '0 0 8px' }}>
-            Per ognuno: l'incarico che gli hai dato e quello che ha svolto davvero in campo.
+            Assegnato → svolto. Tocca un giocatore per segnarli.
           </p>
-          {hannoGiocato.map((pid) => {
-            const a = incaricoInfo(incarichi[pid])
-            const s = incaricoInfo(svolti[pid])
-            return (
-              <div className="card" key={pid}>
-                <div className="row" style={{ marginBottom: 8 }}>
-                  <strong>{nomeDi(pid)}</strong>
-                  <span className="spacer" />
-                  {a && s && (
-                    <span className={`badge ${a.value === s.value ? 'badge-ok' : 'badge-warn'}`}>
-                      {a.value === s.value ? 'Rispettato' : `${a.icona} → ${s.icona}`}
+          <div className="card referto-cronologia">
+            {hannoGiocato.map((pid) => {
+              const a = incaricoInfo(incarichi[pid])
+              const sv = incaricoInfo(svolti[pid])
+              return (
+                <button
+                  type="button"
+                  className="incarico-riga"
+                  key={pid}
+                  aria-label={`Incarichi di ${nomeDi(pid)}`}
+                  onClick={() => setIncaricoAperto(pid)}
+                >
+                  <strong className="incarico-nome">{nomeDi(pid)}</strong>
+                  <span className="incarico-coppia">
+                    <span title={a ? `Assegnato: ${a.label}` : 'Assegnato: —'}>{a ? a.icona : '—'}</span>
+                    <span className="muted">→</span>
+                    <span title={sv ? `Svolto: ${sv.label}` : 'Svolto: —'}>{sv ? sv.icona : '—'}</span>
+                  </span>
+                  {a && sv ? (
+                    <span className={`badge ${a.value === sv.value ? 'badge-ok' : 'badge-warn'}`}>
+                      {a.value === sv.value ? 'Rispettato' : 'Diverso'}
                     </span>
+                  ) : (
+                    <span className="badge">Da segnare</span>
                   )}
-                </div>
-                <IncaricoPicker
-                  label="Incarico assegnato"
-                  value={incarichi[pid] ?? null}
-                  onChange={(v) => setIncarico(pid, v)}
-                />
-                <IncaricoPicker
-                  label="Incarico svolto"
-                  value={svolti[pid] ?? null}
-                  onChange={(v) => setSvolto(pid, v)}
-                  comeAssegnato={incarichi[pid]}
-                />
-              </div>
-            )
-          })}
+                </button>
+              )
+            })}
+          </div>
         </>
       )}
 
-      <button className="btn btn-primary btn-block" style={{ marginTop: 14 }} onClick={salva}>
-        Salva referto
-      </button>
+      {incaricoAperto != null && (
+        <Modal titolo={`Incarichi di ${nomeDi(incaricoAperto)}`} onClose={() => setIncaricoAperto(null)}>
+          <IncaricoPicker
+            label="Incarico assegnato"
+            value={incarichi[incaricoAperto] ?? null}
+            onChange={(v) => setIncarico(incaricoAperto, v)}
+          />
+          <IncaricoPicker
+            label="Incarico svolto"
+            value={svolti[incaricoAperto] ?? null}
+            onChange={(v) => setSvolto(incaricoAperto, v)}
+            comeAssegnato={incarichi[incaricoAperto]}
+          />
+          <button className="btn btn-primary btn-block" style={{ marginTop: 6 }} onClick={() => setIncaricoAperto(null)}>
+            Fatto
+          </button>
+        </Modal>
+      )}
+
+      {finestra === 'durata' && (
+        <Modal titolo="Durata della partita" onClose={() => setFinestra(null)}>
+          <div className="field">
+            <label>Minuti totali di gioco</label>
+            <input
+              className="input"
+              type="number"
+              min="1"
+              inputMode="numeric"
+              value={durata}
+              onChange={(e) => setDurata(Math.max(1, Number(e.target.value) || durataSquadra(team)))}
+            />
+          </div>
+          <p className="muted small" style={{ margin: '0 0 10px' }}>
+            Serve a calcolare i minuti di chi non è stato sostituito.
+          </p>
+          <button className="btn btn-primary btn-block" onClick={() => setFinestra(null)}>Fatto</button>
+        </Modal>
+      )}
+
+      {finestra === 'assetti' && (
+        <Modal titolo="Carica un assetto" onClose={() => setFinestra(null)}>
+          <div className="scelta-lista">
+            {assettoCorrente && (
+              <button
+                type="button"
+                className="scelta-opzione"
+                onClick={() => { caricaAssetto({ ...moduloCorrente.value, ...assettoCorrente }); setFinestra(null) }}
+              >
+                Modulo attuale
+              </button>
+            )}
+            {listaSalvati.map((a) => (
+              <button
+                type="button"
+                key={a.id}
+                className="scelta-opzione"
+                onClick={() => { caricaAssetto(a); setFinestra(null) }}
+              >
+                {a.nome} <span className="muted small">· {a.modulo}</span>
+              </button>
+            ))}
+          </div>
+          <p className="muted small" style={{ margin: '10px 0 0' }}>
+            Chi non era presente resta fuori: la sua posizione arriva vuota.
+          </p>
+        </Modal>
+      )}
+
+      {/* Salva sempre a portata di pollice: il referto è lungo */}
+      <div className="salva-fisso">
+        <button className="btn btn-primary btn-block" onClick={salva}>
+          Salva referto
+        </button>
+      </div>
     </div>
   )
 }

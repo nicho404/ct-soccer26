@@ -6,6 +6,13 @@
 
 export const DURATA_DEFAULT = 60
 
+// Durata con cui parte ogni nuovo referto: quella scelta in Impostazioni
+// (team.durataPartita), altrimenti 60. I referti già salvati tengono la loro.
+export const durataSquadra = (team) => {
+  const n = Number(team?.durataPartita)
+  return Number.isInteger(n) && n > 0 ? n : DURATA_DEFAULT
+}
+
 // Un referto esiste quando la formazione è stata compilata: è quella a dire
 // chi era in campo al minuto 0, senza la quale nessun minuto è calcolabile.
 export const refertoCompilato = (m) =>

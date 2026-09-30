@@ -302,9 +302,12 @@ export async function seedDemoData() {
   await db.sessionPlans.add({ ...DEMO_PIANO, isTemplate: true, demo: true })
   await db.manualEntries.bulkAdd(DEMO_MANUALE.map((v) => ({ ...v, demo: true })))
   // Capitano designato: Matteo Villa, quello segnato come leader del gruppo
-  await db.meta.put({ key: 'capitano', value: playerIds[5] })
-  // Vice: Luca Ferrari, l'altro leader, il portiere
-  await db.meta.put({ key: 'vice', value: playerIds[0] })
+  // Vice: Luca Ferrari, l'altro leader, il portiere.
+  // Le fasce demo si mettono solo se la squadra vera non le ha già: la demo
+  // si affianca ai dati reali, non deve togliere la fascia a nessuno.
+  for (const [chiave, pid] of [['capitano', playerIds[5]], ['vice', playerIds[0]]]) {
+    if ((await db.meta.get(chiave))?.value == null) await db.meta.put({ key: chiave, value: pid })
+  }
   await db.trainings.bulkAdd(
     DEMO_TRAININGS.map(({ giorni, presenze, conPiano, ...t }) => ({
       ...t,
