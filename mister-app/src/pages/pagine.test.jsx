@@ -445,12 +445,22 @@ describe('capitano e vice', () => {
     fireEvent.click(vice[0])
     await waitFor(async () => expect((await db.meta.get('vice'))?.value).toBeTruthy())
     const viceId = (await db.meta.get('vice')).value
+    // il tocco sul pulsante non apre la finestra della riga
+    expect(screen.queryByRole('dialog')).toBeNull()
 
     // lo stesso giocatore diventa capitano: perde la fascia di vice
-    const card = (await screen.findByRole('button', { name: 'Togli vice' })).closest('.card')
-    fireEvent.click([...card.querySelectorAll('button')].find((b) => b.textContent === 'Nomina capitano'))
+    const riga = (await screen.findByRole('button', { name: 'Togli vice' })).closest('.capitano-riga')
+    fireEvent.click(riga.querySelector('[aria-label="Nomina capitano"]'))
     await waitFor(async () => expect((await db.meta.get('capitano'))?.value).toBe(viceId))
     expect(await db.meta.get('vice')).toBeUndefined()
+
+    // il tocco sulla riga apre i criteri, con la scheda e la ✕
+    fireEvent.click(riga)
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog.textContent).toContain('dei criteri coperto')
+    expect(screen.getByRole('button', { name: 'Apri scheda giocatore' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Chiudi' }))
+    expect(screen.queryByRole('dialog')).toBeNull()
     cleanup()
 
     await db.meta.put({ key: 'vice', value: (await db.players.toArray()).find((p) => p.id !== viceId).id })

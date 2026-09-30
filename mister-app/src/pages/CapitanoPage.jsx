@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -8,6 +9,7 @@ import { IconStar } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
 import { classificaCapitani, COPERTURA_MINIMA } from '../lib/capitano'
 import Fascia from '../components/Fascia'
+import Modal from '../components/Modal'
 import { fasciaDi } from '../lib/fascia'
 
 // Le voci senza dato restano in lista, in grigio: dicono cosa manca per
@@ -36,6 +38,8 @@ function VoceRiga({ voce }) {
 
 export default function CapitanoPage() {
   const navigate = useNavigate()
+  // giocatore di cui è aperta la finestra con i criteri
+  const [aperto, setAperto] = useState(null)
   const players = useLiveQuery(() => db.players.toArray(), [])
   const observations = useLiveQuery(() => db.observations.toArray(), [])
   const trainings = useLiveQuery(() => db.trainings.toArray(), [])
@@ -67,10 +71,54 @@ export default function CapitanoPage() {
   const nomina = (pid) => assegna('capitano', pid, capitanoId, 'vice', viceId)
   const nominaVice = (pid) => assegna('vice', pid, viceId, 'capitano', capitanoId)
 
+  const rigaDi = (pid) => conDati.find((r) => r.playerId === pid)
+  const posizioneDi = (pid) => conDati.findIndex((r) => r.playerId === pid) + 1
+
+  // I due pulsanti fascia, uguali in elenco e nella finestra: C pieno quando
+  // è capitano, VC quando è vice. Il tocco non apre la finestra della riga.
+  const pulsantiFascia = (pid, grandi = false) => {
+    const tipo = fasciaDi(pid, { capitanoId, viceId })
+    const stop = (fn) => (e) => { e.stopPropagation(); fn(pid) }
+    return (
+      <>
+        <button
+          type="button"
+          className={`fascia-btn ${tipo === 'capitano' ? 'on capitano' : ''} ${grandi ? 'grande' : ''}`}
+          aria-pressed={tipo === 'capitano'}
+          aria-label={tipo === 'capitano' ? 'Togli la fascia' : 'Nomina capitano'}
+          onClick={stop(nomina)}
+        >
+          {grandi ? (tipo === 'capitano' ? 'Togli la fascia' : 'Nomina capitano') : 'C'}
+        </button>
+        <button
+          type="button"
+          className={`fascia-btn ${tipo === 'vice' ? 'on vice' : ''} ${grandi ? 'grande' : ''}`}
+          aria-pressed={tipo === 'vice'}
+          aria-label={tipo === 'vice' ? 'Togli vice' : 'Nomina vice'}
+          onClick={stop(nominaVice)}
+        >
+          {grandi ? (tipo === 'vice' ? 'Togli vice' : 'Nomina vice') : 'VC'}
+        </button>
+      </>
+    )
+  }
+
+  const overall = (r) => r ? (
+    <span
+      className={`badge ${r.copertura < COPERTURA_MINIMA ? 'badge-warn' : 'badge-ok'}`}
+      title={r.copertura < COPERTURA_MINIMA ? 'Overall su dati parziali' : 'Overall capitano'}
+    >
+      {r.punteggio}
+    </span>
+  ) : null
+
   const designati = [
-    { id: capitanoId, tipo: 'capitano', testo: 'Capitano designato' },
-    { id: viceId, tipo: 'vice', testo: 'Vice capitano' },
-  ].filter((d) => d.id != null && giocatoreDi(d.id))
+    { id: capitanoId, tipo: 'capitano' },
+    { id: viceId, tipo: 'vice' },
+  ]
+
+  const rigaAperta = aperto != null ? rigaDi(aperto) : null
+  const giocatoreAperto = aperto != null ? giocatoreDi(aperto) : null
 
   return (
     <div className="page">
@@ -92,71 +140,53 @@ export default function CapitanoPage() {
         />
       ) : (
         <>
-          {designati.map((d) => (
-            <div className="team-banner" key={d.tipo}>
-              <Avatar src={giocatoreDi(d.id).foto} size={38} />
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <strong>{giocatoreDi(d.id).nome}</strong>
-                <div className="muted small">{d.testo}</div>
-              </div>
-              <Fascia tipo={d.tipo} />
-            </div>
-          ))}
+          {/* Le due fasce a colpo d'occhio: chi le ha e con che overall */}
+          <div className="fasce-grid">
+            {designati.map((d) => {
+              const p = d.id != null ? giocatoreDi(d.id) : null
+              return (
+                <div
+                  key={d.tipo}
+                  className={`fascia-tessera ${p ? 'tappable' : ''}`}
+                  onClick={p ? () => setAperto(d.id) : undefined}
+                >
+                  <Fascia tipo={d.tipo} />
+                  {p ? (
+                    <div className="row" style={{ marginTop: 8, gap: 8 }}>
+                      <Avatar src={p.foto} size={32} />
+                      <strong className="small" style={{ flex: 1, minWidth: 0 }}>{nomeBreve(p)}</strong>
+                      {overall(rigaDi(d.id))}
+                    </div>
+                  ) : (
+                    <div className="muted small" style={{ marginTop: 8 }}>Da nominare</div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
 
-          <p className="muted small">
-            Nessun dato nuovo: il confronto pesa quello che hai già raccolto — leadership e
-            lettura dalle osservazioni, appello dalle sedute, presenza in campo dai referti,
-            carattere dalla scheda giocatore. Il punteggio ordina, la fascia la dai tu.
+          <p className="muted small" style={{ margin: '0 0 10px' }}>
+            Overall dai dati già raccolti (giallo = dati parziali). Tocca un giocatore per i criteri.
           </p>
 
           {conDati.map((r, i) => {
             const p = giocatoreDi(r.playerId)
             if (!p) return null
-            const scarso = r.copertura < COPERTURA_MINIMA
-            const isCapitano = capitanoId === r.playerId
-            const isVice = viceId === r.playerId
             return (
-              <div className="card" key={r.playerId}>
-                <div className="row">
-                  <span className="badge">{i + 1}</span>
-                  <Avatar src={p.foto} size={32} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <strong className="small">{nomeBreve(p)}</strong>
-                    {' '}<Fascia tipo={fasciaDi(r.playerId, { capitanoId, viceId })} />
-                    <div className="muted small">
-                      {scarso
-                        ? `Dati parziali (${r.copertura}% dei criteri)`
-                        : `${r.copertura}% dei criteri coperto`}
-                    </div>
-                  </div>
-                  <span className={`badge ${scarso ? 'badge-warn' : 'badge-ok'}`}>
-                    {r.punteggio}
-                  </span>
-                </div>
-
-                <div style={{ marginTop: 10 }}>
-                  {r.voci.map((v) => (
-                    <VoceRiga voce={v} key={v.key} />
-                  ))}
-                </div>
-
-                <div className="row" style={{ gap: 10, marginTop: 10 }}>
-                  <button
-                    className={`btn btn-sm ${isCapitano ? '' : 'btn-primary'}`}
-                    onClick={() => nomina(r.playerId)}
-                  >
-                    {isCapitano ? 'Togli la fascia' : 'Nomina capitano'}
-                  </button>
-                  <button
-                    className={`btn btn-sm ${isVice ? '' : 'btn-primary'}`}
-                    onClick={() => nominaVice(r.playerId)}
-                  >
-                    {isVice ? 'Togli vice' : 'Nomina vice'}
-                  </button>
-                  <button className="btn btn-sm" onClick={() => navigate(`/rosa/${r.playerId}`)}>
-                    Scheda
-                  </button>
-                </div>
+              <div
+                className="card tappable capitano-riga"
+                key={r.playerId}
+                role="button"
+                tabIndex={0}
+                aria-label={`Criteri di ${nomeBreve(p)}`}
+                onClick={() => setAperto(r.playerId)}
+                onKeyDown={(e) => { if (e.key === 'Enter') setAperto(r.playerId) }}
+              >
+                <span className="muted small" style={{ minWidth: 18 }}>{i + 1}</span>
+                <Avatar src={p.foto} size={32} />
+                <strong className="small" style={{ flex: 1, minWidth: 0 }}>{nomeBreve(p)}</strong>
+                {overall(r)}
+                {pulsantiFascia(r.playerId)}
               </div>
             )
           })}
@@ -168,6 +198,36 @@ export default function CapitanoPage() {
             </p>
           )}
         </>
+      )}
+
+      {giocatoreAperto && (
+        <Modal titolo={nomeBreve(giocatoreAperto)} onClose={() => setAperto(null)}>
+          <div className="row" style={{ marginBottom: 10, gap: 8 }}>
+            <Avatar src={giocatoreAperto.foto} size={44} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Fascia tipo={fasciaDi(aperto, { capitanoId, viceId })} />
+              <div className="muted small" style={{ marginTop: 4 }}>
+                {rigaAperta
+                  ? `${posizioneDi(aperto)}° · ${rigaAperta.copertura}% dei criteri coperto${rigaAperta.copertura < COPERTURA_MINIMA ? ' (dati parziali)' : ''}`
+                  : 'Nessun dato per il confronto'}
+              </div>
+            </div>
+            {rigaAperta && <span className="badge badge-accent" style={{ fontSize: '1.1rem' }}>{rigaAperta.punteggio}</span>}
+          </div>
+
+          {rigaAperta?.voci.map((v) => <VoceRiga voce={v} key={v.key} />)}
+
+          <div className="row" style={{ gap: 8, marginTop: 14 }}>
+            {pulsantiFascia(aperto, true)}
+          </div>
+          <button
+            className="btn btn-primary btn-block"
+            style={{ marginTop: 10 }}
+            onClick={() => navigate(`/rosa/${aperto}`)}
+          >
+            Apri scheda giocatore
+          </button>
+        </Modal>
       )}
     </div>
   )

@@ -347,6 +347,23 @@ a.card {
 .fascia-vice { background: rgba(251, 191, 36, 0.08); color: #fcd34d; }
 .fascia-vice .fascia-sigla { border: 1px solid #fcd34d; color: #fcd34d; }
 
+/* Capitano: tessere delle due fasce e righe compatte */
+.fasce-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.fascia-tessera {
+  background: var(--surface); border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: var(--radius); padding: 10px; min-width: 0;
+}
+.fascia-tessera.tappable { cursor: pointer; }
+.capitano-riga { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; }
+.fascia-btn {
+  min-width: 38px; height: 34px; padding: 0 8px; border-radius: 8px; flex-shrink: 0;
+  border: 1px solid rgba(251, 191, 36, 0.45); background: transparent; color: #fcd34d;
+  font-weight: 800; font-family: inherit; font-size: 0.8rem; cursor: pointer;
+}
+.fascia-btn.on.capitano { background: #fbbf24; color: #14141c; border-color: #fbbf24; }
+.fascia-btn.on.vice { background: rgba(252, 211, 77, 0.2); border-color: #fcd34d; }
+.fascia-btn.grande { flex: 1; height: 44px; font-size: 0.9rem; }
+
 /* Badge presenze: i metalli "brillanti" hanno un riflesso diagonale, ferro,
    legno e cartone restano opachi — la differenza si vede a colpo d'occhio. */
 .badge-medaglia { color: #14141c; font-weight: 800; border: 1px solid rgba(255, 255, 255, 0.25); }
