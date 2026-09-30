@@ -7,18 +7,26 @@ import {
   stileInfo,
 } from '../db/constants'
 import { presenzaPct } from '../lib/stats'
+import { calcolaUmore } from '../lib/umore'
+import { UmoreLegenda, BottoneAiuto } from '../components/UmoreLegenda'
 import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
 import { IconUsers } from '../components/icons'
 
-function PlayerCard({ player, trainings }) {
+function PlayerCard({ player, trainings, matches }) {
   const tess = tesseramentoInfo(player.tesseramento)
   const stato = statoAttivitaInfo(player.statoAttivita)
   const pct = presenzaPct(trainings, player.id)
+  const umore = calcolaUmore({ trainings, matches }, player.id)
   return (
     <Link to={`/rosa/${player.id}`} className="card tappable">
       <div className="row">
         <Avatar src={player.foto} size={38} />
+        {umore && (
+          <span style={{ fontSize: '1.35rem', lineHeight: 1 }} title={`Umore: ${umore.label}`} aria-label={`Umore: ${umore.label}`}>
+            {umore.emoji}
+          </span>
+        )}
         {player.numero !== '' && player.numero != null && (
           <span className="shirt-number">{player.numero}</span>
         )}
@@ -69,10 +77,12 @@ const ordina = (a, b) =>
 export default function RosaPage() {
   const navigate = useNavigate()
   const [filtro, setFiltro] = useState('attivi')
+  const [legendaUmore, setLegendaUmore] = useState(false)
   const players = useLiveQuery(() => db.players.toArray(), [])
   const trainings = useLiveQuery(() => db.trainings.toArray(), [])
+  const matches = useLiveQuery(() => db.matches.toArray(), [])
 
-  if (!players || !trainings) return null
+  if (!players || !trainings || !matches) return null
 
   const attivi = players.filter(isAttivo).sort(ordina)
   const inattivi = players.filter((p) => !isAttivo(p)).sort(ordina)
@@ -102,7 +112,7 @@ export default function RosaPage() {
         />
       ) : (
         <>
-          <div className="chip-row" style={{ marginBottom: 14 }}>
+          <div className="chip-row" style={{ marginBottom: legendaUmore ? 0 : 14, alignItems: 'center' }}>
             <button
               className={`chip chip-sm ${filtro === 'attivi' ? 'selected' : ''}`}
               onClick={() => setFiltro('attivi')}
@@ -121,11 +131,15 @@ export default function RosaPage() {
             >
               Tutti ({players.length})
             </button>
+            <span className="spacer" />
+            <span className="muted small">Umore</span>
+            <BottoneAiuto aperta={legendaUmore} onClick={() => setLegendaUmore((v) => !v)} />
           </div>
+          {legendaUmore && <div style={{ marginBottom: 14 }}><UmoreLegenda /></div>}
 
           {visibili.map((p) => (
             <div key={p.id} style={isAttivo(p) ? undefined : { opacity: 0.55 }}>
-              <PlayerCard player={p} trainings={trainings} />
+              <PlayerCard player={p} trainings={trainings} matches={matches} />
             </div>
           ))}
         </>

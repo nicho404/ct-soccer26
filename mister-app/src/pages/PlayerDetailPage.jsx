@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -10,6 +11,8 @@ import {
 import { famigliaRuoloTattico } from '../tactics/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
 import { aggregaGiocatori, incarichiGiocatore } from '../lib/storico'
+import { calcolaUmore } from '../lib/umore'
+import { UmoreLegenda, BottoneAiuto } from '../components/UmoreLegenda'
 import { formatDataPartita } from '../lib/partite'
 import { DOMANDE_PER_SLOT } from '../lib/domandeRuolo'
 import Avatar from '../components/Avatar'
@@ -36,6 +39,7 @@ export default function PlayerDetailPage() {
   const { id } = useParams()
   const playerId = Number(id)
 
+  const [legendaUmore, setLegendaUmore] = useState(false)
   const player = useLiveQuery(() => db.players.get(playerId), [playerId])
   const observations = useLiveQuery(
     () => db.observations.where('playerId').equals(playerId).reverse().sortBy('data'),
@@ -73,6 +77,7 @@ export default function PlayerDetailPage() {
   const porta = statPorta(matches, playerId)
   const stagione = aggregaGiocatori(matches).find((r) => r.playerId === playerId)
   const incarichiPartite = incarichiGiocatore(matches, playerId)
+  const umore = calcolaUmore({ trainings, matches }, playerId)
   const nomeDi = (pid) => {
     const p = allPlayers.find((x) => x.id === pid)
     return nomeBreve(p)
@@ -231,6 +236,31 @@ export default function PlayerDetailPage() {
         </InfoRow>
         {player.condizione && <InfoRow label="Condizione">{player.condizione}</InfoRow>}
         {player.note && <InfoRow label="Note">{player.note}</InfoRow>}
+      </div>
+
+      <div className="section-title">Umore</div>
+      <div className="card">
+        {umore ? (
+          <>
+            <div className="row" style={{ marginBottom: 8 }}>
+              <span style={{ fontSize: '2rem', lineHeight: 1 }}>{umore.emoji}</span>
+              <strong>{umore.label}</strong>
+              <span className="spacer" />
+              <BottoneAiuto aperta={legendaUmore} onClick={() => setLegendaUmore((v) => !v)} />
+            </div>
+            {umore.fattori.map((f) => (
+              <InfoRow key={f.nome} label={f.nome}>
+                {f.valore} <span className="muted small">· {f.dettaglio}</span>
+              </InfoRow>
+            ))}
+            {umore.nota && <p className="muted small" style={{ margin: '8px 0 0' }}>{umore.nota}</p>}
+            {legendaUmore && <UmoreLegenda />}
+          </>
+        ) : (
+          <span className="muted small">
+            Nessun dato: serve almeno una partita con referto in cui era presente.
+          </span>
+        )}
       </div>
 
       <div className="section-title">Stagione</div>
