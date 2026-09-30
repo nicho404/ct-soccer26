@@ -21,22 +21,27 @@ const UMORI_DI_ALLARME = ['triste', 'arrabbiato']
 
 // Le voci senza dato restano in lista, in grigio: dicono cosa manca per
 // avere un confronto onesto, che è un'informazione utile quanto il punteggio.
+// `extra` prende il posto della barra (es. il badge presenze): stesso dato,
+// letto meglio come livello che come lunghezza.
 function VoceRiga({ voce, extra }) {
   const assente = voce.valore === null
   return (
     <div className="crit-media-row">
       <span className="crit-media-label" style={assente ? { opacity: 0.5 } : undefined}>
         {voce.label} <span className="muted">· {voce.peso}%</span>
-        {extra && <> {extra}</>}
       </span>
-      <span className="stat-bar">
-        {!assente && (
-          <span
-            className={`stat-bar-fill vote-fill-${Math.max(1, Math.round(voce.valore / 20))}`}
-            style={{ width: `${voce.valore}%` }}
-          />
-        )}
-      </span>
+      {extra ? (
+        <span className="stat-bar-sostituto">{extra}</span>
+      ) : (
+        <span className="stat-bar">
+          {!assente && (
+            <span
+              className={`stat-bar-fill vote-fill-${Math.max(1, Math.round(voce.valore / 20))}`}
+              style={{ width: `${voce.valore}%` }}
+            />
+          )}
+        </span>
+      )}
       <span className="muted" style={{ minWidth: 34, textAlign: 'right', fontSize: '0.85rem' }}>
         {assente ? '—' : voce.valore}
       </span>

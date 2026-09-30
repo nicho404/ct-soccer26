@@ -13,7 +13,7 @@ import { aggregaGiocatori } from './storico'
 export const PESI = [
   { key: 'leadership', label: 'Leadership osservata', peso: 35 },
   // stessa percentuale del badge presenze (Rosa, scheda, Presenze e sedute)
-  { key: 'allenamenti', label: 'Presenze (allenamenti e partite)', peso: 25 },
+  { key: 'allenamenti', label: 'Presenze (totali)', peso: 25 },
   { key: 'campo', label: 'Presenza in campo', peso: 20 },
   { key: 'lettura', label: 'Lettura del gioco', peso: 10 },
   { key: 'carattere', label: 'Carattere da leader', peso: 10 },

@@ -354,6 +354,7 @@ a.card {
   border-radius: var(--radius); padding: 10px; min-width: 0;
 }
 .fascia-tessera.tappable { cursor: pointer; }
+.stat-bar-sostituto { flex: 1; display: flex; justify-content: flex-end; }
 .fascia-allarme {
   margin-top: 8px; padding: 4px 8px; border-radius: 8px; font-size: 0.78rem; font-weight: 700;
   background: rgba(248, 113, 113, 0.14); color: var(--danger);
