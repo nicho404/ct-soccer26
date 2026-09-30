@@ -249,7 +249,7 @@ export default function PlayerDetailPage() {
         {umore ? (
           <>
             <div className="row" style={{ marginBottom: 8 }}>
-              <EmojiUmore umore={umore} size="2rem" onClick={() => setLegendaUmore(true)} />
+              <EmojiUmore umore={umore} size={40} onClick={() => setLegendaUmore(true)} />
               <strong>{umore.label}</strong>
               <span className="spacer" />
               <BadgePresenze badge={badge} />

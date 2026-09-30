@@ -1,4 +1,5 @@
 import Modal from './Modal'
+import FacciaUmore from './FacciaUmore'
 import {
   SOGLIE_MINUTAGGIO, IMPEGNO_PIENO, IMPEGNO_MINIMO, BADGE_PRESENZE, umoreInfo, umoreDa,
 } from '../lib/umore'
@@ -59,7 +60,7 @@ export function UmoreLegenda() {
                 <td style={{ ...cella, textAlign: 'left' }} className="muted">{r.label}</td>
                 {colonne.map((c) => (
                   <td key={c.livello} style={{ ...cella, fontSize: '1.15rem' }}>
-                    {umoreDa(c.min, r.quota).livello.emoji}
+                    <FacciaUmore livello={umoreDa(c.min, r.quota).livello.value} size={22} />
                   </td>
                 ))}
               </tr>
@@ -68,7 +69,7 @@ export function UmoreLegenda() {
         </table>
       </div>
       <p className="muted" style={{ margin: '8px 0 12px' }}>
-        Chi c'è sempre e gioca poco si arrabbia. Chi c'è poco e gioca poco resta {umoreInfo('neutro').emoji}:
+        Chi c'è sempre e gioca poco si arrabbia. Chi c'è poco e gioca poco resta <FacciaUmore livello="neutro" size={16} /> {umoreInfo('neutro').label.toLowerCase()}:
         non si aspetta di giocare. Le presenze non tolgono mai il buonumore a chi gioca.
       </p>
 
@@ -86,12 +87,11 @@ export function UmoreLegenda() {
 
 // L'emoji dell'umore è il bottone che apre la legenda. Dentro una card che
 // è già un link (Rosa) il tocco non deve anche aprire la scheda giocatore.
-export function EmojiUmore({ umore, onClick, size = '1.35rem' }) {
+export function EmojiUmore({ umore, onClick, size = 26 }) {
   return (
     <button
       type="button"
       className="emoji-umore"
-      style={{ fontSize: size }}
       aria-label={`Umore: ${umore.label}. Come si calcola`}
       title={`Umore: ${umore.label}`}
       onClick={(e) => {
@@ -100,7 +100,7 @@ export function EmojiUmore({ umore, onClick, size = '1.35rem' }) {
         onClick()
       }}
     >
-      {umore.emoji}
+      <FacciaUmore livello={umore.value} size={size} />
     </button>
   )
 }

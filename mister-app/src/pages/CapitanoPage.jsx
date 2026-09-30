@@ -13,6 +13,7 @@ import Modal from '../components/Modal'
 import { fasciaDi } from '../lib/fascia'
 import { calcolaUmore, badgePresenze } from '../lib/umore'
 import { BadgePresenze } from '../components/UmoreLegenda'
+import FacciaUmore from '../components/FacciaUmore'
 
 // Umori che su chi porta la fascia meritano un avviso: un capitano scontento
 // del minutaggio è un problema di spogliatoio, gli altri stati non dicono niente.
@@ -170,7 +171,7 @@ export default function CapitanoPage() {
                         if (!umore || !UMORI_DI_ALLARME.includes(umore.livello)) return null
                         return (
                           <div className="fascia-allarme">
-                            {umore.emoji} Scontento del minutaggio
+                            <FacciaUmore livello={umore.value} size={16} /> Scontento del minutaggio
                           </div>
                         )
                       })()}

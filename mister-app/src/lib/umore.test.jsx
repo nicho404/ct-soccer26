@@ -101,7 +101,7 @@ describe('legenda umore', () => {
       const [aperta, setAperta] = useState(false)
       return (
         <>
-          <EmojiUmore umore={{ emoji: '😐', label: 'Neutro' }} onClick={() => setAperta(true)} />
+          <EmojiUmore umore={{ value: 'neutro', emoji: '😐', label: 'Neutro' }} onClick={() => setAperta(true)} />
           {aperta && <LegendaPopup onClose={() => setAperta(false)} />}
         </>
       )

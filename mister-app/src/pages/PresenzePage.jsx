@@ -119,7 +119,7 @@ export default function PresenzePage() {
                       const badge = badgePresenze(imp.quota)
                       return (
                         <tr key={p.id}>
-                          <td>{umore && <EmojiUmore umore={umore} size="1.1rem" onClick={() => setLegenda(true)} />}</td>
+                          <td>{umore && <EmojiUmore umore={umore} size={22} onClick={() => setLegenda(true)} />}</td>
                           <td><Link to={`/rosa/${p.id}`}>{nomeBreve(p)}</Link></td>
                           <td>{imp.presenti}</td>
                           <td>{imp.assenti || ''}</td>
