@@ -39,8 +39,11 @@ export default function AnalisiFormPage() {
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
   const modifica = (lista, indice, patch) =>
     setForm((f) => ({ ...f, [lista]: f[lista].map((x, i) => (i === indice ? { ...x, ...patch } : x)) }))
-  const togli = (lista, indice) =>
+  const NOMI_VOCE = { puntiChiave: 'questo punto chiave', obiettivi: 'questo obiettivo', sezioni: 'questa sezione' }
+  const togli = (lista, indice) => {
+    if (!window.confirm(`Eliminare ${NOMI_VOCE[lista] ?? 'questa voce'}?`)) return
     setForm((f) => ({ ...f, [lista]: f[lista].filter((_, i) => i !== indice) }))
+  }
   const aggiungi = (lista, voce) => setForm((f) => ({ ...f, [lista]: [...f[lista], voce] }))
 
   const salva = async () => {

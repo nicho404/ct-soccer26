@@ -196,8 +196,10 @@ export default function ModuloPage() {
       cambiPrevisti: f.cambiPrevisti.map((r) => (r.id === rid ? { ...r, ...patch } : r)),
     }))
 
-  const rimuoviRigaCambio = (rid) =>
+  const rimuoviRigaCambio = (rid) => {
+    if (!window.confirm('Togliere questo cambio previsto?')) return
     setSalvaForm((f) => ({ ...f, cambiPrevisti: f.cambiPrevisti.filter((r) => r.id !== rid) }))
+  }
 
   const confermaSalvaCorrente = async () => {
     const nome = salvaForm.nome.trim()
@@ -376,6 +378,7 @@ export default function ModuloPage() {
 
   const rimuoviCambio = () => {
     if (sel === null || cambi[sel] === undefined) return
+    if (!window.confirm('Annullare questo cambio pianificato?')) return
     const nextCambi = { ...cambi }
     delete nextCambi[sel]
     setCambi(nextCambi)
@@ -692,6 +695,7 @@ export default function ModuloPage() {
                           className="btn btn-sm btn-danger"
                           aria-label={`Annulla cambio ${nomeBreve(entrante)}`}
                           onClick={() => {
+                            if (!window.confirm(`Annullare il cambio di ${nomeBreve(entrante)}?`)) return
                             const nextCambi = { ...cambi }
                             delete nextCambi[slotIndex]
                             setCambi(nextCambi)

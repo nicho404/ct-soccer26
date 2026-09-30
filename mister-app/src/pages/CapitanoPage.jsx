@@ -73,6 +73,8 @@ export default function CapitanoPage() {
   // viceversa. Ritoccare la fascia che ha già la toglie.
   const assegna = async (chiave, pid, attuale, altra, altraId) => {
     if (attuale === pid) {
+      const nome = nomeBreve(giocatoreDi(pid))
+      if (!window.confirm(chiave === 'capitano' ? `Togliere la fascia di capitano a ${nome}?` : `Togliere ${nome} da vice?`)) return
       await db.meta.delete(chiave)
       return
     }

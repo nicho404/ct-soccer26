@@ -76,7 +76,10 @@ export default function SedutaFormPage() {
       presenze: Object.fromEntries(convocabili.map((p) => [p.id, f.presenze[p.id] ?? 'presente'])),
     }))
 
-  const svuotaAppello = () => set('presenze', {})
+  const svuotaAppello = () => {
+    if (!window.confirm("Svuotare l'appello di questa seduta?")) return
+    set('presenze', {})
+  }
 
   // --- piano seduta ---------------------------------------------------------
 
@@ -89,8 +92,10 @@ export default function SedutaFormPage() {
       blocchi: form.piano.blocchi.map((b) => (b.id === bid ? { ...b, ...patch } : b)),
     })
 
-  const eliminaBlocco = (bid) =>
+  const eliminaBlocco = (bid) => {
+    if (!window.confirm('Eliminare questo blocco del piano?')) return
     setPiano({ blocchi: form.piano.blocchi.filter((b) => b.id !== bid) })
+  }
 
   const caricaModello = (m) =>
     setPiano({

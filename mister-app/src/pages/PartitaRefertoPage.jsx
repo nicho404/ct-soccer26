@@ -234,7 +234,10 @@ export default function PartitaRefertoPage() {
     setBozza(null)
   }
 
-  const eliminaEvento = (evId) => setEventi((e) => e.filter((x) => x.id !== evId))
+  const eliminaEvento = (evId) => {
+    if (!window.confirm('Eliminare questo evento dal referto?')) return
+    setEventi((e) => e.filter((x) => x.id !== evId))
+  }
 
   const eventiOrdinati = [...eventi].sort((a, b) => (a.minuto ?? 0) - (b.minuto ?? 0))
   // ricalcolato a ogni modifica: se si ritocca la formazione iniziale dopo

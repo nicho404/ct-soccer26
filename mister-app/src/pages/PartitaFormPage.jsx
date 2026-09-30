@@ -111,7 +111,10 @@ export default function PartitaFormPage() {
       presenze: Object.fromEntries(convocabili.map((p) => [p.id, f.presenze[p.id] ?? 'presente'])),
     }))
 
-  const svuotaAppello = () => set('presenze', {})
+  const svuotaAppello = () => {
+    if (!window.confirm("Svuotare l'appello di questa partita?")) return
+    set('presenze', {})
+  }
 
   // Cerca l'avversario per nome (senza distinzione di maiuscole) e lo crea se non c'è:
   // così il calendario si popola senza passare da un CRUD avversari, che arriva con M7.

@@ -45,7 +45,10 @@ export default function EventiAvversari({ eventi, onChange, lati, giocatori }) {
             <button
               className="btn btn-sm"
               aria-label={`Togli ${e.nome}`}
-              onClick={() => onChange(eventi.filter((x) => x.key !== e.key))}
+              onClick={() => {
+                if (!window.confirm(`Togliere ${e.nome}?`)) return
+                onChange(eventi.filter((x) => x.key !== e.key))
+              }}
             >
               ✕
             </button>

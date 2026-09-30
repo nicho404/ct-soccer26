@@ -64,8 +64,11 @@ export default function AvversarioFormPage() {
       pericolosi: f.pericolosi.map((p) => (p.id === pid ? { ...p, ...patch } : p)),
     }))
 
-  const eliminaPericoloso = (pid) =>
+  const eliminaPericoloso = (pid) => {
+    const nome = form.pericolosi.find((p) => p.id === pid)?.nome?.trim()
+    if (!window.confirm(`Togliere ${nome || 'questo giocatore'} dai pericolosi?`)) return
     setForm((f) => ({ ...f, pericolosi: f.pericolosi.filter((p) => p.id !== pid) }))
+  }
 
   const salva = async () => {
     if (!form.nome.trim()) {

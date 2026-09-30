@@ -159,7 +159,10 @@ export default function ImpostazioniPage() {
               {team?.logo ? 'Cambia logo' : 'Carica logo'}
             </button>
             {team?.logo && (
-              <button className="btn btn-sm" onClick={() => saveTeam({ logo: '' })}>
+              <button
+                className="btn btn-sm"
+                onClick={() => { if (window.confirm('Rimuovere il logo della squadra?')) saveTeam({ logo: '' }) }}
+              >
                 Rimuovi
               </button>
             )}

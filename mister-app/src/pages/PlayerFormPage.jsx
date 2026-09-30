@@ -121,7 +121,10 @@ export default function PlayerFormPage() {
             {form.foto ? 'Cambia foto' : 'Carica foto'}
           </button>
           {form.foto && (
-            <button className="btn btn-sm" onClick={() => set('foto', '')}>
+            <button
+              className="btn btn-sm"
+              onClick={() => { if (window.confirm('Rimuovere la foto del giocatore?')) set('foto', '') }}
+            >
               Rimuovi
             </button>
           )}
