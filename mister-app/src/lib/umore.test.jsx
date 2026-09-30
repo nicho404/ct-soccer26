@@ -93,25 +93,27 @@ describe('umoreDa: presenze bassissime e pochi minuti non fanno arrabbiare', () 
 describe('legenda umore', () => {
   it('il ? apre la legenda con le soglie del calcolo', async () => {
     const { render, screen, fireEvent, cleanup } = await import('@testing-library/react')
-    const { UmoreLegenda, BottoneAiuto } = await import('../components/UmoreLegenda')
+    const { EmojiUmore, LegendaPopup } = await import('../components/UmoreLegenda')
     const { useState } = await import('react')
     function Prova() {
       const [aperta, setAperta] = useState(false)
       return (
         <>
-          <BottoneAiuto aperta={aperta} onClick={() => setAperta((v) => !v)} />
-          {aperta && <UmoreLegenda />}
+          <EmojiUmore umore={{ emoji: '😐', label: 'Neutro' }} onClick={() => setAperta(true)} />
+          {aperta && <LegendaPopup onClose={() => setAperta(false)} />}
         </>
       )
     }
     render(<Prova />)
     expect(screen.queryByText('da 85%')).toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: "Come si calcola l'umore" }))
+    fireEvent.click(screen.getByRole('button', { name: /Umore: Neutro/ }))
     expect(screen.getByText('da 85%')).toBeTruthy()
     expect(screen.getByText('35%–60%')).toBeTruthy()
     expect(screen.getByText('sotto 15%')).toBeTruthy()
     expect(screen.getByText(/Chi c'è poco e gioca poco resta/)).toBeTruthy()
     expect(screen.getByText(/Cartone sotto 40%/)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Chiudi' }))
+    expect(screen.queryByRole('dialog')).toBeNull()
     cleanup()
   })
 })

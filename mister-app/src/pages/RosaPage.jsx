@@ -7,12 +7,12 @@ import {
   stileInfo,
 } from '../db/constants'
 import { calcolaUmore, impegno, badgePresenze } from '../lib/umore'
-import { UmoreLegenda, BottoneAiuto, BadgePresenze } from '../components/UmoreLegenda'
+import { EmojiUmore, LegendaPopup, BadgePresenze } from '../components/UmoreLegenda'
 import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
 import { IconUsers } from '../components/icons'
 
-function PlayerCard({ player, trainings, matches }) {
+function PlayerCard({ player, trainings, matches, onUmore }) {
   const tess = tesseramentoInfo(player.tesseramento)
   const stato = statoAttivitaInfo(player.statoAttivita)
   const imp = impegno({ trainings, matches }, player.id)
@@ -21,11 +21,7 @@ function PlayerCard({ player, trainings, matches }) {
     <Link to={`/rosa/${player.id}`} className="card tappable">
       <div className="row">
         <Avatar src={player.foto} size={38} />
-        {umore && (
-          <span style={{ fontSize: '1.35rem', lineHeight: 1 }} title={`Umore: ${umore.label}`} aria-label={`Umore: ${umore.label}`}>
-            {umore.emoji}
-          </span>
-        )}
+        {umore && <EmojiUmore umore={umore} onClick={onUmore} />}
         {player.numero !== '' && player.numero != null && (
           <span className="shirt-number">{player.numero}</span>
         )}
@@ -111,7 +107,7 @@ export default function RosaPage() {
         />
       ) : (
         <>
-          <div className="chip-row" style={{ marginBottom: legendaUmore ? 0 : 14, alignItems: 'center' }}>
+          <div className="chip-row" style={{ marginBottom: 14 }}>
             <button
               className={`chip chip-sm ${filtro === 'attivi' ? 'selected' : ''}`}
               onClick={() => setFiltro('attivi')}
@@ -130,15 +126,12 @@ export default function RosaPage() {
             >
               Tutti ({players.length})
             </button>
-            <span className="spacer" />
-            <span className="muted small">Umore e badge</span>
-            <BottoneAiuto aperta={legendaUmore} onClick={() => setLegendaUmore((v) => !v)} />
           </div>
-          {legendaUmore && <div style={{ marginBottom: 14 }}><UmoreLegenda /></div>}
+          {legendaUmore && <LegendaPopup onClose={() => setLegendaUmore(false)} />}
 
           {visibili.map((p) => (
             <div key={p.id} style={isAttivo(p) ? undefined : { opacity: 0.55 }}>
-              <PlayerCard player={p} trainings={trainings} matches={matches} />
+              <PlayerCard player={p} trainings={trainings} matches={matches} onUmore={() => setLegendaUmore(true)} />
             </div>
           ))}
         </>

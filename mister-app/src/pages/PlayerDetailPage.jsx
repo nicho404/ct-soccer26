@@ -12,7 +12,7 @@ import { famigliaRuoloTattico } from '../tactics/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
 import { aggregaGiocatori, incarichiGiocatore } from '../lib/storico'
 import { calcolaUmore, impegno, badgePresenze } from '../lib/umore'
-import { UmoreLegenda, BottoneAiuto, BadgePresenze } from '../components/UmoreLegenda'
+import { EmojiUmore, LegendaPopup, BadgePresenze } from '../components/UmoreLegenda'
 import { formatDataPartita } from '../lib/partite'
 import { DOMANDE_PER_SLOT } from '../lib/domandeRuolo'
 import Avatar from '../components/Avatar'
@@ -244,11 +244,10 @@ export default function PlayerDetailPage() {
         {umore ? (
           <>
             <div className="row" style={{ marginBottom: 8 }}>
-              <span style={{ fontSize: '2rem', lineHeight: 1 }}>{umore.emoji}</span>
+              <EmojiUmore umore={umore} size="2rem" onClick={() => setLegendaUmore(true)} />
               <strong>{umore.label}</strong>
               <span className="spacer" />
               <BadgePresenze badge={badge} />
-              <BottoneAiuto aperta={legendaUmore} onClick={() => setLegendaUmore((v) => !v)} />
             </div>
             {umore.fattori.map((f) => (
               <InfoRow key={f.nome} label={f.nome}>
@@ -256,7 +255,7 @@ export default function PlayerDetailPage() {
               </InfoRow>
             ))}
             {umore.nota && <p className="muted small" style={{ margin: '8px 0 0' }}>{umore.nota}</p>}
-            {legendaUmore && <UmoreLegenda />}
+            {legendaUmore && <LegendaPopup onClose={() => setLegendaUmore(false)} />}
           </>
         ) : (
           <div className="row">

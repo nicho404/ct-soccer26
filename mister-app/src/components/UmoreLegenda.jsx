@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import {
   SOGLIE_MINUTAGGIO, IMPEGNO_PIENO, IMPEGNO_MINIMO, BADGE_PRESENZE, umoreInfo, umoreDa,
 } from '../lib/umore'
@@ -31,7 +32,7 @@ export function UmoreLegenda() {
   const cella = { textAlign: 'center', padding: '4px 2px' }
 
   return (
-    <div className="card small" style={{ marginTop: 8 }}>
+    <div className="small">
       <div style={{ fontWeight: 800, marginBottom: 4 }}>Umore = quanto gioca rispetto a quanto c'è</div>
       <ul className="muted" style={{ margin: '0 0 10px', paddingLeft: 18 }}>
         <li><strong>Minutaggio</strong> = minuti giocati ÷ minuti disponibili (solo partite con referto in cui era presente)</li>
@@ -79,19 +80,49 @@ export function UmoreLegenda() {
   )
 }
 
-// Il "?" che apre e chiude la legenda: lo stato sta nel chiamante, che
-// decide dove far comparire la legenda (sotto la riga, non dentro).
-export function BottoneAiuto({ aperta, onClick }) {
+// L'emoji dell'umore è il bottone che apre la legenda. Dentro una card che
+// è già un link (Rosa) il tocco non deve anche aprire la scheda giocatore.
+export function EmojiUmore({ umore, onClick, size = '1.35rem' }) {
   return (
     <button
       type="button"
-      className="btn btn-sm"
-      aria-label="Come si calcola l'umore"
-      aria-expanded={aperta}
-      onClick={onClick}
-      style={{ minWidth: 32 }}
+      className="emoji-umore"
+      style={{ fontSize: size }}
+      aria-label={`Umore: ${umore.label}. Come si calcola`}
+      title={`Umore: ${umore.label}`}
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        onClick()
+      }}
     >
-      ?
+      {umore.emoji}
     </button>
+  )
+}
+
+// Popup con la legenda: si chiude col ✕, toccando fuori o con Esc.
+export function LegendaPopup({ onClose }) {
+  useEffect(() => {
+    const esc = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', esc)
+    return () => window.removeEventListener('keydown', esc)
+  }, [onClose])
+  return (
+    <div className="popup-overlay" onClick={onClose}>
+      <div
+        className="popup-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Come si calcolano umore e badge"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="row" style={{ marginBottom: 8 }}>
+          <strong style={{ flex: 1 }}>Umore e badge presenze</strong>
+          <button type="button" className="btn btn-sm" aria-label="Chiudi" onClick={onClose}>✕</button>
+        </div>
+        <UmoreLegenda />
+      </div>
+    </div>
   )
 }
