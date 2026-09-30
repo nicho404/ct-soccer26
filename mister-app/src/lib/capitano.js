@@ -5,14 +5,15 @@
 // Il punteggio è un ordinamento, non un verdetto: la fascia la dà il mister.
 
 import { CRITERI_OSSERVAZIONE } from '../db/constants'
-import { aggregaPresenze } from './presenze'
+import { impegno } from './umore'
 import { aggregaGiocatori } from './storico'
 
 // Pesi in centesimi. Leadership pesa più di tutto perché è l'unica voce che
 // misura direttamente la cosa; le altre sono indizi di affidabilità.
 export const PESI = [
   { key: 'leadership', label: 'Leadership osservata', peso: 35 },
-  { key: 'allenamenti', label: 'Presenza agli allenamenti', peso: 25 },
+  // stessa percentuale del badge presenze (Rosa, scheda, Presenze e sedute)
+  { key: 'allenamenti', label: 'Presenze (allenamenti e partite)', peso: 25 },
   { key: 'campo', label: 'Presenza in campo', peso: 20 },
   { key: 'lettura', label: 'Lettura del gioco', peso: 10 },
   { key: 'carattere', label: 'Carattere da leader', peso: 10 },
@@ -51,20 +52,19 @@ export function mediaCriterio(observations, key, n = OSSERVAZIONI_RECENTI) {
 export function classificaCapitani({
   players = [], observations = [], trainings = [], matches = [],
 } = {}) {
-  const presenze = aggregaPresenze(trainings)
   const stagione = aggregaGiocatori(matches)
   const partiteConReferto = stagione.reduce((max, r) => Math.max(max, r.presenze), 0)
 
   return players
     .map((p) => {
       const obsSue = observations.filter((o) => o.playerId === p.id)
-      const rigaPresenze = presenze.find((r) => r.playerId === p.id)
+      const imp = impegno({ trainings, matches }, p.id)
       const rigaStagione = stagione.find((r) => r.playerId === p.id)
 
       const valori = {
         leadership: mediaCriterio(obsSue, 'leadership'),
         lettura: mediaCriterio(obsSue, 'lettura'),
-        allenamenti: rigaPresenze?.pct ?? null,
+        allenamenti: imp?.quota == null ? null : Math.round(imp.quota * 100),
         // "c'è quando si gioca": partite giocate sul totale di quelle refertate
         campo: partiteConReferto === 0 || !rigaStagione
           ? null

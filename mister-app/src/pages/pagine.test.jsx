@@ -469,3 +469,33 @@ describe('capitano e vice', () => {
     expect(screen.getByTitle('Capitano')).toBeTruthy()
   })
 })
+
+describe('capitano scontento', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+    await db.players.bulkAdd([
+      { id: 1, nome: 'Mario Rossi', soprannome: 'Rossi', ruoloNaturale: 'CC', statoAttivita: 'sicuro' },
+      { id: 2, nome: 'Luca Bianchi', soprannome: 'Bianchi', ruoloNaturale: 'DC', statoAttivita: 'sicuro' },
+    ])
+    await db.observations.add({ playerId: 1, data: '2026-09-20', voti: { leadership: 5 } })
+    await db.trainings.bulkAdd([1, 2, 3].map((id) => ({ id, data: `2026-09-1${id}`, presenze: { 1: 'presente', 2: 'presente' } })))
+    // Rossi presente ma in panchina tutta la partita
+    await db.matches.add({
+      id: 1, data: '2026-09-27', durata: 50, presenze: { 1: 'presente', 2: 'presente' },
+      formazione: { slots: [2] }, minuti: { 2: 50 },
+    })
+    await db.meta.put({ key: 'capitano', value: 1 })
+    await db.meta.put({ key: 'vice', value: 2 })
+  })
+
+  afterEach(cleanup)
+
+  it("avvisa solo sul capitano scontento, non sul vice che gioca", async () => {
+    montaPagina(CapitanoPage)
+    const avvisi = await screen.findAllByText(/Scontento del minutaggio/)
+    expect(avvisi).toHaveLength(1)
+    expect(avvisi[0].closest('.fascia-tessera').textContent).toContain('Rossi')
+  })
+})

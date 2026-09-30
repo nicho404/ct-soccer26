@@ -11,15 +11,22 @@ import { classificaCapitani, COPERTURA_MINIMA } from '../lib/capitano'
 import Fascia from '../components/Fascia'
 import Modal from '../components/Modal'
 import { fasciaDi } from '../lib/fascia'
+import { calcolaUmore, badgePresenze } from '../lib/umore'
+import { BadgePresenze } from '../components/UmoreLegenda'
+
+// Umori che su chi porta la fascia meritano un avviso: un capitano scontento
+// del minutaggio è un problema di spogliatoio, gli altri stati non dicono niente.
+const UMORI_DI_ALLARME = ['triste', 'arrabbiato']
 
 // Le voci senza dato restano in lista, in grigio: dicono cosa manca per
 // avere un confronto onesto, che è un'informazione utile quanto il punteggio.
-function VoceRiga({ voce }) {
+function VoceRiga({ voce, extra }) {
   const assente = voce.valore === null
   return (
     <div className="crit-media-row">
       <span className="crit-media-label" style={assente ? { opacity: 0.5 } : undefined}>
         {voce.label} <span className="muted">· {voce.peso}%</span>
+        {extra && <> {extra}</>}
       </span>
       <span className="stat-bar">
         {!assente && (
@@ -152,11 +159,22 @@ export default function CapitanoPage() {
                 >
                   <Fascia tipo={d.tipo} />
                   {p ? (
-                    <div className="row" style={{ marginTop: 8, gap: 8 }}>
-                      <Avatar src={p.foto} size={32} />
-                      <strong className="small" style={{ flex: 1, minWidth: 0 }}>{nomeBreve(p)}</strong>
-                      {overall(rigaDi(d.id))}
-                    </div>
+                    <>
+                      <div className="row" style={{ marginTop: 8, gap: 8 }}>
+                        <Avatar src={p.foto} size={32} />
+                        <strong className="small" style={{ flex: 1, minWidth: 0 }}>{nomeBreve(p)}</strong>
+                        {overall(rigaDi(d.id))}
+                      </div>
+                      {(() => {
+                        const umore = calcolaUmore({ trainings, matches }, d.id)
+                        if (!umore || !UMORI_DI_ALLARME.includes(umore.livello)) return null
+                        return (
+                          <div className="fascia-allarme">
+                            {umore.emoji} Scontento del minutaggio
+                          </div>
+                        )
+                      })()}
+                    </>
                   ) : (
                     <div className="muted small" style={{ marginTop: 8 }}>Da nominare</div>
                   )}
@@ -215,7 +233,15 @@ export default function CapitanoPage() {
             {rigaAperta && <span className="badge badge-accent" style={{ fontSize: '1.1rem' }}>{rigaAperta.punteggio}</span>}
           </div>
 
-          {rigaAperta?.voci.map((v) => <VoceRiga voce={v} key={v.key} />)}
+          {rigaAperta?.voci.map((v) => (
+            <VoceRiga
+              voce={v}
+              key={v.key}
+              extra={v.key === 'allenamenti' && v.valore != null
+                ? <BadgePresenze badge={badgePresenze(v.valore / 100)} />
+                : null}
+            />
+          ))}
 
           <div className="row" style={{ gap: 8, marginTop: 14 }}>
             {pulsantiFascia(aperto, true)}

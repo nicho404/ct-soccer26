@@ -90,3 +90,18 @@ describe('classificaCapitani', () => {
     expect(PESI.reduce((a, v) => a + v.peso, 0)).toBe(100)
   })
 })
+
+describe('presenze del capitano allineate al badge', () => {
+  it('contano anche le partite e i giustificati non pesano', () => {
+    const players = [{ id: 1, nome: 'A' }]
+    const trainings = [
+      { presenze: { 1: 'presente' } },
+      { presenze: { 1: 'giustificato' } },
+      { presenze: { 1: 'assente' } },
+    ]
+    const matches = [{ presenze: { 1: 'presente' } }]
+    const [r] = classificaCapitani({ players, trainings, matches })
+    // 2 presenze su 3 appelli (il giustificato non conta): 67%, come il badge
+    expect(r.voci.find((v) => v.key === 'allenamenti').valore).toBe(67)
+  })
+})
