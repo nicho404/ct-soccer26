@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest'
-import { calcolaUmore, impegno, minutaggio } from './umore'
+import { calcolaUmore, impegno, minutaggio, badgePresenze, umoreDa } from './umore'
 
 // Una partita con referto da 50′ in cui il giocatore 1 era presente e ha
 // giocato `min` minuti.
@@ -72,6 +72,24 @@ describe('umore: fattori e casi limite', () => {
   })
 })
 
+describe('badge presenze', () => {
+  it('copre da 0 a 100 con le fasce del mister', () => {
+    const b = (q) => badgePresenze(q)?.value
+    expect([1, 0.9, 0.89, 0.8, 0.75, 0.6, 0.55, 0.45, 0.39, 0].map(b)).toEqual([
+      'diamante', 'diamante', 'oro', 'oro', 'argento', 'bronzo', 'ferro', 'legno', 'cartone', 'cartone',
+    ])
+    expect(badgePresenze(null)).toBe(null)
+  })
+})
+
+describe('umoreDa: presenze bassissime e pochi minuti non fanno arrabbiare', () => {
+  it('stesso minutaggio minimo, presenze diverse', () => {
+    expect(umoreDa(0.05, 1).livello.value).toBe('arrabbiato')
+    expect(umoreDa(0.05, 0.6).livello.value).toBe('triste')
+    expect(umoreDa(0.05, 0.1).livello.value).toBe('neutro')
+  })
+})
+
 describe('legenda umore', () => {
   it('il ? apre la legenda con le soglie del calcolo', async () => {
     const { render, screen, fireEvent, cleanup } = await import('@testing-library/react')
@@ -92,6 +110,8 @@ describe('legenda umore', () => {
     expect(screen.getByText('da 85%')).toBeTruthy()
     expect(screen.getByText('35%–60%')).toBeTruthy()
     expect(screen.getByText('sotto 15%')).toBeTruthy()
+    expect(screen.getByText(/Chi c'è poco e gioca poco resta/)).toBeTruthy()
+    expect(screen.getByText(/Cartone sotto 40%/)).toBeTruthy()
     cleanup()
   })
 })

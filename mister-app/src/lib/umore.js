@@ -41,6 +41,43 @@ export const IMPEGNO_MINIMO = 0.5
 
 const pct = (x) => `${Math.round(x * 100)}%`
 
+// Badge presenze per l'allenatore: solo presenze complessive (allenamenti +
+// partite), il minutaggio non c'entra. Dall'alto: la prima soglia raggiunta.
+export const BADGE_PRESENZE = [
+  { min: 0.9, value: 'diamante', label: 'Diamante', icona: '💎' },
+  { min: 0.8, value: 'oro', label: 'Oro', icona: '🥇' },
+  { min: 0.7, value: 'argento', label: 'Argento', icona: '🥈' },
+  { min: 0.6, value: 'bronzo', label: 'Bronzo', icona: '🥉' },
+  { min: 0.5, value: 'ferro', label: 'Ferro', icona: '🔩' },
+  { min: 0.4, value: 'legno', label: 'Legno', icona: '🪵' },
+  { min: 0, value: 'cartone', label: 'Cartone', icona: '📦' },
+]
+
+export const badgePresenze = (quota) =>
+  quota == null ? null : BADGE_PRESENZE.find((b) => quota >= b.min)
+
+// Il cuore del calcolo, in una riga: il minutaggio dà l'umore, le presenze
+// decidono quanto conta lo scontento. Chi c'è poco e gioca poco resta neutro.
+// `quotaPresenze` null (nessun appello): conta solo il minutaggio.
+export function umoreDa(quotaMinuti, quotaPresenze) {
+  const base = SOGLIE_MINUTAGGIO.find((s) => quotaMinuti >= s.min).livello
+  const neutro = LIVELLI_UMORE.findIndex((l) => l.value === 'neutro')
+  let gradino = LIVELLI_UMORE.findIndex((l) => l.value === base)
+  let nota = null
+  if (gradino > neutro && quotaPresenze != null) {
+    if (quotaPresenze < IMPEGNO_MINIMO) {
+      gradino = neutro
+      nota = 'Gioca poco, ma si vede poco: non se lo aspetta.'
+    } else if (quotaPresenze < IMPEGNO_PIENO) {
+      gradino -= 1
+      nota = 'Gioca poco, ma non è sempre presente: lo scontento si attenua.'
+    } else {
+      nota = 'È sempre presente ma gioca poco.'
+    }
+  }
+  return { livello: LIVELLI_UMORE[gradino], nota }
+}
+
 // Presenze su sedute e partite. I giustificati non contano né a favore né
 // contro: chi avvisa non manca di impegno, ma nemmeno era lì.
 export function impegno({ trainings = [], matches = [] }, playerId) {
@@ -77,24 +114,7 @@ export function calcolaUmore({ trainings = [], matches = [] }, playerId) {
   if (!min) return null
   const imp = impegno({ trainings, matches }, playerId)
 
-  const base = SOGLIE_MINUTAGGIO.find((s) => min.quota >= s.min).livello
-  let gradino = LIVELLI_UMORE.findIndex((l) => l.value === base)
-  const neutro = LIVELLI_UMORE.findIndex((l) => l.value === 'neutro')
-
-  let nota = null
-  if (gradino > neutro && imp) {
-    if (imp.quota < IMPEGNO_MINIMO) {
-      gradino = neutro
-      nota = 'Gioca poco, ma si vede poco: non se lo aspetta.'
-    } else if (imp.quota < IMPEGNO_PIENO) {
-      gradino -= 1
-      nota = 'Gioca poco, ma non è sempre presente: lo scontento si attenua.'
-    } else {
-      nota = 'È sempre presente ma gioca poco.'
-    }
-  }
-
-  const livello = LIVELLI_UMORE[gradino]
+  const { livello, nota } = umoreDa(min.quota, imp?.quota ?? null)
   return {
     ...livello,
     livello: livello.value,

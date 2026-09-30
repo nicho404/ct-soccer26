@@ -1,43 +1,80 @@
-import { LIVELLI_UMORE, SOGLIE_MINUTAGGIO, IMPEGNO_PIENO, IMPEGNO_MINIMO, umoreInfo } from '../lib/umore'
+import {
+  SOGLIE_MINUTAGGIO, IMPEGNO_PIENO, IMPEGNO_MINIMO, BADGE_PRESENZE, umoreInfo, umoreDa,
+} from '../lib/umore'
 
 const pct = (x) => `${Math.round(x * 100)}%`
 
-// Legenda dell'umore, costruita dalle stesse soglie del calcolo: se si
-// ritoccano in lib/umore.js, la spiegazione segue da sola.
+// Fasce [da, a) da una lista di soglie ordinate dall'alto: `a` è la soglia
+// precedente, null per la prima (fino al 100%).
+const fasce = (soglie) => soglie.map((s, i) => ({ ...s, a: i === 0 ? null : soglie[i - 1].min }))
+const etichetta = (f) => (f.a == null ? `da ${pct(f.min)}` : f.min === 0 ? `sotto ${pct(f.a)}` : `${pct(f.min)}–${pct(f.a)}`)
+
+export function BadgePresenze({ badge, quota }) {
+  if (!badge) return null
+  return (
+    <span className={`badge badge-medaglia medaglia-${badge.value}`} title={`Presenze: ${badge.label}`}>
+      {badge.icona} {badge.label}{quota != null ? ` · ${pct(quota)}` : ''}
+    </span>
+  )
+}
+
+// Legenda di umore e badge, costruita dalle stesse soglie e dalla stessa
+// funzione del calcolo (umoreDa): se si ritoccano in lib/umore.js, la
+// spiegazione e la tabella seguono da sole.
 export function UmoreLegenda() {
-  const fasce = SOGLIE_MINUTAGGIO.map((s, i) => ({
-    ...umoreInfo(s.livello),
-    da: s.min,
-    a: i === 0 ? null : SOGLIE_MINUTAGGIO[i - 1].min,
-  }))
-  const neutro = umoreInfo('neutro')
+  const colonne = fasce(SOGLIE_MINUTAGGIO).reverse() // da chi gioca meno a chi gioca di più
+  const righe = [
+    { label: `da ${pct(IMPEGNO_PIENO)}`, quota: IMPEGNO_PIENO },
+    { label: `${pct(IMPEGNO_MINIMO)}–${pct(IMPEGNO_PIENO)}`, quota: IMPEGNO_MINIMO },
+    { label: `sotto ${pct(IMPEGNO_MINIMO)}`, quota: 0 },
+  ]
+  const cella = { textAlign: 'center', padding: '4px 2px' }
+
   return (
     <div className="card small" style={{ marginTop: 8 }}>
-      <p style={{ margin: '0 0 8px' }}>
-        <strong>Minutaggio</strong> = minuti giocati ÷ minuti disponibili, solo nelle partite
-        con referto in cui era presente.
-      </p>
-      {fasce.map((f) => (
-        <div className="row" key={f.value} style={{ gap: 8, marginBottom: 4 }}>
-          <span style={{ fontSize: '1.1rem', width: 24 }}>{f.emoji}</span>
-          <span style={{ flex: 1 }}>{f.label}</span>
-          <span className="muted">
-            {f.a == null ? `da ${pct(f.da)}` : f.da === 0 ? `sotto ${pct(f.a)}` : `${pct(f.da)}–${pct(f.a)}`}
-          </span>
-        </div>
-      ))}
-      <p style={{ margin: '10px 0 6px' }}>
-        <strong>Presenze</strong> = presenze ÷ appelli, allenamenti e partite insieme
-        (i giustificati non contano). Pesano solo su chi gioca poco:
-      </p>
-      <ul className="muted" style={{ margin: 0, paddingLeft: 18 }}>
-        <li>da {pct(IMPEGNO_PIENO)}: lo scontento resta intero</li>
-        <li>{pct(IMPEGNO_MINIMO)}–{pct(IMPEGNO_PIENO)}: migliora di un gradino</li>
-        <li>sotto {pct(IMPEGNO_MINIMO)}: resta {neutro.emoji} {neutro.label.toLowerCase()}, non si aspetta di giocare</li>
+      <div style={{ fontWeight: 800, marginBottom: 4 }}>Umore = quanto gioca rispetto a quanto c'è</div>
+      <ul className="muted" style={{ margin: '0 0 10px', paddingLeft: 18 }}>
+        <li><strong>Minutaggio</strong> = minuti giocati ÷ minuti disponibili (solo partite con referto in cui era presente)</li>
+        <li><strong>Presenze</strong> = volte presente ÷ appelli (allenamenti + partite, i giustificati non contano)</li>
       </ul>
-      <p className="muted" style={{ margin: '8px 0 0' }}>
-        Scala: {LIVELLI_UMORE.map((l) => l.emoji).join(' ')}
+
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={{ ...cella, textAlign: 'left' }} className="muted">Presenze ↓ · Minuti →</th>
+              {colonne.map((c) => (
+                <th key={c.livello} style={cella} className="muted">{etichetta(c)}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {righe.map((r) => (
+              <tr key={r.label}>
+                <td style={{ ...cella, textAlign: 'left' }} className="muted">{r.label}</td>
+                {colonne.map((c) => (
+                  <td key={c.livello} style={{ ...cella, fontSize: '1.15rem' }}>
+                    {umoreDa(c.min, r.quota).livello.emoji}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="muted" style={{ margin: '8px 0 12px' }}>
+        Chi c'è sempre e gioca poco si arrabbia. Chi c'è poco e gioca poco resta {umoreInfo('neutro').emoji}:
+        non si aspetta di giocare. Le presenze non tolgono mai il buonumore a chi gioca.
       </p>
+
+      <div style={{ fontWeight: 800, marginBottom: 6 }}>Badge presenze (solo presenze, non minuti)</div>
+      <div className="chip-row" style={{ gap: 6 }}>
+        {fasce(BADGE_PRESENZE).map((b) => (
+          <span key={b.value} className={`badge badge-medaglia medaglia-${b.value}`}>
+            {b.icona} {b.label} {etichetta(b)}
+          </span>
+        ))}
+      </div>
     </div>
   )
 }

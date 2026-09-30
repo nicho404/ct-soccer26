@@ -6,9 +6,8 @@ import {
   ruoloLabel, ruoloOrdine, famigliaRuolo, tesseramentoInfo, statoAttivitaInfo, isAttivo,
   stileInfo,
 } from '../db/constants'
-import { presenzaPct } from '../lib/stats'
-import { calcolaUmore } from '../lib/umore'
-import { UmoreLegenda, BottoneAiuto } from '../components/UmoreLegenda'
+import { calcolaUmore, impegno, badgePresenze } from '../lib/umore'
+import { UmoreLegenda, BottoneAiuto, BadgePresenze } from '../components/UmoreLegenda'
 import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
 import { IconUsers } from '../components/icons'
@@ -16,7 +15,7 @@ import { IconUsers } from '../components/icons'
 function PlayerCard({ player, trainings, matches }) {
   const tess = tesseramentoInfo(player.tesseramento)
   const stato = statoAttivitaInfo(player.statoAttivita)
-  const pct = presenzaPct(trainings, player.id)
+  const imp = impegno({ trainings, matches }, player.id)
   const umore = calcolaUmore({ trainings, matches }, player.id)
   return (
     <Link to={`/rosa/${player.id}`} className="card tappable">
@@ -63,7 +62,7 @@ function PlayerCard({ player, trainings, matches }) {
             {player.stiliGioco.map((s) => stileInfo(s)?.icona ?? '').join('')}
           </span>
         )}
-        <span className="badge">Presenze: {pct === null ? '—' : `${pct}%`}</span>
+        {imp ? <BadgePresenze badge={badgePresenze(imp.quota)} quota={imp.quota} /> : <span className="badge">Presenze: —</span>}
       </div>
     </Link>
   )
@@ -132,7 +131,7 @@ export default function RosaPage() {
               Tutti ({players.length})
             </button>
             <span className="spacer" />
-            <span className="muted small">Umore</span>
+            <span className="muted small">Umore e badge</span>
             <BottoneAiuto aperta={legendaUmore} onClick={() => setLegendaUmore((v) => !v)} />
           </div>
           {legendaUmore && <div style={{ marginBottom: 14 }}><UmoreLegenda /></div>}

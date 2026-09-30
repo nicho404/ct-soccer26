@@ -294,6 +294,17 @@ a.card {
 }
 
 .badge-ok { background: rgba(52, 211, 153, 0.15); color: var(--ok); }
+
+/* Badge presenze: i metalli "brillanti" hanno un riflesso diagonale, ferro,
+   legno e cartone restano opachi — la differenza si vede a colpo d'occhio. */
+.badge-medaglia { color: #14141c; font-weight: 800; border: 1px solid rgba(255, 255, 255, 0.25); }
+.medaglia-diamante { background: linear-gradient(135deg, #a5f3fc 0%, #e0f2fe 45%, #67e8f9 55%, #c4b5fd 100%); }
+.medaglia-oro { background: linear-gradient(135deg, #fde68a 0%, #fbbf24 45%, #fff7d1 55%, #d97706 100%); }
+.medaglia-argento { background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 45%, #ffffff 55%, #94a3b8 100%); }
+.medaglia-bronzo { background: linear-gradient(135deg, #f5c38b 0%, #cd7f32 45%, #f8d7b0 55%, #92400e 100%); }
+.medaglia-ferro { background: #6b7280; color: #f3f4f6; }
+.medaglia-legno { background: #8b5a2b; color: #fdf6ec; }
+.medaglia-cartone { background: #c8b89a; color: #3b3222; }
 .badge-warn { background: rgba(251, 191, 36, 0.15); color: var(--warn); }
 .badge-danger { background: rgba(248, 113, 113, 0.15); color: var(--danger); }
 .badge-accent { background: rgba(167, 139, 250, 0.15); color: var(--accent); }

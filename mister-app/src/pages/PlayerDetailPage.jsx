@@ -11,8 +11,8 @@ import {
 import { famigliaRuoloTattico } from '../tactics/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
 import { aggregaGiocatori, incarichiGiocatore } from '../lib/storico'
-import { calcolaUmore } from '../lib/umore'
-import { UmoreLegenda, BottoneAiuto } from '../components/UmoreLegenda'
+import { calcolaUmore, impegno, badgePresenze } from '../lib/umore'
+import { UmoreLegenda, BottoneAiuto, BadgePresenze } from '../components/UmoreLegenda'
 import { formatDataPartita } from '../lib/partite'
 import { DOMANDE_PER_SLOT } from '../lib/domandeRuolo'
 import Avatar from '../components/Avatar'
@@ -78,6 +78,7 @@ export default function PlayerDetailPage() {
   const stagione = aggregaGiocatori(matches).find((r) => r.playerId === playerId)
   const incarichiPartite = incarichiGiocatore(matches, playerId)
   const umore = calcolaUmore({ trainings, matches }, playerId)
+  const badge = badgePresenze(impegno({ trainings, matches }, playerId)?.quota)
   const nomeDi = (pid) => {
     const p = allPlayers.find((x) => x.id === pid)
     return nomeBreve(p)
@@ -246,6 +247,7 @@ export default function PlayerDetailPage() {
               <span style={{ fontSize: '2rem', lineHeight: 1 }}>{umore.emoji}</span>
               <strong>{umore.label}</strong>
               <span className="spacer" />
+              <BadgePresenze badge={badge} />
               <BottoneAiuto aperta={legendaUmore} onClick={() => setLegendaUmore((v) => !v)} />
             </div>
             {umore.fattori.map((f) => (
@@ -257,9 +259,12 @@ export default function PlayerDetailPage() {
             {legendaUmore && <UmoreLegenda />}
           </>
         ) : (
-          <span className="muted small">
-            Nessun dato: serve almeno una partita con referto in cui era presente.
-          </span>
+          <div className="row">
+            <span className="muted small" style={{ flex: 1 }}>
+              Umore non ancora calcolabile: serve almeno una partita con referto in cui era presente.
+            </span>
+            <BadgePresenze badge={badge} />
+          </div>
         )}
       </div>
 
