@@ -29,6 +29,15 @@ tocco. Prima di ridisegnare un'altra sezione, verificare questi punti.
 10. **Niente menu a tendina né pannelli che si aprono nella pagina.** Le scelte usano
     `components/Scelta`, i pannelli `components/Modal`, sempre con la ✕.
 
+## Pagine già allineate
+
+- **Capitano**: il modello.
+- **Rosa**: riepilogo in cima (disponibili, porta, scontenti), giocatori per reparto, una riga
+  ciascuno (faccina, foto con numero, soprannome + nome, fascia, ruolo, badge); gli avvisi
+  (stato, acciaccato, tesseramento) compaiono sotto il nome solo se ci sono.
+- **Home**: prossima partita (con la posizione dell'avversario), ultima partita, stagione in
+  quattro numeri (posizione, punti, V-N-P, gol) e forma dalla più vecchia alla più recente.
+
 ## Componenti
 
 | Componente | Uso |

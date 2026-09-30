@@ -10,10 +10,12 @@ import {
 } from '../lib/partite'
 import { presentiIds } from '../lib/presenze'
 import { classifica, competizioneDefault } from '../lib/girone'
+import { refertoCompilato } from '../lib/storico'
+import { FASCE } from '../lib/fascia'
 
-// Home: solo dati, niente consigli. Prossima partita, come sta andando la
-// stagione e dove siamo in classifica — l'analisi del mister vive in Altro.
-
+// Home: solo dati, niente consigli. In ordine di urgenza: la prossima
+// partita, l'ultima giocata, poi la stagione in quattro numeri e la forma.
+// L'analisi del mister vive in Altro.
 export default function HomePage() {
   const navigate = useNavigate()
   const players = useLiveQuery(() => db.players.toArray(), [])
@@ -29,18 +31,25 @@ export default function HomePage() {
 
   const nomeAvversario = (m) => opponents.find((o) => o.id === m.opponentId)?.nome
   const prossima = prossimaPartita(partite)
-  const avversario = prossima ? nomeAvversario(prossima) : null
-
+  const giocate = partiteGiocate(partite).filter(esitoPartita)
+  const ultima = giocate[0] ?? null
   const b = bilancio(partite)
-  const ultime = partiteGiocate(partite).filter(esitoPartita).slice(0, 5)
+  // forma: dalla più vecchia alla più recente, così si legge da sinistra a destra
+  const forma = giocate.slice(0, 5).reverse()
 
   const dati = { partiteGirone, matches: partite, opponents, competitions, nomeNostro: team?.nome ?? '' }
   const compId = competizioneDefault(competitions, dati)
-  const noi = compId != null ? classifica(compId, dati).righe.find((r) => r.nostra) : null
-  const squadreGirone = compId != null ? classifica(compId, dati).righe.length : 0
-  const competizione = competitions.find((c) => c.id === compId)
+  const righe = compId != null ? classifica(compId, dati).righe : []
+  const noi = righe.find((r) => r.nostra) ?? null
+  const rigaAvversario = (m) => righe.find((r) => r.squadraId === m?.opponentId) ?? null
 
   const hasTeam = team && (team.nome || team.torneo || team.logo)
+  const fasce = [
+    { tipo: 'capitano', id: capitano?.value },
+    { tipo: 'vice', id: vice?.value },
+  ]
+    .map((f) => ({ ...f, p: players.find((p) => p.id === f.id) }))
+    .filter((f) => f.p)
 
   return (
     <div className="page">
@@ -56,17 +65,20 @@ export default function HomePage() {
           <div style={{ minWidth: 0 }}>
             <strong>{team.nome || 'La tua squadra'}</strong>
             <div className="muted small">
-              {[
-                team.torneo,
-                team.mister ? `Mister ${team.mister}` : '',
-                capitano?.value != null && players.some((p) => p.id === capitano.value)
-                  ? `Capitano ${nomeBreve(players.find((p) => p.id === capitano.value))}`
-                  : '',
-                vice?.value != null && players.some((p) => p.id === vice.value)
-                  ? `Vice ${nomeBreve(players.find((p) => p.id === vice.value))}`
-                  : '',
-              ].filter(Boolean).join(' · ')}
+              {[team.torneo, team.mister ? `Mister ${team.mister}` : ''].filter(Boolean).join(' · ')}
             </div>
+            {fasce.length > 0 && (
+              <div className="row" style={{ gap: 10, marginTop: 4 }}>
+                {fasce.map((f) => (
+                  <span key={f.tipo} className="small">
+                    <span className={`rosa-fascia ${FASCE[f.tipo].className}`} style={{ marginLeft: 0 }}>
+                      {FASCE[f.tipo].sigla}
+                    </span>{' '}
+                    {nomeBreve(f.p)}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -89,7 +101,7 @@ export default function HomePage() {
             <Link to={`/partite/${prossima.id}`} className="card tappable">
               <div className="row">
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <strong>{avversario || 'Avversario da definire'}</strong>
+                  <strong>{nomeAvversario(prossima) || 'Avversario da definire'}</strong>
                   <div className="muted small">
                     {[
                       formatDataPartita(prossima.data),
@@ -100,43 +112,43 @@ export default function HomePage() {
                 </div>
                 <span className="badge badge-accent">{quandoPartita(prossima.data)}</span>
               </div>
-              <div className="muted small" style={{ marginTop: 6, opacity: 0.75 }}>
+              <div className="muted small" style={{ marginTop: 6 }}>
                 {[
-                  prossima.luogo,
+                  rigaAvversario(prossima)
+                    ? `Loro: ${rigaAvversario(prossima).pos}° · ${rigaAvversario(prossima).pt} pt`
+                    : '',
                   `${presentiIds(prossima).length} presenti`,
+                  prossima.luogo,
                 ].filter(Boolean).join(' · ')}
               </div>
             </Link>
           ) : (
-            <div className="card">
-              <div className="muted small">Nessuna partita in calendario.</div>
-              <button
-                className="btn btn-sm"
-                style={{ marginTop: 10 }}
-                onClick={() => navigate('/partite/nuova')}
-              >
-                + Metti in calendario
+            <div className="card row">
+              <span className="muted small" style={{ flex: 1 }}>Nessuna partita in calendario.</span>
+              <button className="btn btn-sm" onClick={() => navigate('/partite/nuova')}>
+                + Aggiungi
               </button>
             </div>
           )}
 
-          {noi && (
+          {ultima && (
             <>
-              <div className="section-title">Classifica</div>
-              <Link to="/girone" className="card tappable">
+              <div className="section-title">Ultima partita</div>
+              <Link to={`/partite/${ultima.id}`} className="card tappable">
                 <div className="row">
+                  <span className={`badge risultato-grande ${ESITO_INFO[esitoPartita(ultima)].badge}`}>
+                    {ultima.golFatti}-{ultima.golSubiti}
+                  </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <strong>{noi.pos}° posto</strong>
-                    <span className="muted small"> su {squadreGirone}</span>
+                    <strong>{nomeAvversario(ultima) || 'Avversario da definire'}</strong>
                     <div className="muted small">
                       {[
-                        competizione?.nome,
-                        `${noi.g} giocate`,
-                        `DR ${noi.dr > 0 ? '+' : ''}${noi.dr}`,
-                      ].filter(Boolean).join(' · ')}
+                        formatDataPartita(ultima.data),
+                        ESITO_INFO[esitoPartita(ultima)].label,
+                      ].join(' · ')}
                     </div>
                   </div>
-                  <span className="badge badge-accent">{noi.pt} pt</span>
+                  {!refertoCompilato(ultima) && <span className="badge badge-warn">Referto da fare</span>}
                 </div>
               </Link>
             </>
@@ -144,42 +156,50 @@ export default function HomePage() {
 
           {b.giocate > 0 && (
             <>
-              <div className="section-title">Bilancio ({b.giocate} partite)</div>
-              <div className="stat-grid">
+              <div className="section-title">Stagione</div>
+              <div className="stagione-grid">
+                <Link to="/girone" className="stat-tile">
+                  <div className="value">{noi ? `${noi.pos}°` : '—'}</div>
+                  <div className="label">{noi ? `su ${righe.length}` : 'Classifica'}</div>
+                </Link>
+                <Link to="/girone" className="stat-tile">
+                  <div className="value">{noi ? noi.pt : '—'}</div>
+                  <div className="label">Punti</div>
+                </Link>
                 <div className="stat-tile">
-                  <div className="value" style={{ color: 'var(--ok)' }}>{b.vinte}</div>
-                  <div className="label">Vinte</div>
+                  <div className="value" style={{ fontSize: '1.05rem' }}>
+                    <span style={{ color: 'var(--ok)' }}>{b.vinte}</span>
+                    <span className="muted">-</span>
+                    <span style={{ color: 'var(--warn)' }}>{b.pari}</span>
+                    <span className="muted">-</span>
+                    <span style={{ color: 'var(--danger)' }}>{b.perse}</span>
+                  </div>
+                  <div className="label">V-N-P</div>
                 </div>
                 <div className="stat-tile">
-                  <div className="value" style={{ color: 'var(--warn)' }}>{b.pari}</div>
-                  <div className="label">Pareggiate</div>
-                </div>
-                <div className="stat-tile">
-                  <div className="value" style={{ color: 'var(--danger)' }}>{b.perse}</div>
-                  <div className="label">Perse</div>
+                  <div className="value" style={{ fontSize: '1.05rem' }}>{b.golFatti}:{b.golSubiti}</div>
+                  <div className="label">Gol</div>
                 </div>
               </div>
-              <div className="card">
-                <div className="row">
-                  <span className="muted small" style={{ flex: 1 }}>
-                    Gol fatti {b.golFatti} · subiti {b.golSubiti}
-                  </span>
-                  <span className="chip-row" style={{ gap: 4 }} aria-label="Ultime partite">
-                    {ultime.map((m) => {
-                      const e = esitoPartita(m)
-                      return (
-                        <Link
-                          key={m.id}
-                          to={`/partite/${m.id}`}
-                          className={`badge ${ESITO_INFO[e].badge}`}
-                          title={`${nomeAvversario(m) ?? ''} ${m.golFatti}-${m.golSubiti}`}
-                        >
-                          {e}
-                        </Link>
-                      )
-                    })}
-                  </span>
-                </div>
+              <div className="card row">
+                <span className="muted small" style={{ flex: 1 }}>
+                  Forma · ultime {forma.length}
+                </span>
+                <span className="forma" aria-label="Ultime partite, dalla più vecchia">
+                  {forma.map((m) => {
+                    const e = esitoPartita(m)
+                    return (
+                      <Link
+                        key={m.id}
+                        to={`/partite/${m.id}`}
+                        className={`badge ${ESITO_INFO[e].badge}`}
+                        title={`${nomeAvversario(m) ?? ''} ${m.golFatti}-${m.golSubiti}`}
+                      >
+                        {e}
+                      </Link>
+                    )
+                  })}
+                </span>
               </div>
             </>
           )}

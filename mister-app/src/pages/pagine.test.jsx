@@ -236,8 +236,10 @@ describe('girone con dati', () => {
   it('Home: posizione in classifica e bilancio della stagione', async () => {
     await db.players.add({ nome: 'Mario Rossi', ruoloNaturale: 'CC', statoAttivita: 'sicuro' })
     montaPagina(HomePage)
-    expect(await screen.findByText(/° posto/)).toBeTruthy()
-    expect(screen.getByText(/^Bilancio \(/)).toBeTruthy()
+    expect(await screen.findByText('Stagione')).toBeTruthy()
+    expect(screen.getByText(/^\d+°$/)).toBeTruthy()
+    expect(screen.getByText('V-N-P')).toBeTruthy()
+    expect(screen.getByText('Ultima partita')).toBeTruthy()
   })
 })
 
