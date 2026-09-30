@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import Modal from './Modal'
 import {
   SOGLIE_MINUTAGGIO, IMPEGNO_PIENO, IMPEGNO_MINIMO, BADGE_PRESENZE, umoreInfo, umoreDa,
 } from '../lib/umore'
@@ -103,26 +103,9 @@ export function EmojiUmore({ umore, onClick, size = '1.35rem' }) {
 
 // Popup con la legenda: si chiude col ✕, toccando fuori o con Esc.
 export function LegendaPopup({ onClose }) {
-  useEffect(() => {
-    const esc = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', esc)
-    return () => window.removeEventListener('keydown', esc)
-  }, [onClose])
   return (
-    <div className="popup-overlay" onClick={onClose}>
-      <div
-        className="popup-sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Come si calcolano umore e badge"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="row" style={{ marginBottom: 8 }}>
-          <strong style={{ flex: 1 }}>Umore e badge presenze</strong>
-          <button type="button" className="btn btn-sm" aria-label="Chiudi" onClick={onClose}>✕</button>
-        </div>
-        <UmoreLegenda />
-      </div>
-    </div>
+    <Modal titolo="Umore e badge presenze" onClose={onClose}>
+      <UmoreLegenda />
+    </Modal>
   )
 }

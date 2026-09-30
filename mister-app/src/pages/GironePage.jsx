@@ -8,6 +8,7 @@ import {
   competizioneDefault,
 } from '../lib/girone'
 import { formatDataPartita, perDataCrescente } from '../lib/partite'
+import Scelta from '../components/Scelta'
 
 const TABS = [
   { value: 'classifica', label: 'Classifica' },
@@ -325,7 +326,8 @@ export default function GironePage() {
       {header}
 
       <div className="field">
-        <select
+        <Scelta
+          titolo="Competizione"
           className="select"
           aria-label="Competizione"
           value={compId}
@@ -334,7 +336,7 @@ export default function GironePage() {
           {competitions.map((c) => (
             <option key={c.id} value={c.id}>{c.nome}</option>
           ))}
-        </select>
+        </Scelta>
       </div>
 
       <div className="chip-row" style={{ marginBottom: 12 }}>

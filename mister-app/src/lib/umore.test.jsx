@@ -54,7 +54,9 @@ describe('umore: fattori e casi limite', () => {
 
   it('i giustificati non contano nelle presenze', () => {
     const trainings = [{ presenze: { 1: 'presente' } }, { presenze: { 1: 'giustificato' } }]
-    expect(impegno({ trainings }, 1)).toEqual({ presenti: 1, totale: 1, quota: 1 })
+    expect(impegno({ trainings }, 1)).toEqual({ presenti: 1, assenti: 0, giustificati: 1, totale: 1, quota: 1 })
+    expect(impegno({ trainings: [{ presenze: { 1: 'giustificato' } }] }, 1).quota).toBe(null)
+    expect(impegno({ trainings: [] }, 1)).toBe(null)
   })
 
   it('senza partite con referto non c\'è umore', () => {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { TIPI_EVENTO, tipoEventoInfo, famigliaRuolo, incaricoInfo } from '../db/constants'
@@ -14,6 +14,8 @@ import {
 import { presentiIds } from '../lib/presenze'
 import PitchView from '../components/PitchView'
 import IncaricoPicker from '../components/IncaricoPicker'
+import Scelta from '../components/Scelta'
+import Modal from '../components/Modal'
 
 const VUOTO = (n) => Array(n).fill(null)
 
@@ -24,6 +26,7 @@ const TATTICA_DEFAULT = { impostazione: 'possesso', costruzione: 'equilibrata', 
 
 export default function PartitaRefertoPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { id } = useParams()
   const partitaId = Number(id)
 
@@ -288,7 +291,8 @@ export default function PartitaRefertoPage() {
       minuti,
       portaMinuti,
     })
-    navigate(`/partite/${partitaId}`)
+    // la scheda partita riceve lo stesso `state`: sa ancora dove tornare
+    navigate(`/partite/${partitaId}`, { state: location.state })
   }
 
   const allineaRisultato = async () => {
@@ -506,8 +510,17 @@ export default function PartitaRefertoPage() {
         )
       })}
 
-      {bozza ? (
-        <div className="card">
+      <button
+        className="btn btn-block"
+        onClick={() => setBozza({
+          tipo: 'gol', minuto: 0, playerId: null, assistId: null, outId: null, inId: null, slotIndex: null,
+        })}
+      >
+        + Aggiungi evento
+      </button>
+
+      {bozza && (
+        <Modal titolo="Nuovo evento" onClose={() => setBozza(null)}>
           <div className="field">
             <label>Tipo</label>
             <div className="chip-row">
@@ -542,7 +555,8 @@ export default function PartitaRefertoPage() {
           {(tipoEventoInfo(bozza.tipo).conGiocatore || tipoEventoInfo(bozza.tipo).conSpostamento) && (
             <div className="field">
               <label>Giocatore</label>
-              <select
+              <Scelta
+                titolo="Giocatore"
                 className="select"
                 value={bozza.playerId ?? ''}
                 onChange={(e) => setBozza((b) => ({
@@ -557,14 +571,15 @@ export default function PartitaRefertoPage() {
                   : presenti.map((p) => (
                     <option key={p.id} value={p.id}>{nomeBreve(p)}</option>
                   ))}
-              </select>
+              </Scelta>
             </div>
           )}
 
           {tipoEventoInfo(bozza.tipo).conSpostamento && (
             <div className="field">
               <label>Nuova posizione</label>
-              <select
+              <Scelta
+                titolo="Nuova posizione"
                 className="select"
                 value={bozza.slotIndex ?? ''}
                 onChange={(e) => setBozza((b) => ({
@@ -575,7 +590,7 @@ export default function PartitaRefertoPage() {
                 {sigle.map((_, i) => (
                   <option key={i} value={i}>{etichettaSlot(i)}</option>
                 ))}
-              </select>
+              </Scelta>
               <p className="muted small" style={{ margin: '6px 0 0' }}>
                 Se la posizione è occupata, i due giocatori si scambiano di posto.
               </p>
@@ -585,7 +600,8 @@ export default function PartitaRefertoPage() {
           {tipoEventoInfo(bozza.tipo).conAssist && (
             <div className="field">
               <label>Assist (facoltativo)</label>
-              <select
+              <Scelta
+                titolo="Assist"
                 className="select"
                 value={bozza.assistId ?? ''}
                 onChange={(e) => setBozza((b) => ({
@@ -596,7 +612,7 @@ export default function PartitaRefertoPage() {
                 {presenti.map((p) => (
                   <option key={p.id} value={p.id}>{nomeBreve(p)}</option>
                 ))}
-              </select>
+              </Scelta>
             </div>
           )}
 
@@ -604,7 +620,8 @@ export default function PartitaRefertoPage() {
             <>
               <div className="field">
                 <label>Esce</label>
-                <select
+                <Scelta
+                  titolo="Chi esce"
                   className="select"
                   value={bozza.outId ?? ''}
                   onChange={(e) => setBozza((b) => ({
@@ -615,11 +632,12 @@ export default function PartitaRefertoPage() {
                   {inCampoBozza.map((pid) => (
                     <option key={pid} value={pid}>{nomeDi(pid)} ({sigle[campoBozza.indexOf(pid)]})</option>
                   ))}
-                </select>
+                </Scelta>
               </div>
               <div className="field">
                 <label>Entra</label>
-                <select
+                <Scelta
+                  titolo="Chi entra"
                   className="select"
                   value={bozza.inId ?? ''}
                   onChange={(e) => setBozza((b) => ({
@@ -630,11 +648,12 @@ export default function PartitaRefertoPage() {
                   {disponibiliBozza.map((p) => (
                     <option key={p.id} value={p.id}>{nomeBreve(p)}</option>
                   ))}
-                </select>
+                </Scelta>
               </div>
               <div className="field">
                 <label>Posizione di chi entra</label>
-                <select
+                <Scelta
+                  titolo="Posizione di chi entra"
                   className="select"
                   value={bozza.slotIndex ?? ''}
                   onChange={(e) => setBozza((b) => ({
@@ -645,7 +664,7 @@ export default function PartitaRefertoPage() {
                   {sigle.map((_, i) => (
                     <option key={i} value={i}>{etichettaSlot(i)}</option>
                   ))}
-                </select>
+                </Scelta>
                 <p className="muted small" style={{ margin: '6px 0 0' }}>
                   Chi occupa quella posizione scala nel posto lasciato libero da chi esce.
                 </p>
@@ -666,16 +685,7 @@ export default function PartitaRefertoPage() {
             </button>
             <button className="btn" onClick={() => setBozza(null)}>Annulla</button>
           </div>
-        </div>
-      ) : (
-        <button
-          className="btn btn-block"
-          onClick={() => setBozza({
-            tipo: 'gol', minuto: 0, playerId: null, assistId: null, outId: null, inId: null, slotIndex: null,
-          })}
-        >
-          + Aggiungi evento
-        </button>
+        </Modal>
       )}
 
       {hannoGiocato.length > 0 && (

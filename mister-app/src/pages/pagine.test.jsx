@@ -2,7 +2,7 @@
 import 'fake-indexeddb/auto'
 import { describe, it, expect, beforeAll, afterEach } from 'vitest'
 import { render, cleanup, screen, fireEvent, waitFor } from '@testing-library/react'
-import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { db } from '../db/db'
 import { seedDemoData } from '../db/demo'
 
@@ -315,18 +315,26 @@ describe('referto: cambi volanti, posizioni e incarichi', () => {
     const minuto = screen.getByText('Minuto').parentElement.querySelector('input')
     fireEvent.change(minuto, { target: { value: '30' } })
 
-    const esce = screen.getByText('Esce').parentElement.querySelector('select')
-    const entra = screen.getByText('Entra').parentElement.querySelector('select')
-    const opzioni = (sel) => [...sel.options].map((o) => o.textContent)
-    // al 30′ in campo c'è Otto, non Sette; Sette è tornato disponibile
-    expect(opzioni(esce).some((t) => t.startsWith('Otto'))).toBe(true)
-    expect(opzioni(esce).some((t) => t.startsWith('Sette'))).toBe(false)
-    expect(opzioni(entra)).toContain('Sette')
+    // i menu di scelta si aprono in una finestra con l'elenco delle opzioni
+    const apri = (label, titolo) => {
+      fireEvent.click(screen.getByText(label).parentElement.querySelector('button.scelta'))
+      return screen.getByRole('dialog', { name: titolo })
+    }
+    const voci = (dialog) => [...dialog.querySelectorAll('.scelta-opzione')].map((o) => o.textContent)
+    const scegli = (dialog, inizio) =>
+      fireEvent.click([...dialog.querySelectorAll('.scelta-opzione')].find((o) => o.textContent.startsWith(inizio)))
 
-    fireEvent.change(esce, { target: { value: '8' } })
-    fireEvent.change(entra, { target: { value: '7' } })
-    const posizione = screen.getByText('Posizione di chi entra').parentElement.querySelector('select')
-    fireEvent.change(posizione, { target: { value: '0' } })
+    // al 30′ in campo c'è Otto, non Sette; Sette è tornato disponibile
+    let dialog = apri('Esce', 'Chi esce')
+    expect(voci(dialog).some((t) => t.startsWith('Otto'))).toBe(true)
+    expect(voci(dialog).some((t) => t.startsWith('Sette'))).toBe(false)
+    scegli(dialog, 'Otto')
+    expect(screen.queryByRole('dialog', { name: 'Chi esce' })).toBeNull()
+
+    dialog = apri('Entra', 'Chi entra')
+    expect(voci(dialog)).toContain('Sette')
+    scegli(dialog, 'Sette')
+    scegli(apri('Posizione di chi entra', 'Posizione di chi entra'), 'POR')
     const incaricoBozza = screen.getByText('Incarico di Sette').parentElement
     fireEvent.click([...incaricoBozza.querySelectorAll('button')].find((b) => b.textContent.includes('Difensivo')))
     fireEvent.click(screen.getByText('Aggiungi'))
@@ -360,5 +368,61 @@ describe('referto: cambi volanti, posizioni e incarichi', () => {
     )
     expect(await screen.findByText(/Un evento non torna/)).toBeTruthy()
     expect(screen.getByText(/Sette non è in campo al 15′; Otto è già in campo al 15′/)).toBeTruthy()
+  })
+})
+
+describe('presenze e sedute', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+    await db.players.bulkAdd([
+      { id: 1, nome: 'Mario Rossi', soprannome: 'Rossi', ruoloNaturale: 'CC', statoAttivita: 'sicuro' },
+      { id: 2, nome: 'Luca Bianchi', soprannome: 'Bianchi', ruoloNaturale: 'DC', statoAttivita: 'sicuro' },
+    ])
+    await db.trainings.bulkAdd([
+      { id: 1, data: '2026-09-20', presenze: { 1: 'presente', 2: 'assente' } },
+      { id: 2, data: '2026-09-24', presenze: { 1: 'presente', 2: 'giustificato' } },
+    ])
+    await db.matches.add({
+      id: 1, data: '2026-09-27', golFatti: 1, golSubiti: 0, note: '',
+      presenze: { 1: 'presente', 2: 'presente' },
+    })
+  })
+
+  afterEach(cleanup)
+
+  const PaginaCorrente = () => {
+    const { pathname } = useLocation()
+    return <div data-testid="pagina">{pathname}</div>
+  }
+
+  it('tabella presenze sotto l\'elenco, con le stesse percentuali e badge della Rosa', async () => {
+    render(<MemoryRouter><PresenzePage /></MemoryRouter>)
+    const titolo = await screen.findByText('Presenze giocatori')
+    const elenco = screen.getByText('Sedute e partite')
+    expect(elenco.compareDocumentPosition(titolo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    // Rossi 3/3 = 100% diamante; Bianchi 1 presente su 2 (giustificato escluso) = 50% ferro
+    const riga = (nome) => screen.getByRole('link', { name: nome }).closest('tr').textContent
+    expect(riga('Rossi')).toContain('100%')
+    expect(riga('Rossi')).toContain('💎')
+    expect(riga('Bianchi')).toContain('50%')
+    expect(riga('Bianchi')).toContain('🔩')
+    expect(screen.queryByText('Campo e allenamento')).toBeNull()
+  })
+
+  it('una partita aperta da qui, salvata, riporta a presenze e sedute', async () => {
+    render(
+      <MemoryRouter initialEntries={['/presenze']}>
+        <Routes>
+          <Route path="/presenze" element={<><PresenzePage /><PaginaCorrente /></>} />
+          <Route path="/partite/:id" element={<PartitaFormPage />} />
+          <Route path="/partite" element={<PaginaCorrente />} />
+        </Routes>
+      </MemoryRouter>
+    )
+    fireEvent.click(await screen.findByText(/Avversario da definire/))
+    fireEvent.click(await screen.findByText('Salva modifiche'))
+    await waitFor(() => expect(screen.getByTestId('pagina').textContent).toBe('/presenze'))
   })
 })

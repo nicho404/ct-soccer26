@@ -9,6 +9,7 @@ import {
   GESTIONE_ERRORE, CARATTERE, NOTE_FISICHE, STILI_GIOCO, stileInfo,
 } from '../db/constants'
 import { RUOLI as RUOLI_TATTICI, zonaSigla, famigliaRuoloTattico, ruoloPerNome } from '../tactics/constants'
+import Modal from '../components/Modal'
 
 const EMPTY = {
   foto: '',
@@ -248,7 +249,7 @@ export default function PlayerFormPage() {
                         aria-label={`Info su ${r.nome}`}
                         onClick={(e) => {
                           e.stopPropagation()
-                          setInfoRuolo((v) => (v === r.nome ? null : r.nome))
+                          setInfoRuolo(r.nome)
                         }}
                       >
                         ?
@@ -256,12 +257,6 @@ export default function PlayerFormPage() {
                     </button>
                   ))}
                 </div>
-                {infoRuolo && ruoli.some((r) => r.nome === infoRuolo) && (
-                  <div className="info-pop" onClick={() => setInfoRuolo(null)}>
-                    <strong>{infoRuolo}</strong>
-                    <p>{ruoloPerNome(infoRuolo)?.compito}</p>
-                  </div>
-                )}
               </div>
             ))}
             {ruoliOrfani.length > 0 && (
@@ -385,7 +380,7 @@ export default function PlayerFormPage() {
                 aria-label={`Descrizione di ${s.value}`}
                 onClick={(e) => {
                   e.stopPropagation()
-                  setInfoStile((v) => (v === s.value ? null : s.value))
+                  setInfoStile(s.value)
                 }}
               >
                 ?
@@ -394,10 +389,14 @@ export default function PlayerFormPage() {
           ))}
         </div>
         {infoStile && stileInfo(infoStile) && (
-          <div className="info-pop" onClick={() => setInfoStile(null)}>
-            <strong>{stileInfo(infoStile).icona} {infoStile}</strong>
-            <p>{stileInfo(infoStile).descrizione}</p>
-          </div>
+          <Modal titolo={`${stileInfo(infoStile).icona} ${infoStile}`} onClose={() => setInfoStile(null)}>
+            <p style={{ margin: 0 }}>{stileInfo(infoStile).descrizione}</p>
+          </Modal>
+        )}
+        {infoRuolo && (
+          <Modal titolo={infoRuolo} onClose={() => setInfoRuolo(null)}>
+            <p style={{ margin: 0 }}>{ruoloPerNome(infoRuolo)?.compito}</p>
+          </Modal>
         )}
       </div>
 

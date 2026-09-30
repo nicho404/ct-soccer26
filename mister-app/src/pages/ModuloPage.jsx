@@ -21,6 +21,8 @@ import EmptyState from '../components/EmptyState'
 import ArrowSelect from '../components/ArrowSelect'
 import IncaricoPicker from '../components/IncaricoPicker'
 import { IconBall } from '../components/icons'
+import Scelta from '../components/Scelta'
+import Modal from '../components/Modal'
 
 const VUOTO = (formato) => Array(formato).fill(null)
 const OVERRIDE_VUOTO = () => ({ possesso: {}, nonPossesso: {} })
@@ -535,9 +537,9 @@ export default function ModuloPage() {
               linea: lineaDifesaInfo(linea),
             }[descDi]
             return (
-              <div className="tactics-desc" onClick={() => setDescDi(null)}>
-                <strong>{box.icona ? `${box.icona} ` : ''}{box.label}</strong> — {box.descrizione}
-              </div>
+              <Modal titolo={`${box.icona ? `${box.icona} ` : ''}${box.label}`} onClose={() => setDescDi(null)}>
+                <p style={{ margin: 0 }}>{box.descrizione}</p>
+              </Modal>
             )
           })()}
 
@@ -730,8 +732,8 @@ export default function ModuloPage() {
               )}
 
               <div className="row" style={{ marginBottom: 8 }}>
-                <button className="btn btn-sm" onClick={() => setScegliManuale((v) => !v)}>
-                  {scegliManuale ? 'Annulla' : 'Ruolo manuale'}
+                <button className="btn btn-sm" onClick={() => setScegliManuale(true)}>
+                  Ruolo manuale
                 </button>
                 {ruoloSel.manuale && (
                   <button className="btn btn-sm" onClick={() => setOverride(null)}>
@@ -740,7 +742,8 @@ export default function ModuloPage() {
                 )}
               </div>
               {scegliManuale && (
-                <div className="chip-row" style={{ marginBottom: 8 }}>
+                <Modal titolo={`Ruolo manuale — ${slotSel.sigla}`} onClose={() => setScegliManuale(false)}>
+                <div className="chip-row">
                   {(fase === 'possesso' ? ruoliZona(ruoloSel.zona) : ruoliNpZona(ruoloSel.zona)).map((r) => (
                     <button
                       key={r.codice}
@@ -751,6 +754,7 @@ export default function ModuloPage() {
                     </button>
                   ))}
                 </div>
+                </Modal>
               )}
 
               <div className="chip-row">
@@ -802,13 +806,11 @@ export default function ModuloPage() {
 
           <div className="section-title row" style={{ paddingLeft: 6 }}>
             <span style={{ flex: 1 }}>Gestione squadra</span>
-            {!salvaForm && (
-              <button className="btn btn-sm" onClick={apriSalvaCorrente}>+ Salva assetto</button>
-            )}
+            <button className="btn btn-sm" onClick={apriSalvaCorrente}>+ Salva assetto</button>
           </div>
 
           {salvaForm && (
-            <div className="card" style={{ marginLeft: 6, marginRight: 6, marginBottom: 10 }}>
+            <Modal titolo="Salva assetto" onClose={() => setSalvaForm(null)}>
               <div className="field">
                 <label>Nome assetto</label>
                 <input
@@ -845,7 +847,8 @@ export default function ModuloPage() {
                 return (
                 <div className="card" key={r.id} style={{ marginBottom: 8 }}>
                   <div className="row" style={{ gap: 8 }}>
-                    <select
+                    <Scelta
+                      titolo="Chi esce"
                       className="select"
                       style={{ flex: 1 }}
                       value={r.escePlayerId ?? ''}
@@ -855,8 +858,9 @@ export default function ModuloPage() {
                       {esceIds.map((pid) => (
                         <option key={pid} value={pid}>{nome(pid)}</option>
                       ))}
-                    </select>
-                    <select
+                    </Scelta>
+                    <Scelta
+                      titolo="Chi entra"
                       className="select"
                       style={{ flex: 1 }}
                       value={r.entraPlayerId ?? ''}
@@ -866,7 +870,7 @@ export default function ModuloPage() {
                       {entraIds.map((pid) => (
                         <option key={pid} value={pid}>{nome(pid)}</option>
                       ))}
-                    </select>
+                    </Scelta>
                     <button
                       className="btn btn-sm"
                       aria-label="Rimuovi cambio"
@@ -893,7 +897,8 @@ export default function ModuloPage() {
                     onChange={(e) => modificaRigaCambio(r.id, { dettaglio: e.target.value })}
                     placeholder="Es. inizio ripresa, se in vantaggio, se prestazione non convince…"
                   />
-                  <select
+                  <Scelta
+                    titolo="Posizione di chi entra"
                     className="select"
                     style={{ marginTop: 8 }}
                     value={r.slotIndex ?? ''}
@@ -905,7 +910,7 @@ export default function ModuloPage() {
                         Posizione: {sl.sigla}{slots[i] != null ? ` (oggi ${nome(slots[i])})` : ''}
                       </option>
                     ))}
-                  </select>
+                  </Scelta>
                   {r.entraPlayerId != null && (
                     <div style={{ marginTop: 8 }}>
                       <IncaricoPicker
@@ -925,7 +930,7 @@ export default function ModuloPage() {
                 </button>
                 <button className="btn" onClick={() => setSalvaForm(null)}>Annulla</button>
               </div>
-            </div>
+            </Modal>
           )}
 
           {listaSalvati.length === 0 ? (

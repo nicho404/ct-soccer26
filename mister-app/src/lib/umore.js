@@ -80,16 +80,23 @@ export function umoreDa(quotaMinuti, quotaPresenze) {
 
 // Presenze su sedute e partite. I giustificati non contano né a favore né
 // contro: chi avvisa non manca di impegno, ma nemmeno era lì.
+// È la stessa percentuale in Rosa, nella scheda giocatore e nella tabella
+// di Presenze e sedute. null se non compare in nessun appello; quota null se
+// ha solo giustificati.
 export function impegno({ trainings = [], matches = [] }, playerId) {
   let presenti = 0
-  let totale = 0
+  let assenti = 0
+  let giustificati = 0
   for (const ev of [...trainings, ...matches]) {
     const stato = ev?.presenze?.[playerId]
-    if (!stato || stato === 'giustificato') continue
-    totale += 1
+    if (!stato) continue
     if (stato === 'presente') presenti += 1
+    else if (stato === 'giustificato') giustificati += 1
+    else assenti += 1
   }
-  return totale === 0 ? null : { presenti, totale, quota: presenti / totale }
+  const totale = presenti + assenti
+  if (totale + giustificati === 0) return null
+  return { presenti, assenti, giustificati, totale, quota: totale === 0 ? null : presenti / totale }
 }
 
 // Minuti giocati su quelli disponibili, solo nelle partite con referto in

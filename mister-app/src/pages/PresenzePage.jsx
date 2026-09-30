@@ -1,21 +1,24 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
-import { isAttivo } from '../db/constants'
 import EmptyState from '../components/EmptyState'
 import { IconClipboardCheck } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
 import { formatDataPartita } from '../lib/partite'
-import {
-  contaSeduta, pctSeduta, aggregaPresenze, meritocrazia, LIVELLI_MERITOCRAZIA,
-} from '../lib/presenze'
+import { contaSeduta, pctSeduta } from '../lib/presenze'
+import { impegno, badgePresenze, calcolaUmore } from '../lib/umore'
+import { EmojiUmore, LegendaPopup } from '../components/UmoreLegenda'
 
 // Ordine di lettura: la seduta o partita più recente per prima.
 const perDataDecrescente = (a, b) =>
   `${b.data ?? ''} ${b.ora ?? ''}`.localeCompare(`${a.data ?? ''} ${a.ora ?? ''}`)
 
+const pct = (x) => `${Math.round(x * 100)}%`
+
 export default function PresenzePage() {
   const navigate = useNavigate()
+  const [legenda, setLegenda] = useState(false)
   const trainings = useLiveQuery(() => db.trainings.toArray(), [])
   const players = useLiveQuery(() => db.players.toArray(), [])
   const matches = useLiveQuery(() => db.matches.toArray(), [])
@@ -24,39 +27,33 @@ export default function PresenzePage() {
 
   if (!trainings || !players || !matches || !opponents || !piani) return null
 
-  const sedute = [...trainings].sort(perDataDecrescente)
-  // L'appello di squadra (disciplina agli allenamenti) resta sulle sole
-  // sedute: mischiarci le partite azzererebbe il confronto di meritocrazia,
-  // che vive apposta sul contrasto "quanto ti alleni" vs "quanto giochi".
-  const righe = aggregaPresenze(trainings)
-  const confronto = meritocrazia({ trainings, matches })
   const modelli = piani.filter((p) => p.isTemplate)
-
-  const nomeDi = (pid) => nomeBreve(players.find((p) => p.id === pid))
   const nomeAvversario = (id) => opponents.find((o) => o.id === id)?.nome
 
   // Vista unica di "chi c'era": sedute e partite condividono lo stesso
   // appello (presente/assente/giustificato), quindi finiscono nella stessa
   // lista cronologica invece che in due sezioni scollegate.
   const eventi = [
-    ...sedute.map((t) => ({ tipo: 'allenamento', id: t.id, data: t.data, ora: t.ora, presenze: t.presenze, titolo: t.tema || 'Allenamento' })),
+    ...trainings.map((t) => ({ tipo: 'allenamento', id: t.id, data: t.data, ora: t.ora, presenze: t.presenze, titolo: t.tema || 'Allenamento' })),
     ...matches.map((m) => ({ tipo: 'partita', id: m.id, data: m.data, ora: m.ora, presenze: m.presenze, titolo: nomeAvversario(m.opponentId) || 'Avversario da definire' })),
   ].sort(perDataDecrescente)
 
-  // Media delle percentuali di squadra: risponde a "quanti si presentano",
-  // non a "quanti allenamenti ho fatto".
-  const pctSedute = sedute.map(pctSeduta).filter((x) => x !== null)
-  const mediaSquadra = pctSedute.length === 0
-    ? null
-    : Math.round(pctSedute.reduce((a, b) => a + b, 0) / pctSedute.length)
-
-  const daSegnalare = confronto.filter((r) => r.livello === 'premiato' || r.livello === 'penalizzato')
+  // Stessi numeri della Rosa: presenze su allenamenti + partite, badge e
+  // umore calcolati da lib/umore. Una sola fonte, nessuna percentuale diversa.
+  const dati = { trainings, matches }
+  const righe = players
+    .map((p) => ({ p, imp: impegno(dati, p.id), umore: calcolaUmore(dati, p.id) }))
+    .filter((r) => r.imp)
+    .sort((a, b) =>
+      (b.imp.quota ?? -1) - (a.imp.quota ?? -1) ||
+      b.imp.presenti - a.imp.presenti ||
+      nomeBreve(a.p).localeCompare(nomeBreve(b.p)))
 
   return (
     <div className="page">
       <div className="page-header">
         <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/altro')}>‹</button>
-        <h1>Presenze</h1>
+        <h1>Presenze e sedute</h1>
         <span className="muted small">{eventi.length}</span>
       </div>
 
@@ -73,85 +70,16 @@ export default function PresenzePage() {
         />
       ) : (
         <>
-          <div className="stat-grid">
-            <div className="stat-tile">
-              <div className="value">{sedute.length}</div>
-              <div className="label">Sedute</div>
-            </div>
-            <div className="stat-tile">
-              <div className="value">{mediaSquadra === null ? '—' : `${mediaSquadra}%`}</div>
-              <div className="label">Media presenze</div>
-            </div>
-            <div className="stat-tile">
-              <div className="value">{players.filter(isAttivo).length}</div>
-              <div className="label">Rosa attiva</div>
-            </div>
-          </div>
-
-          {daSegnalare.length > 0 && (
-            <>
-              <div className="section-title">Campo e allenamento</div>
-              {daSegnalare.map((r) => {
-                const info = LIVELLI_MERITOCRAZIA[r.livello]
-                return (
-                  <Link to={`/rosa/${r.playerId}`} className="card tappable" key={r.playerId}>
-                    <div className="row">
-                      <strong className="small" style={{ flex: 1 }}>{nomeDi(r.playerId)}</strong>
-                      <span className={`badge ${info.badge}`}>{info.label}</span>
-                    </div>
-                    <div className="muted small" style={{ marginTop: 6 }}>
-                      {r.pct}% agli allenamenti · {r.pctMinuti}% dei minuti del più impiegato
-                    </div>
-                  </Link>
-                )
-              })}
-              <p className="muted small">
-                Il minutaggio è rapportato a chi ha giocato di più: nel calcio amatoriale
-                è l'unico metro che regge ai tornei saltati.
-              </p>
-            </>
-          )}
-
-          {righe.length > 0 && (
-            <>
-              <div className="section-title">Rendimento appello</div>
-              <div className="obs-table-wrap">
-                <table className="obs-table">
-                  <thead>
-                    <tr>
-                      <th>Giocatore</th>
-                      <th title="Sedute all'appello">SED</th>
-                      <th title="Presente">P</th>
-                      <th title="Assente">A</th>
-                      <th title="Assente giustificato">G</th>
-                      <th>%</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {righe.map((r) => (
-                      <tr key={r.playerId}>
-                        <td>{nomeDi(r.playerId)}</td>
-                        <td>{r.sedute}</td>
-                        <td>{r.presenti}</td>
-                        <td>{r.assenti || ''}</td>
-                        <td>{r.giustificati || ''}</td>
-                        <td>{r.pct}%</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-
           <div className="section-title">Sedute e partite</div>
           {eventi.map((ev) => {
             const c = contaSeduta(ev)
-            const pct = pctSeduta(ev)
+            const pctEv = pctSeduta(ev)
             const isPartita = ev.tipo === 'partita'
             return (
               <Link
                 to={isPartita ? `/partite/${ev.id}` : `/presenze/${ev.id}`}
+                // la scheda partita, salvando, torna qui e non alla lista partite
+                state={isPartita ? { da: '/presenze' } : undefined}
                 className="card tappable"
                 key={`${ev.tipo}-${ev.id}`}
               >
@@ -162,13 +90,54 @@ export default function PresenzePage() {
                       {[formatDataPartita(ev.data), ev.ora].filter(Boolean).join(' · ')}
                     </div>
                   </div>
-                  <span className={`badge ${pct === null ? 'badge-warn' : ''}`}>
-                    {pct === null ? 'Appello vuoto' : `${c.presenti}/${c.totale}`}
+                  <span className={`badge ${pctEv === null ? 'badge-warn' : ''}`}>
+                    {pctEv === null ? 'Appello vuoto' : `${c.presenti}/${c.totale}`}
                   </span>
                 </div>
               </Link>
             )
           })}
+
+          {righe.length > 0 && (
+            <>
+              <div className="section-title">Presenze giocatori</div>
+              <div className="obs-table-wrap">
+                <table className="obs-table">
+                  <thead>
+                    <tr>
+                      <th aria-label="Umore" />
+                      <th>Giocatore</th>
+                      <th title="Presente">P</th>
+                      <th title="Assente">A</th>
+                      <th title="Assente giustificato">G</th>
+                      <th>%</th>
+                      <th aria-label="Badge" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {righe.map(({ p, imp, umore }) => {
+                      const badge = badgePresenze(imp.quota)
+                      return (
+                        <tr key={p.id}>
+                          <td>{umore && <EmojiUmore umore={umore} size="1.1rem" onClick={() => setLegenda(true)} />}</td>
+                          <td><Link to={`/rosa/${p.id}`}>{nomeBreve(p)}</Link></td>
+                          <td>{imp.presenti}</td>
+                          <td>{imp.assenti || ''}</td>
+                          <td>{imp.giustificati || ''}</td>
+                          <td>{imp.quota == null ? '—' : pct(imp.quota)}</td>
+                          <td title={badge ? `Badge ${badge.label}` : undefined}>{badge?.icona}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <p className="muted small">
+                % = presenze ÷ appelli, allenamenti e partite insieme (i giustificati non contano):
+                la stessa della Rosa. Tocca un'emoji per la legenda di umore e badge.
+              </p>
+            </>
+          )}
 
           <Link to="/presenze/piani" className="card tappable">
             <div className="row">
@@ -185,6 +154,8 @@ export default function PresenzePage() {
           </button>
         </>
       )}
+
+      {legenda && <LegendaPopup onClose={() => setLegenda(false)} />}
     </div>
   )
 }

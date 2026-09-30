@@ -58,7 +58,9 @@ function PlayerCard({ player, trainings, matches, onUmore }) {
             {player.stiliGioco.map((s) => stileInfo(s)?.icona ?? '').join('')}
           </span>
         )}
-        {imp ? <BadgePresenze badge={badgePresenze(imp.quota)} quota={imp.quota} /> : <span className="badge">Presenze: —</span>}
+        {imp?.quota != null
+          ? <BadgePresenze badge={badgePresenze(imp.quota)} quota={imp.quota} />
+          : <span className="badge">Presenze: —</span>}
       </div>
     </Link>
   )

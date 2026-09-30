@@ -5,6 +5,7 @@ import { db } from '../db/db'
 import { risolviAvversario, eventiPerForm, eventiPerDb } from '../db/girone'
 import { disallineamentoGirone, pulisciNome } from '../lib/girone'
 import EventiAvversari from '../components/EventiAvversari'
+import Scelta from '../components/Scelta'
 
 const EMPTY = {
   competitionId: null,
@@ -151,7 +152,8 @@ export default function GironePartitaFormPage() {
 
       <div className="field">
         <label>Competizione</label>
-        <select
+        <Scelta
+          titolo="Competizione"
           className="select"
           value={form.competitionId ?? ''}
           onChange={(e) => set('competitionId', e.target.value ? Number(e.target.value) : null)}
@@ -160,7 +162,7 @@ export default function GironePartitaFormPage() {
           {competitions.map((c) => (
             <option key={c.id} value={c.id}>{c.nome}</option>
           ))}
-        </select>
+        </Scelta>
       </div>
 
       <div className="row" style={{ gap: 10, alignItems: 'flex-start' }}>

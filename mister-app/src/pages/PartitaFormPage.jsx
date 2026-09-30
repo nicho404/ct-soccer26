@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import {
@@ -12,6 +12,7 @@ import EventiAvversari from '../components/EventiAvversari'
 import { refertoCompilato, titolariDi } from '../lib/storico'
 import { contaSeduta } from '../lib/presenze'
 import AppelloPresenze from '../components/AppelloPresenze'
+import Scelta from '../components/Scelta'
 
 const EMPTY = {
   data: '',
@@ -42,6 +43,10 @@ const toGiornata = (raw) => {
 
 export default function PartitaFormPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  // Chi apre la partita da un'altra sezione (es. Presenze e sedute) passa
+  // `state.da`: salvando o eliminando si torna lì, non alla lista partite.
+  const tornaA = location.state?.da ?? '/partite'
   const { id } = useParams()
   const editing = Boolean(id)
   const [form, setForm] = useState({ ...EMPTY, data: oggiISO() })
@@ -144,13 +149,13 @@ export default function PartitaFormPage() {
     } else {
       await db.matches.add(dati)
     }
-    navigate('/partite')
+    navigate(tornaA)
   }
 
   const elimina = async () => {
     if (!window.confirm('Eliminare questa partita?')) return
     await db.matches.delete(Number(id))
-    navigate('/partite', { replace: true })
+    navigate(tornaA, { replace: true })
   }
 
   const esito = esitoPartita(form)
@@ -297,7 +302,8 @@ export default function PartitaFormPage() {
           </>
         ) : (
           <>
-            <select
+            <Scelta
+              titolo="Competizione"
               className="select"
               value={form.competitionId ?? ''}
               onChange={(e) => set('competitionId', e.target.value ? Number(e.target.value) : null)}
@@ -306,7 +312,7 @@ export default function PartitaFormPage() {
               {competitions.map((c) => (
                 <option key={c.id} value={c.id}>{c.nome}</option>
               ))}
-            </select>
+            </Scelta>
             <button
               className="btn btn-sm"
               style={{ marginTop: 8 }}
@@ -412,7 +418,7 @@ export default function PartitaFormPage() {
             <button
               className="btn btn-sm"
               style={{ marginTop: 10 }}
-              onClick={() => navigate(`/partite/${id}/referto`)}
+              onClick={() => navigate(`/partite/${id}/referto`, { state: location.state })}
             >
               {refertoCompilato(form) ? 'Apri referto' : '+ Compila referto'}
             </button>
