@@ -49,6 +49,12 @@ tocco. Prima di ridisegnare un'altra sezione, verificare questi punti.
   (minuto, icona, descrizione); incarichi una riga per giocatore (assegnato → svolto) con i
   dettagli in finestra; "Salva" fisso in basso. Le azioni che cambiano dati importanti (es.
   "Usa il conto degli eventi") compaiono solo quando hanno senso.
+- **Altro**: griglia di pulsanti per categoria (Squadra, Campionato, Mister), righe da tre.
+- **Quaderno**: analisi e manuale nella stessa sezione, due schede (`/analisi`, `/manuale`).
+- **Liste di testo (Manuale, Intese)**: classe `voce-lista` — etichetta piccola sopra, titolo
+  su tutta la larghezza, anteprima tagliata a due righe dal CSS. Mai un badge accanto al
+  titolo: gli ruba metà riga e lo manda a capo.
+- **Storico**: marcatori come righe in una sola card, referti come le righe di Partite.
 - **Riquadri in cima**: classe `stat-grid compatto`, etichette di una parola.
 
 ## Componenti

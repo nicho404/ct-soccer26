@@ -22,12 +22,11 @@ import SedutaFormPage from './pages/SedutaFormPage'
 import PianiPage from './pages/PianiPage'
 import AvversariPage from './pages/AvversariPage'
 import AvversarioFormPage from './pages/AvversarioFormPage'
-import ManualePage from './pages/ManualePage'
+import QuadernoPage from './pages/QuadernoPage'
 import ManualeFormPage from './pages/ManualeFormPage'
 import CapitanoPage from './pages/CapitanoPage'
 import GironePage from './pages/GironePage'
 import GironePartitaFormPage from './pages/GironePartitaFormPage'
-import AnalisiPage from './pages/AnalisiPage'
 import AnalisiDettaglioPage from './pages/AnalisiDettaglioPage'
 import AnalisiFormPage from './pages/AnalisiFormPage'
 
@@ -66,14 +65,14 @@ export default function App() {
           <Route path="/avversari" element={<AvversariPage />} />
           <Route path="/avversari/nuovo" element={<AvversarioFormPage />} />
           <Route path="/avversari/:id" element={<AvversarioFormPage />} />
-          <Route path="/manuale" element={<ManualePage />} />
+          <Route path="/manuale" element={<QuadernoPage scheda="manuale" />} />
           <Route path="/manuale/nuova" element={<ManualeFormPage />} />
           <Route path="/manuale/:id" element={<ManualeFormPage />} />
           <Route path="/capitano" element={<CapitanoPage />} />
           <Route path="/girone" element={<GironePage />} />
           <Route path="/girone/nuova" element={<GironePartitaFormPage />} />
           <Route path="/girone/:id" element={<GironePartitaFormPage />} />
-          <Route path="/analisi" element={<AnalisiPage />} />
+          <Route path="/analisi" element={<QuadernoPage scheda="analisi" />} />
           <Route path="/analisi/nuova" element={<AnalisiFormPage />} />
           <Route path="/analisi/:id" element={<AnalisiDettaglioPage />} />
           <Route path="/analisi/:id/modifica" element={<AnalisiFormPage />} />

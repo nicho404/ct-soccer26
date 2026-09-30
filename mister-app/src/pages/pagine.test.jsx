@@ -30,6 +30,7 @@ import GironePartitaFormPage from './GironePartitaFormPage'
 import AnalisiPage from './AnalisiPage'
 import AnalisiDettaglioPage from './AnalisiDettaglioPage'
 import AnalisiFormPage from './AnalisiFormPage'
+import QuadernoPage from './QuadernoPage'
 
 // Una schermata nera è un errore di render non intercettato: qui lo si
 // trasforma in un test che fallisce, montando ogni pagina per davvero.
@@ -607,5 +608,33 @@ describe('dati demo accanto ai dati reali', () => {
     expect((await db.players.toArray()).map((p) => p.id).sort()).toEqual([901, 902])
     expect((await db.meta.get('capitano')).value).toBe(901)
     expect((await db.meta.get('vice')).value).toBe(902)
+  })
+})
+
+describe('quaderno: analisi e manuale in una sezione', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+    await db.analisi.add({ id: 1, data: '2026-09-23', titolo: 'Analisi di prova', obiettivi: [] })
+    await db.manualEntries.add({ id: 1, titolo: 'Voce di prova', categoria: 'tattica', testo: 'Testo' })
+  })
+
+  afterEach(cleanup)
+
+  it('le due schede passano da analisi a manuale', async () => {
+    render(
+      <MemoryRouter initialEntries={['/analisi']}>
+        <Routes>
+          <Route path="/analisi" element={<QuadernoPage scheda="analisi" />} />
+          <Route path="/manuale" element={<QuadernoPage scheda="manuale" />} />
+        </Routes>
+      </MemoryRouter>
+    )
+    expect(await screen.findByText('Analisi di prova')).toBeTruthy()
+    expect(screen.queryByText('Voce di prova')).toBeNull()
+    fireEvent.click(screen.getByRole('tab', { name: 'Manuale' }))
+    expect(await screen.findByText('Voce di prova')).toBeTruthy()
+    expect(screen.getByRole('tab', { name: 'Manuale' }).getAttribute('aria-selected')).toBe('true')
   })
 })

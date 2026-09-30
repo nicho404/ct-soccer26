@@ -3,9 +3,9 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import EmptyState from '../components/EmptyState'
 import { IconChart } from '../components/icons'
-import { normalizzaAnalisi, avanzamentoObiettivi, ultimaAnalisi, intestazioneAnalisi } from '../lib/analisi'
+import { normalizzaAnalisi, avanzamentoObiettivi, intestazioneAnalisi } from '../lib/analisi'
 
-export default function AnalisiPage() {
+export default function AnalisiPage({ incorporata = false }) {
   const navigate = useNavigate()
   const righe = useLiveQuery(() => db.analisi.toArray(), [])
   if (!righe) return null
@@ -13,20 +13,14 @@ export default function AnalisiPage() {
   const lista = righe.map(normalizzaAnalisi).sort((a, b) =>
     b.data.localeCompare(a.data) || b.id - a.id
   )
-  const inHome = ultimaAnalisi(lista)
 
-  return (
-    <div className="page">
-      <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
-        <h1>Analisi</h1>
-      </div>
-
+  const corpo = (
+    <>
       {lista.length === 0 ? (
         <EmptyState
           icon={<IconChart />}
           title="Nessuna analisi"
-          text="Dopo un blocco di partite e allenamenti fissa i punti chiave e gli obiettivi: la più recente resta in Home."
+          text="Dopo un blocco di partite e allenamenti fissa i punti chiave e gli obiettivi."
           action={
             <button className="btn btn-primary" onClick={() => navigate('/analisi/nuova')}>
               + Nuova analisi
@@ -44,7 +38,6 @@ export default function AnalisiPage() {
                     <strong>{a.titolo || 'Analisi'}</strong>
                     <div className="muted small">{intestazioneAnalisi(a)}</div>
                   </div>
-                  {a.id === inHome.id && <span className="badge badge-accent">In Home</span>}
                   {totale > 0 && <span className="badge">{fatti}/{totale}</span>}
                 </div>
               </Link>
@@ -55,6 +48,18 @@ export default function AnalisiPage() {
           </button>
         </>
       )}
+    </>
+  )
+  if (incorporata) return corpo
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
+        <h1>Analisi</h1>
+      </div>
+
+      {corpo}
     </div>
   )
 }

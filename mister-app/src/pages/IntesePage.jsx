@@ -41,22 +41,13 @@ export default function IntesePage() {
         intese.map((i) => {
           const tipo = TIPI_INTESA.find((t) => t.value === i.tipo)
           return (
-            <Link to={`/intese/${i.id}`} className="card tappable" key={i.id}>
-              <div className="row">
-                <span className="role-dot" style={{ background: tipo?.colore }} />
-                <strong className="small" style={{ flex: 1 }}>
-                  {(i.playerIds ?? []).map(nomeDi).join(' + ')}
-                </strong>
-                <span className="badge badge-accent">{tipo?.label ?? i.tipo}</span>
-              </div>
-              {i.descrizione && (
-                <p className="small muted" style={{ margin: '8px 0 0' }}>{i.descrizione}</p>
-              )}
-              {i.fonte && (
-                <p className="small muted" style={{ margin: '4px 0 0', opacity: 0.7 }}>
-                  Fonte: {i.fonte}
-                </p>
-              )}
+            <Link to={`/intese/${i.id}`} className="card tappable voce-lista" key={i.id}>
+              <span className="voce-categoria" style={{ color: tipo?.colore }}>
+                ● {tipo?.label ?? i.tipo}
+              </span>
+              <strong>{(i.playerIds ?? []).map(nomeDi).join(' + ')}</strong>
+              {i.descrizione && <span className="voce-anteprima">{i.descrizione}</span>}
+              {i.fonte && <span className="voce-fonte">Fonte: {i.fonte}</span>}
             </Link>
           )
         })

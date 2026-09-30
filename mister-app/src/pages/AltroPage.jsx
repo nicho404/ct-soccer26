@@ -4,17 +4,33 @@ import {
   IconTarget, IconBook, IconStar, IconGear, IconGrid,
 } from '../components/icons'
 
-const VOCI = [
-  { to: '/osservazione', Icon: IconEye, label: 'Osservazione', desc: 'Voti, sì/no di ruolo e note da bordo campo' },
-  { to: '/intese', Icon: IconLink, label: 'Intese', desc: 'Coppie e catene che si capiscono' },
-  { to: '/storico', Icon: IconChart, label: 'Storico', desc: 'Referti, minutaggio, marcatori' },
-  { to: '/presenze', Icon: IconClipboardCheck, label: 'Presenze e sedute', desc: 'Appello, meritocrazia, allenamenti' },
-  { to: '/analisi', Icon: IconChart, label: 'Analisi', desc: 'Punti chiave e obiettivi del mister' },
-  { to: '/girone', Icon: IconGrid, label: 'Girone', desc: 'Risultati, classifica, marcatori e cartellini avversari' },
-  { to: '/avversari', Icon: IconTarget, label: 'Avversari', desc: 'Scouting squadre del girone' },
-  { to: '/manuale', Icon: IconBook, label: 'Manuale', desc: 'La tua knowledge base tattica' },
-  { to: '/capitano', Icon: IconStar, label: 'Capitano', desc: 'Criteri comparati per la scelta' },
-  { to: '/impostazioni', Icon: IconGear, label: 'Impostazioni', desc: 'Backup, dati demo, info' },
+// Divise per categoria, in griglia: si trova la sezione a colpo d'occhio,
+// senza leggere un elenco di descrizioni.
+const CATEGORIE = [
+  {
+    titolo: 'Squadra',
+    voci: [
+      { to: '/osservazione', Icon: IconEye, label: 'Osservazione' },
+      { to: '/presenze', Icon: IconClipboardCheck, label: 'Presenze' },
+      { to: '/intese', Icon: IconLink, label: 'Intese' },
+    ],
+  },
+  {
+    titolo: 'Campionato',
+    voci: [
+      { to: '/storico', Icon: IconChart, label: 'Storico' },
+      { to: '/girone', Icon: IconGrid, label: 'Girone' },
+      { to: '/avversari', Icon: IconTarget, label: 'Avversari' },
+    ],
+  },
+  {
+    titolo: 'Mister',
+    voci: [
+      { to: '/capitano', Icon: IconStar, label: 'Capitano' },
+      { to: '/analisi', Icon: IconBook, label: 'Quaderno', sotto: 'Analisi e manuale' },
+      { to: '/impostazioni', Icon: IconGear, label: 'Impostazioni' },
+    ],
+  },
 ]
 
 export default function AltroPage() {
@@ -24,16 +40,19 @@ export default function AltroPage() {
         <h1>Altro</h1>
       </div>
 
-      {VOCI.map((v) => (
-        <Link key={v.to} to={v.to} className="card tappable">
-          <div className="row">
-            <span className="menu-icon"><v.Icon /></span>
-            <div style={{ flex: 1 }}>
-              <strong>{v.label}</strong>
-              <div className="muted small">{v.desc}</div>
-            </div>
+      {CATEGORIE.map((c) => (
+        <div key={c.titolo}>
+          <div className="section-title">{c.titolo}</div>
+          <div className="menu-griglia">
+            {c.voci.map((v) => (
+              <Link key={v.to} to={v.to} className="menu-tessera">
+                <span className="menu-icon"><v.Icon /></span>
+                <strong>{v.label}</strong>
+                {v.sotto && <span className="muted menu-sotto">{v.sotto}</span>}
+              </Link>
+            ))}
           </div>
-        </Link>
+        </div>
       ))}
     </div>
   )

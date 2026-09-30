@@ -453,6 +453,35 @@ a.card {
 }
 .impostazioni-voci strong { font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* Altro: griglia per categoria */
+.menu-griglia { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.menu-tessera {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  min-height: 92px; padding: 10px 6px; text-align: center; text-decoration: none; color: inherit;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.menu-tessera:active { transform: scale(0.97); }
+.menu-tessera strong { font-size: 0.85rem; line-height: 1.15; }
+.menu-sotto { font-size: 0.68rem; line-height: 1.2; }
+
+/* Schede (Quaderno) */
+.schede { display: flex; gap: 6px; margin-bottom: 12px; padding: 4px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); }
+.scheda {
+  flex: 1; text-align: center; padding: 9px 0; border-radius: 8px; font-weight: 700;
+  text-decoration: none; color: var(--muted);
+}
+.scheda.attiva { background: var(--accent-dark, #7c3aed); color: #fff; }
+
+/* Voci di lista a tutta larghezza (Manuale, Intese): etichetta sopra,
+   titolo su tutta la riga, anteprima su due righe */
+.card.voce-lista { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; }
+.voce-categoria { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--accent); }
+.voce-anteprima {
+  font-size: 0.85rem; color: var(--muted); line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.voce-fonte { font-size: 0.72rem; color: var(--muted); opacity: 0.75; }
+
 /* Home: stagione e forma */
 .stagione-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
 .stagione-grid .stat-tile { padding: 10px 4px; text-decoration: none; color: inherit; }

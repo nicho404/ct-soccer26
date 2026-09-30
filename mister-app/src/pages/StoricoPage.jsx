@@ -45,18 +45,18 @@ export default function StoricoPage() {
         />
       ) : (
         <>
-          <div className="stat-grid">
+          <div className="stat-grid compatto">
             <div className="stat-tile">
               <div className="value">{b.vinte}-{b.pari}-{b.perse}</div>
-              <div className="label">V-N-P su {b.giocate}</div>
+              <div className="label">V-N-P</div>
             </div>
             <div className="stat-tile">
-              <div className="value">{b.golFatti}</div>
-              <div className="label">Gol fatti</div>
+              <div className="value">{b.golFatti}:{b.golSubiti}</div>
+              <div className="label">Gol</div>
             </div>
             <div className="stat-tile">
-              <div className="value">{b.golSubiti}</div>
-              <div className="label">Gol subiti</div>
+              <div className="value">{conReferto.length}/{giocate.length}</div>
+              <div className="label">Referti</div>
             </div>
           </div>
 
@@ -73,16 +73,16 @@ export default function StoricoPage() {
           {marcatori.length > 0 && (
             <>
               <div className="section-title">Marcatori</div>
-              {marcatori.map((r, i) => (
-                <Link to={`/rosa/${r.playerId}`} className="card tappable" key={r.playerId}>
-                  <div className="row">
-                    <span className="badge">{i + 1}</span>
-                    <strong className="small" style={{ flex: 1 }}>{nomeDi(r.playerId)}</strong>
-                    {r.gol > 0 && <span className="badge badge-ok">{r.gol} gol</span>}
-                    {r.assist > 0 && <span className="badge badge-accent">{r.assist} assist</span>}
-                  </div>
-                </Link>
-              ))}
+              <div className="card referto-cronologia">
+                {marcatori.map((r, i) => (
+                  <Link to={`/rosa/${r.playerId}`} className="evento-riga" key={r.playerId} style={{ color: 'inherit', textDecoration: 'none' }}>
+                    <span className="evento-minuto">{i + 1}</span>
+                    <strong className="evento-testo">{nomeDi(r.playerId)}</strong>
+                    {r.gol > 0 && <span className="badge badge-ok">⚽ {r.gol}</span>}
+                    {r.assist > 0 && <span className="badge badge-accent">🅰️ {r.assist}</span>}
+                  </Link>
+                ))}
+              </div>
             </>
           )}
 
@@ -125,21 +125,17 @@ export default function StoricoPage() {
             const esito = esitoPartita(m)
             const compilato = refertoCompilato(m)
             return (
-              <Link to={`/partite/${m.id}/referto`} className="card tappable" key={m.id}>
-                <div className="row">
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <strong>{nomeAvversario(m.opponentId)}</strong>
-                    <div className="muted small">{formatDataPartita(m.data)}</div>
-                  </div>
-                  {esito && (
-                    <span className={`badge ${ESITO_INFO[esito].badge}`}>
-                      {m.golFatti}-{m.golSubiti}
-                    </span>
-                  )}
-                  <span className={`badge ${compilato ? '' : 'badge-warn'}`}>
-                    {compilato ? 'Referto ok' : 'Da compilare'}
-                  </span>
-                </div>
+              <Link to={`/partite/${m.id}/referto`} className="card tappable partita-riga" key={m.id}>
+                <span className="partita-riga-esito">
+                  {esito
+                    ? <span className={`badge ${ESITO_INFO[esito].badge}`}>{m.golFatti}-{m.golSubiti}</span>
+                    : <span className="badge badge-warn">?</span>}
+                </span>
+                <span className="partita-riga-testo">
+                  <strong>{nomeAvversario(m.opponentId)}</strong>
+                  <span className="muted small">{formatDataPartita(m.data)}</span>
+                </span>
+                {!compilato && <span className="badge badge-warn">Da compilare</span>}
               </Link>
             )
           })}

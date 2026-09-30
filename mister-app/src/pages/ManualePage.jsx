@@ -9,13 +9,11 @@ import { IconBook } from '../components/icons'
 const categoriaLabel = (value) =>
   CATEGORIE_MANUALE.find((c) => c.value === value)?.label ?? value ?? '—'
 
-// Anteprima di una voce: la prima riga di testo, tagliata.
-const anteprima = (testo) => {
-  const riga = (testo ?? '').trim().split('\n')[0]
-  return riga.length > 120 ? `${riga.slice(0, 119)}…` : riga
-}
+// Anteprima di una voce: la prima riga di testo. Il taglio a due righe lo
+// fa il CSS, così usa tutta la larghezza dello schermo.
+const anteprima = (testo) => (testo ?? '').trim().split('\n')[0]
 
-export default function ManualePage() {
+export default function ManualePage({ incorporata = false }) {
   const navigate = useNavigate()
   const [categoria, setCategoria] = useState('tutte')
   const [cerca, setCerca] = useState('')
@@ -39,14 +37,8 @@ export default function ManualePage() {
     voci.some((v) => v.categoria === c.value)
   )
 
-  return (
-    <div className="page">
-      <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/altro')}>‹</button>
-        <h1>Manuale</h1>
-        <span className="muted small">{voci.length}</span>
-      </div>
-
+  const corpo = (
+    <>
       {voci.length === 0 ? (
         <EmptyState
           icon={<IconBook />}
@@ -69,7 +61,7 @@ export default function ManualePage() {
             />
           </div>
 
-          <div className="chip-row">
+          <div className="chip-row" style={{ marginBottom: 12 }}>
             <button
               className={`chip chip-sm ${categoria === 'tutte' ? 'selected' : ''}`}
               onClick={() => setCategoria('tutte')}
@@ -91,14 +83,10 @@ export default function ManualePage() {
             <div className="card muted small">Nessuna voce con questi filtri.</div>
           ) : (
             visibili.map((v) => (
-              <Link to={`/manuale/${v.id}`} className="card tappable" key={v.id}>
-                <div className="row">
-                  <strong style={{ flex: 1, minWidth: 0 }}>{v.titolo || 'Senza titolo'}</strong>
-                  <span className="badge badge-accent">{categoriaLabel(v.categoria)}</span>
-                </div>
-                {anteprima(v.testo) && (
-                  <p className="small muted" style={{ margin: '8px 0 0' }}>{anteprima(v.testo)}</p>
-                )}
+              <Link to={`/manuale/${v.id}`} className="card tappable voce-lista" key={v.id}>
+                <span className="voce-categoria">{categoriaLabel(v.categoria)}</span>
+                <strong>{v.titolo || 'Senza titolo'}</strong>
+                {anteprima(v.testo) && <span className="voce-anteprima">{anteprima(v.testo)}</span>}
               </Link>
             ))
           )}
@@ -108,6 +96,19 @@ export default function ManualePage() {
           </button>
         </>
       )}
+    </>
+  )
+  if (incorporata) return corpo
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/altro')}>‹</button>
+        <h1>Manuale</h1>
+        <span className="muted small">{voci.length}</span>
+      </div>
+
+      {corpo}
     </div>
   )
 }
