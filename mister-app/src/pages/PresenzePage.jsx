@@ -8,7 +8,7 @@ import { nomeBreve } from '../lib/nomi'
 import { formatDataPartita } from '../lib/partite'
 import { contaSeduta, pctSeduta } from '../lib/presenze'
 import { impegno, badgePresenze, calcolaUmore } from '../lib/umore'
-import { EmojiUmore, LegendaPopup } from '../components/UmoreLegenda'
+import { EmojiUmore, LegendaPopup, BadgePresenze } from '../components/UmoreLegenda'
 
 // Ordine di lettura: la seduta o partita più recente per prima.
 const perDataDecrescente = (a, b) =>
@@ -125,7 +125,7 @@ export default function PresenzePage() {
                           <td>{imp.assenti || ''}</td>
                           <td>{imp.giustificati || ''}</td>
                           <td>{imp.quota == null ? '—' : pct(imp.quota)}</td>
-                          <td title={badge ? `Badge ${badge.label}` : undefined}>{badge?.icona}</td>
+                          <td><BadgePresenze badge={badge} quota={imp.quota} /></td>
                         </tr>
                       )
                     })}

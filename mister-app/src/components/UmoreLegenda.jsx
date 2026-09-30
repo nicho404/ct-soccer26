@@ -10,11 +10,15 @@ const pct = (x) => `${Math.round(x * 100)}%`
 const fasce = (soglie) => soglie.map((s, i) => ({ ...s, a: i === 0 ? null : soglie[i - 1].min }))
 const etichetta = (f) => (f.a == null ? `da ${pct(f.min)}` : f.min === 0 ? `sotto ${pct(f.a)}` : `${pct(f.min)}–${pct(f.a)}`)
 
+// Solo l'icona nel riquadro del colore: il nome del livello (e la
+// percentuale, se passata) restano nel tooltip e per i lettori di schermo.
+// La legenda li spiega per esteso.
 export function BadgePresenze({ badge, quota }) {
   if (!badge) return null
+  const descrizione = `Presenze: ${badge.label}${quota != null ? ` · ${pct(quota)}` : ''}`
   return (
-    <span className={`badge badge-medaglia medaglia-${badge.value}`} title={`Presenze: ${badge.label}`}>
-      {badge.icona} {badge.label}{quota != null ? ` · ${pct(quota)}` : ''}
+    <span className={`badge badge-medaglia badge-icona medaglia-${badge.value}`} title={descrizione} aria-label={descrizione}>
+      {badge.icona}
     </span>
   )
 }
