@@ -7,6 +7,8 @@ import Avatar from '../components/Avatar'
 import { IconStar } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
 import { classificaCapitani, COPERTURA_MINIMA } from '../lib/capitano'
+import Fascia from '../components/Fascia'
+import { fasciaDi } from '../lib/fascia'
 
 // Le voci senza dato restano in lista, in grigio: dicono cosa manca per
 // avere un confronto onesto, che è un'informazione utile quanto il punteggio.
@@ -39,22 +41,36 @@ export default function CapitanoPage() {
   const trainings = useLiveQuery(() => db.trainings.toArray(), [])
   const matches = useLiveQuery(() => db.matches.toArray(), [])
   const capitano = useLiveQuery(() => db.meta.get('capitano').then((c) => c ?? null), [])
+  const vice = useLiveQuery(() => db.meta.get('vice').then((c) => c ?? null), [])
 
-  if (!players || !observations || !trainings || !matches || capitano === undefined) return null
+  if (!players || !observations || !trainings || !matches || capitano === undefined || vice === undefined) return null
 
   const attivi = players.filter(isAttivo)
   const righe = classificaCapitani({ players: attivi, observations, trainings, matches })
   const conDati = righe.filter((r) => r.punteggio !== null)
   const capitanoId = capitano?.value ?? null
+  const viceId = vice?.value ?? null
   const giocatoreDi = (pid) => players.find((p) => p.id === pid)
 
-  const nomina = async (pid) => {
-    if (capitanoId === pid) {
-      await db.meta.delete('capitano')
+  // Una fascia per giocatore: chi diventa capitano smette di essere vice e
+  // viceversa. Ritoccare la fascia che ha già la toglie.
+  const assegna = async (chiave, pid, attuale, altra, altraId) => {
+    if (attuale === pid) {
+      await db.meta.delete(chiave)
       return
     }
-    await db.meta.put({ key: 'capitano', value: pid })
+    await db.transaction('rw', db.meta, async () => {
+      if (altraId === pid) await db.meta.delete(altra)
+      await db.meta.put({ key: chiave, value: pid })
+    })
   }
+  const nomina = (pid) => assegna('capitano', pid, capitanoId, 'vice', viceId)
+  const nominaVice = (pid) => assegna('vice', pid, viceId, 'capitano', capitanoId)
+
+  const designati = [
+    { id: capitanoId, tipo: 'capitano', testo: 'Capitano designato' },
+    { id: viceId, tipo: 'vice', testo: 'Vice capitano' },
+  ].filter((d) => d.id != null && giocatoreDi(d.id))
 
   return (
     <div className="page">
@@ -76,15 +92,16 @@ export default function CapitanoPage() {
         />
       ) : (
         <>
-          {capitanoId != null && giocatoreDi(capitanoId) && (
-            <div className="team-banner">
-              <Avatar src={giocatoreDi(capitanoId).foto} size={38} />
-              <div style={{ minWidth: 0 }}>
-                <strong>{giocatoreDi(capitanoId).nome}</strong>
-                <div className="muted small">Capitano designato</div>
+          {designati.map((d) => (
+            <div className="team-banner" key={d.tipo}>
+              <Avatar src={giocatoreDi(d.id).foto} size={38} />
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <strong>{giocatoreDi(d.id).nome}</strong>
+                <div className="muted small">{d.testo}</div>
               </div>
+              <Fascia tipo={d.tipo} />
             </div>
-          )}
+          ))}
 
           <p className="muted small">
             Nessun dato nuovo: il confronto pesa quello che hai già raccolto — leadership e
@@ -97,6 +114,7 @@ export default function CapitanoPage() {
             if (!p) return null
             const scarso = r.copertura < COPERTURA_MINIMA
             const isCapitano = capitanoId === r.playerId
+            const isVice = viceId === r.playerId
             return (
               <div className="card" key={r.playerId}>
                 <div className="row">
@@ -104,6 +122,7 @@ export default function CapitanoPage() {
                   <Avatar src={p.foto} size={32} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <strong className="small">{nomeBreve(p)}</strong>
+                    {' '}<Fascia tipo={fasciaDi(r.playerId, { capitanoId, viceId })} />
                     <div className="muted small">
                       {scarso
                         ? `Dati parziali (${r.copertura}% dei criteri)`
@@ -127,6 +146,12 @@ export default function CapitanoPage() {
                     onClick={() => nomina(r.playerId)}
                   >
                     {isCapitano ? 'Togli la fascia' : 'Nomina capitano'}
+                  </button>
+                  <button
+                    className={`btn btn-sm ${isVice ? '' : 'btn-primary'}`}
+                    onClick={() => nominaVice(r.playerId)}
+                  >
+                    {isVice ? 'Togli vice' : 'Nomina vice'}
                   </button>
                   <button className="btn btn-sm" onClick={() => navigate(`/rosa/${r.playerId}`)}>
                     Scheda

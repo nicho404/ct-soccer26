@@ -13,6 +13,8 @@ import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../
 import { aggregaGiocatori, incarichiGiocatore } from '../lib/storico'
 import { calcolaUmore, impegno, badgePresenze } from '../lib/umore'
 import { EmojiUmore, LegendaPopup, BadgePresenze } from '../components/UmoreLegenda'
+import Fascia from '../components/Fascia'
+import { fasciaDi } from '../lib/fascia'
 import { formatDataPartita } from '../lib/partite'
 import { DOMANDE_PER_SLOT } from '../lib/domandeRuolo'
 import Avatar from '../components/Avatar'
@@ -54,10 +56,12 @@ export default function PlayerDetailPage() {
   )
   const allPlayers = useLiveQuery(() => db.players.toArray(), [])
   const opponents = useLiveQuery(() => db.opponents.toArray(), [])
+  const capitano = useLiveQuery(() => db.meta.get('capitano').then((c) => c ?? null), [])
+  const vice = useLiveQuery(() => db.meta.get('vice').then((c) => c ?? null), [])
 
   if (
     player === undefined || !observations || !trainings || !matches ||
-    !competitions || !intese || !allPlayers || !opponents
+    !competitions || !intese || !allPlayers || !opponents || capitano === undefined || vice === undefined
   ) return null
 
   if (!player) {
@@ -133,6 +137,7 @@ export default function PlayerDetailPage() {
           )}
         </div>
         <div className="row" style={{ flex: 1, flexWrap: 'wrap', gap: 6, minWidth: 0 }}>
+          <Fascia tipo={fasciaDi(playerId, { capitanoId: capitano?.value ?? null, viceId: vice?.value ?? null })} />
           <button
             className={`star-toggle ${player.titolare ? 'on' : ''}`}
             onClick={() => db.players.update(playerId, { titolare: !player.titolare })}

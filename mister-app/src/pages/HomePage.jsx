@@ -21,10 +21,11 @@ export default function HomePage() {
   const partite = useLiveQuery(() => db.matches.toArray(), [])
   const opponents = useLiveQuery(() => db.opponents.toArray(), [])
   const capitano = useLiveQuery(() => db.meta.get('capitano').then((c) => c ?? null), [])
+  const vice = useLiveQuery(() => db.meta.get('vice').then((c) => c ?? null), [])
   const competitions = useLiveQuery(() => db.competitions.toArray(), [])
   const partiteGirone = useLiveQuery(() => db.partiteGirone.toArray(), [])
 
-  if (!players || !partite || !opponents || capitano === undefined || !competitions || !partiteGirone) return null
+  if (!players || !partite || !opponents || capitano === undefined || vice === undefined || !competitions || !partiteGirone) return null
 
   const nomeAvversario = (m) => opponents.find((o) => o.id === m.opponentId)?.nome
   const prossima = prossimaPartita(partite)
@@ -60,6 +61,9 @@ export default function HomePage() {
                 team.mister ? `Mister ${team.mister}` : '',
                 capitano?.value != null && players.some((p) => p.id === capitano.value)
                   ? `Capitano ${nomeBreve(players.find((p) => p.id === capitano.value))}`
+                  : '',
+                vice?.value != null && players.some((p) => p.id === vice.value)
+                  ? `Vice ${nomeBreve(players.find((p) => p.id === vice.value))}`
                   : '',
               ].filter(Boolean).join(' · ')}
             </div>

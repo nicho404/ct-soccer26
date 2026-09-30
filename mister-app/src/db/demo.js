@@ -303,6 +303,8 @@ export async function seedDemoData() {
   await db.manualEntries.bulkAdd(DEMO_MANUALE.map((v) => ({ ...v, demo: true })))
   // Capitano designato: Matteo Villa, quello segnato come leader del gruppo
   await db.meta.put({ key: 'capitano', value: playerIds[5] })
+  // Vice: Luca Ferrari, l'altro leader, il portiere
+  await db.meta.put({ key: 'vice', value: playerIds[0] })
   await db.trainings.bulkAdd(
     DEMO_TRAININGS.map(({ giorni, presenze, conPiano, ...t }) => ({
       ...t,
@@ -340,10 +342,12 @@ export async function clearDemoData() {
     await table.bulkDelete(ids)
   }
 
-  // Il capitano vive in `meta`, che non ha il flag demo: se puntava a un
+  // Capitano e vice vivono in `meta`, che non ha il flag demo: se puntano a un
   // giocatore appena cancellato, la fascia va tolta insieme a lui.
-  const capitano = await db.meta.get('capitano')
-  if (capitano?.value != null && !(await db.players.get(capitano.value))) {
-    await db.meta.delete('capitano')
+  for (const chiave of ['capitano', 'vice']) {
+    const fascia = await db.meta.get(chiave)
+    if (fascia?.value != null && !(await db.players.get(fascia.value))) {
+      await db.meta.delete(chiave)
+    }
   }
 }

@@ -426,3 +426,36 @@ describe('presenze e sedute', () => {
     await waitFor(() => expect(screen.getByTestId('pagina').textContent).toBe('/presenze'))
   })
 })
+
+describe('capitano e vice', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+    await seedDemoData()
+    await db.meta.delete('capitano')
+    await db.meta.delete('vice')
+  })
+
+  afterEach(cleanup)
+
+  it('nomina il vice, un giocatore ha una sola fascia, e il tag compare in Rosa', async () => {
+    montaPagina(CapitanoPage)
+    const vice = await screen.findAllByRole('button', { name: 'Nomina vice' })
+    fireEvent.click(vice[0])
+    await waitFor(async () => expect((await db.meta.get('vice'))?.value).toBeTruthy())
+    const viceId = (await db.meta.get('vice')).value
+
+    // lo stesso giocatore diventa capitano: perde la fascia di vice
+    const card = (await screen.findByRole('button', { name: 'Togli vice' })).closest('.card')
+    fireEvent.click([...card.querySelectorAll('button')].find((b) => b.textContent === 'Nomina capitano'))
+    await waitFor(async () => expect((await db.meta.get('capitano'))?.value).toBe(viceId))
+    expect(await db.meta.get('vice')).toBeUndefined()
+    cleanup()
+
+    await db.meta.put({ key: 'vice', value: (await db.players.toArray()).find((p) => p.id !== viceId).id })
+    render(<MemoryRouter><RosaPage /></MemoryRouter>)
+    expect(await screen.findByTitle('Vice')).toBeTruthy()
+    expect(screen.getByTitle('Capitano')).toBeTruthy()
+  })
+})

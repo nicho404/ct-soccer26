@@ -336,6 +336,17 @@ a.card {
 }
 .scelta-opzione.selected { border-color: var(--accent); background: rgba(167, 139, 250, 0.15); font-weight: 700; }
 
+/* Fascia: capitano pieno, vice solo bordato */
+.fascia { font-weight: 800; }
+.fascia-sigla {
+  display: inline-block; min-width: 18px; padding: 0 3px; border-radius: 4px;
+  font-size: 0.7rem; text-align: center; margin-right: 2px;
+}
+.fascia-capitano { background: rgba(251, 191, 36, 0.18); color: #fbbf24; }
+.fascia-capitano .fascia-sigla { background: #fbbf24; color: #14141c; }
+.fascia-vice { background: rgba(251, 191, 36, 0.08); color: #fcd34d; }
+.fascia-vice .fascia-sigla { border: 1px solid #fcd34d; color: #fcd34d; }
+
 /* Badge presenze: i metalli "brillanti" hanno un riflesso diagonale, ferro,
    legno e cartone restano opachi — la differenza si vede a colpo d'occhio. */
 .badge-medaglia { color: #14141c; font-weight: 800; border: 1px solid rgba(255, 255, 255, 0.25); }

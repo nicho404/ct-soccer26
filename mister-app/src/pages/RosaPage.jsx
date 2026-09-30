@@ -8,11 +8,13 @@ import {
 } from '../db/constants'
 import { calcolaUmore, impegno, badgePresenze } from '../lib/umore'
 import { EmojiUmore, LegendaPopup, BadgePresenze } from '../components/UmoreLegenda'
+import Fascia from '../components/Fascia'
+import { fasciaDi } from '../lib/fascia'
 import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
 import { IconUsers } from '../components/icons'
 
-function PlayerCard({ player, trainings, matches, onUmore }) {
+function PlayerCard({ player, trainings, matches, onUmore, fascia }) {
   const tess = tesseramentoInfo(player.tesseramento)
   const stato = statoAttivitaInfo(player.statoAttivita)
   const imp = impegno({ trainings, matches }, player.id)
@@ -44,6 +46,7 @@ function PlayerCard({ player, trainings, matches, onUmore }) {
         </span>
       </div>
       <div className="row" style={{ marginTop: 8, flexWrap: 'wrap', gap: 6 }}>
+        <Fascia tipo={fascia} />
         {player.statoAttivita !== 'sicuro' && (
           <span className={`badge ${stato.badge ? `badge-${stato.badge}` : ''}`}>{stato.label}</span>
         )}
@@ -78,8 +81,11 @@ export default function RosaPage() {
   const players = useLiveQuery(() => db.players.toArray(), [])
   const trainings = useLiveQuery(() => db.trainings.toArray(), [])
   const matches = useLiveQuery(() => db.matches.toArray(), [])
+  const capitano = useLiveQuery(() => db.meta.get('capitano').then((c) => c ?? null), [])
+  const vice = useLiveQuery(() => db.meta.get('vice').then((c) => c ?? null), [])
 
-  if (!players || !trainings || !matches) return null
+  if (!players || !trainings || !matches || capitano === undefined || vice === undefined) return null
+  const fasce = { capitanoId: capitano?.value ?? null, viceId: vice?.value ?? null }
 
   const attivi = players.filter(isAttivo).sort(ordina)
   const inattivi = players.filter((p) => !isAttivo(p)).sort(ordina)
@@ -133,7 +139,7 @@ export default function RosaPage() {
 
           {visibili.map((p) => (
             <div key={p.id} style={isAttivo(p) ? undefined : { opacity: 0.55 }}>
-              <PlayerCard player={p} trainings={trainings} matches={matches} onUmore={() => setLegendaUmore(true)} />
+              <PlayerCard player={p} trainings={trainings} matches={matches} onUmore={() => setLegendaUmore(true)} fascia={fasciaDi(p.id, fasce)} />
             </div>
           ))}
         </>
