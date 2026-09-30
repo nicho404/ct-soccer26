@@ -5,6 +5,7 @@ import EmptyState from '../components/EmptyState'
 import { IconGrid } from '../components/icons'
 import {
   NOI, gare, conRisultato, classifica, statoGiornate, marcatori, cartellini, nomeSquadra,
+  competizioneDefault,
 } from '../lib/girone'
 import { formatDataPartita, perDataCrescente } from '../lib/partite'
 
@@ -14,13 +15,6 @@ const TABS = [
   { value: 'marcatori', label: 'Marcatori' },
   { value: 'cartellini', label: 'Cartellini' },
 ]
-
-// Senza scelta esplicita: la competizione con più gare inserite, a parità la più recente.
-function competizioneDefault(competitions, dati) {
-  const tutte = gare(dati)
-  const quante = (c) => tutte.filter((g) => g.competitionId === c.id).length
-  return [...competitions].sort((a, b) => quante(b) - quante(a) || b.id - a.id)[0].id
-}
 
 function TabClassifica({ compId, dati, competizione }) {
   const { righe, pariNonRisolta } = classifica(compId, dati)

@@ -5,11 +5,12 @@ import {
   ruoloLabel, famigliaRuolo, tesseramentoInfo, statoAttivitaInfo,
   portaInfo, isAttivo,
   PIEDI, STATI_ATTIVITA, CALCI_FISSI, CRITERI_OSSERVAZIONE, TIPI_INTESA,
-  GESTIONE_ERRORE, CARATTERE, stileInfo,
+  GESTIONE_ERRORE, CARATTERE, stileInfo, incaricoInfo,
 } from '../db/constants'
 import { famigliaRuoloTattico } from '../tactics/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
-import { aggregaGiocatori } from '../lib/storico'
+import { aggregaGiocatori, incarichiGiocatore } from '../lib/storico'
+import { formatDataPartita } from '../lib/partite'
 import { DOMANDE_PER_SLOT } from '../lib/domandeRuolo'
 import Avatar from '../components/Avatar'
 import { nomeBreve } from '../lib/nomi'
@@ -48,10 +49,11 @@ export default function PlayerDetailPage() {
     [playerId]
   )
   const allPlayers = useLiveQuery(() => db.players.toArray(), [])
+  const opponents = useLiveQuery(() => db.opponents.toArray(), [])
 
   if (
     player === undefined || !observations || !trainings || !matches ||
-    !competitions || !intese || !allPlayers
+    !competitions || !intese || !allPlayers || !opponents
   ) return null
 
   if (!player) {
@@ -70,6 +72,7 @@ export default function PlayerDetailPage() {
   const perComp = minutiPerCompetizione(matches, playerId)
   const porta = statPorta(matches, playerId)
   const stagione = aggregaGiocatori(matches).find((r) => r.playerId === playerId)
+  const incarichiPartite = incarichiGiocatore(matches, playerId)
   const nomeDi = (pid) => {
     const p = allPlayers.find((x) => x.id === pid)
     return nomeBreve(p)
@@ -262,6 +265,27 @@ export default function PlayerDetailPage() {
           {porta.partite > 0 ? `${porta.partite} partite · ${porta.minuti}′` : 'Mai'}
         </InfoRow>
       </div>
+
+      {incarichiPartite.length > 0 && (
+        <>
+          <div className="section-title">Incarichi in partita</div>
+          <div className="card">
+            {incarichiPartite.map((r) => {
+              const a = incaricoInfo(r.assegnato)
+              const s = incaricoInfo(r.svolto)
+              const avv = opponents.find((o) => o.id === r.opponentId)?.nome
+              return (
+                <InfoRow key={r.matchId} label={`${formatDataPartita(r.data)}${avv ? ` · ${avv}` : ''}`}>
+                  {a ? `${a.icona} ${a.label}` : 'Nessuno'}
+                  {' → '}
+                  {s ? `${s.icona} ${s.label}` : 'svolto da segnare'}
+                  {a && s && a.value === s.value ? ' ✓' : ''}
+                </InfoRow>
+              )
+            })}
+          </div>
+        </>
+      )}
 
       <div className="section-title row">
         <span style={{ flex: 1 }}>Intese ({intese.length})</span>

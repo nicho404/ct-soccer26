@@ -232,9 +232,16 @@ describe('girone con dati', () => {
     expect(screen.getByText('Testa')).toBeTruthy()
     expect(screen.getByText('Risultati nel girone')).toBeTruthy()
   })
+
+  it('Home: posizione in classifica e bilancio della stagione', async () => {
+    await db.players.add({ nome: 'Mario Rossi', ruoloNaturale: 'CC', statoAttivita: 'sicuro' })
+    montaPagina(HomePage)
+    expect(await screen.findByText(/° posto/)).toBeTruthy()
+    expect(screen.getByText(/^Bilancio \(/)).toBeTruthy()
+  })
 })
 
-describe('analisi in Home', () => {
+describe('analisi', () => {
   beforeAll(async () => {
     if (!db.isOpen()) await db.open()
     await Promise.all(db.tables.map((t) => t.clear()))
@@ -258,20 +265,11 @@ describe('analisi in Home', () => {
 
   afterEach(cleanup)
 
-  it('mostra la più recente, con quattro punti chiave e gli obiettivi', async () => {
+  it('la Home mostra solo dati: niente analisi', async () => {
     montaPagina(HomePage)
-    expect(await screen.findByText('Analisi di prova')).toBeTruthy()
-    expect(screen.queryByText('Vecchia analisi')).toBeNull()
-    expect(screen.getByText('Primo punto')).toBeTruthy()
-    expect(screen.queryByText('Quinto punto, solo nel dettaglio')).toBeNull()
-    expect(screen.getByText('Obiettivo uno')).toBeTruthy()
-  })
-
-  it('un obiettivo spuntato dalla Home resta salvato', async () => {
-    montaPagina(HomePage)
-    fireEvent.click(await screen.findByRole('checkbox', { name: 'Obiettivo due' }))
-    await waitFor(async () => expect((await db.analisi.get(2)).obiettivi[1].fatto).toBe(true))
-    expect((await db.analisi.get(2)).obiettivi[0].fatto).toBe(false)
+    expect(await screen.findByText('Prossima partita')).toBeTruthy()
+    expect(screen.queryByText('Analisi di prova')).toBeNull()
+    expect(screen.queryByText('Primo punto')).toBeNull()
   })
 
   it('il dettaglio mostra tutti i punti, divisi per tipo, e le sezioni', async () => {
@@ -329,16 +327,38 @@ describe('referto: cambi volanti, posizioni e incarichi', () => {
     fireEvent.change(entra, { target: { value: '7' } })
     const posizione = screen.getByText('Posizione di chi entra').parentElement.querySelector('select')
     fireEvent.change(posizione, { target: { value: '0' } })
-    fireEvent.click(screen.getByText(/Difensivo/))
+    const incaricoBozza = screen.getByText('Incarico di Sette').parentElement
+    fireEvent.click([...incaricoBozza.querySelectorAll('button')].find((b) => b.textContent.includes('Difensivo')))
     fireEvent.click(screen.getByText('Aggiungi'))
+
+    // incarico svolto: Sette aveva il difensivo, ha fatto entrambe le fasi
+    const card = screen.getAllByText('Sette').find((el) => el.tagName === 'STRONG').closest('.card')
+    const svolto = [...card.querySelectorAll('label')].find((l) => l.textContent === 'Incarico svolto').parentElement
+    fireEvent.click([...svolto.querySelectorAll('button')].find((b) => b.textContent.includes('Entrambe')))
     fireEvent.click(screen.getByText('Salva referto'))
 
     await waitFor(async () => expect((await db.matches.get(1)).eventi).toHaveLength(2))
     const m = await db.matches.get(1)
     expect(m.eventi[1]).toMatchObject({ tipo: 'cambio', minuto: 30, outId: 8, inId: 7, slotIndex: 0 })
     expect(m.formazione.incarichi).toEqual({ 7: 'difensivo' })
+    expect(m.formazione.incarichiSvolti).toEqual({ 7: 'entrambe' })
     // Sette: 15′ + 30′; Otto: dal 15′ al 30′
     expect(m.minuti[7]).toBe(45)
     expect(m.minuti[8]).toBe(15)
+  })
+
+  it('non lascia far entrare chi è già in campo e segnala i cambi che non tornano', async () => {
+    // formazione ritoccata a mano: Otto titolare, ma un cambio lo fa entrare al 15′
+    await db.matches.update(1, {
+      formazione: { formato: 7, modulo: '2-3-1', slots: [1, 2, 3, 4, 5, 6, 8] },
+      eventi: [{ id: 1, tipo: 'cambio', minuto: 15, outId: 7, inId: 8 }],
+    })
+    render(
+      <MemoryRouter initialEntries={['/partite/1/referto']}>
+        <Routes><Route path="/partite/:id/referto" element={<PartitaRefertoPage />} /></Routes>
+      </MemoryRouter>
+    )
+    expect(await screen.findByText(/Un evento non torna/)).toBeTruthy()
+    expect(screen.getByText(/Sette non è in campo al 15′; Otto è già in campo al 15′/)).toBeTruthy()
   })
 })

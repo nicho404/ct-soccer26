@@ -167,6 +167,47 @@ export function calcolaMinuti({
   return { minuti, portaMinuti }
 }
 
+// Eventi che non tornano con la formazione: chi esce non è in campo, chi
+// entra c'è già o è stato espulso, chi cambia posizione non sta giocando.
+// Succede se si inserisce un cambio a un minuto sbagliato o se si ritocca la
+// formazione iniziale dopo aver registrato i cambi: l'evento resta salvato
+// ma non ha effetto, e i minuti non tornano. Ritorna evento.id -> motivo.
+export function eventiIncoerenti(slotsIniziali = [], eventi = [], nomeDi = String) {
+  const slots = [...slotsIniziali]
+  const espulsi = new Set()
+  const problemi = new Map()
+  for (const ev of perMinuto(eventi)) {
+    const al = `al ${ev.minuto ?? 0}′`
+    const motivi = []
+    if (ev.tipo === 'cambio') {
+      if (ev.outId != null && !slots.includes(ev.outId)) motivi.push(`${nomeDi(ev.outId)} non è in campo ${al}`)
+      if (ev.inId != null && slots.includes(ev.inId)) motivi.push(`${nomeDi(ev.inId)} è già in campo ${al}`)
+      if (ev.inId != null && espulsi.has(ev.inId)) motivi.push(`${nomeDi(ev.inId)} è stato espulso`)
+    } else if (ev.tipo === 'spostamento') {
+      if (ev.playerId != null && !slots.includes(ev.playerId)) motivi.push(`${nomeDi(ev.playerId)} non è in campo ${al}`)
+    }
+    if (motivi.length > 0 && ev.id != null) problemi.set(ev.id, motivi.join('; '))
+    if (ev.tipo === 'rosso' && ev.playerId != null) espulsi.add(ev.playerId)
+    applicaEvento(slots, ev)
+  }
+  return problemi
+}
+
+// Incarico assegnato e svolto da un giocatore, partita per partita (solo
+// quelle in cui almeno uno dei due è segnato), dalla più recente.
+export function incarichiGiocatore(matches = [], playerId) {
+  return matches
+    .map((m) => ({
+      matchId: m.id,
+      data: m.data,
+      opponentId: m.opponentId,
+      assegnato: m.formazione?.incarichi?.[playerId] ?? null,
+      svolto: m.formazione?.incarichiSvolti?.[playerId] ?? null,
+    }))
+    .filter((r) => r.assegnato || r.svolto)
+    .sort((a, b) => (b.data ?? '').localeCompare(a.data ?? ''))
+}
+
 // Chi ha occupato ogni slot durante la partita: titolare, e ogni giocatore
 // che ci è passato via cambio (anche con posizione scelta) o spostamento.
 // Un cambio senza un uscente riconoscibile e senza slot libero (dato

@@ -1,14 +1,18 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
-import { isAttivo, campoPartitaInfo } from '../db/constants'
+import { campoPartitaInfo } from '../db/constants'
 import EmptyState from '../components/EmptyState'
 import { IconBolt, IconBall } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
-import { prossimaPartita, formatDataPartita, quandoPartita } from '../lib/partite'
+import {
+  prossimaPartita, formatDataPartita, quandoPartita, bilancio, esitoPartita, partiteGiocate, ESITO_INFO,
+} from '../lib/partite'
 import { presentiIds } from '../lib/presenze'
-import { ultimaAnalisi, normalizzaAnalisi } from '../lib/analisi'
-import { AnalisiInEvidenza } from '../components/Analisi'
+import { classifica, competizioneDefault } from '../lib/girone'
+
+// Home: solo dati, niente consigli. Prossima partita, come sta andando la
+// stagione e dove siamo in classifica — l'analisi del mister vive in Altro.
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -17,36 +21,23 @@ export default function HomePage() {
   const partite = useLiveQuery(() => db.matches.toArray(), [])
   const opponents = useLiveQuery(() => db.opponents.toArray(), [])
   const capitano = useLiveQuery(() => db.meta.get('capitano').then((c) => c ?? null), [])
-  const analisi = useLiveQuery(() => db.analisi.toArray(), [])
+  const competitions = useLiveQuery(() => db.competitions.toArray(), [])
+  const partiteGirone = useLiveQuery(() => db.partiteGirone.toArray(), [])
 
-  if (!players || !partite || !opponents || capitano === undefined || !analisi) return null
+  if (!players || !partite || !opponents || capitano === undefined || !competitions || !partiteGirone) return null
 
-  const inEvidenza = ultimaAnalisi(analisi)
-
+  const nomeAvversario = (m) => opponents.find((o) => o.id === m.opponentId)?.nome
   const prossima = prossimaPartita(partite)
-  const avversario = prossima
-    ? opponents.find((o) => o.id === prossima.opponentId)?.nome
-    : null
+  const avversario = prossima ? nomeAvversario(prossima) : null
 
-  const attivi = players.filter(isAttivo)
-  const acciaccati = attivi.filter((p) => p.acciaccato || p.statoAttivita === 'infortunato')
-  const daVerificare = attivi.filter((p) => p.tesseramento === 'da_verificare')
-  const nonTesserabili = attivi.filter((p) => p.tesseramento === 'non_tesserabile')
-  const portieri = attivi.filter((p) => p.porta === 'si')
+  const b = bilancio(partite)
+  const ultime = partiteGiocate(partite).filter(esitoPartita).slice(0, 5)
 
-  const alerts = []
-  if (attivi.length > 0 && portieri.length === 0) {
-    alerts.push({ level: 'danger', icon: '🧤', text: 'Porta scoperta: nessun giocatore attivo copre la porta stabilmente.' })
-  }
-  if (acciaccati.length > 0) {
-    alerts.push({ level: 'warn', icon: '🩹', text: `Acciaccati o infortunati: ${acciaccati.map(nomeBreve).join(', ')}.` })
-  }
-  if (daVerificare.length > 0) {
-    alerts.push({ level: 'warn', icon: '📄', text: `Tesseramenti da verificare: ${daVerificare.map(nomeBreve).join(', ')}.` })
-  }
-  if (nonTesserabili.length > 0) {
-    alerts.push({ level: 'danger', icon: '🚫', text: `Non tesserabili: ${nonTesserabili.map(nomeBreve).join(', ')}.` })
-  }
+  const dati = { partiteGirone, matches: partite, opponents, competitions, nomeNostro: team?.nome ?? '' }
+  const compId = competizioneDefault(competitions, dati)
+  const noi = compId != null ? classifica(compId, dati).righe.find((r) => r.nostra) : null
+  const squadreGirone = compId != null ? classifica(compId, dati).righe.length : 0
+  const competizione = competitions.find((c) => c.id === compId)
 
   const hasTeam = team && (team.nome || team.torneo || team.logo)
 
@@ -125,36 +116,69 @@ export default function HomePage() {
             </div>
           )}
 
-          {inEvidenza && (
+          {noi && (
             <>
-              <div className="section-title">Rotta del mister</div>
-              <AnalisiInEvidenza analisi={normalizzaAnalisi(inEvidenza)} />
+              <div className="section-title">Classifica</div>
+              <Link to="/girone" className="card tappable">
+                <div className="row">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <strong>{noi.pos}° posto</strong>
+                    <span className="muted small"> su {squadreGirone}</span>
+                    <div className="muted small">
+                      {[
+                        competizione?.nome,
+                        `${noi.g} giocate`,
+                        `DR ${noi.dr > 0 ? '+' : ''}${noi.dr}`,
+                      ].filter(Boolean).join(' · ')}
+                    </div>
+                  </div>
+                  <span className="badge badge-accent">{noi.pt} pt</span>
+                </div>
+              </Link>
             </>
           )}
 
-          <div className="section-title">La rosa oggi</div>
-          <div className="stat-grid">
-            <Link to="/rosa" className="stat-tile" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div className="value">{attivi.length}</div>
-              <div className="label">Rosa attiva</div>
-            </Link>
-            <div className="stat-tile">
-              <div className="value">{portieri.length}</div>
-              <div className="label">Coprono la porta</div>
-            </div>
-            <div className="stat-tile">
-              <div className="value">{acciaccati.length}</div>
-              <div className="label">Acciaccati</div>
-            </div>
-          </div>
-
-          {alerts.length > 0 && <div className="section-title">Da tenere d'occhio</div>}
-          {alerts.map((a, i) => (
-            <div key={i} className={`alert-card ${a.level === 'danger' ? 'danger' : ''}`}>
-              <span>{a.icon}</span>
-              <span>{a.text}</span>
-            </div>
-          ))}
+          {b.giocate > 0 && (
+            <>
+              <div className="section-title">Bilancio ({b.giocate} partite)</div>
+              <div className="stat-grid">
+                <div className="stat-tile">
+                  <div className="value" style={{ color: 'var(--ok)' }}>{b.vinte}</div>
+                  <div className="label">Vinte</div>
+                </div>
+                <div className="stat-tile">
+                  <div className="value" style={{ color: 'var(--warn)' }}>{b.pari}</div>
+                  <div className="label">Pareggiate</div>
+                </div>
+                <div className="stat-tile">
+                  <div className="value" style={{ color: 'var(--danger)' }}>{b.perse}</div>
+                  <div className="label">Perse</div>
+                </div>
+              </div>
+              <div className="card">
+                <div className="row">
+                  <span className="muted small" style={{ flex: 1 }}>
+                    Gol fatti {b.golFatti} · subiti {b.golSubiti}
+                  </span>
+                  <span className="chip-row" style={{ gap: 4 }} aria-label="Ultime partite">
+                    {ultime.map((m) => {
+                      const e = esitoPartita(m)
+                      return (
+                        <Link
+                          key={m.id}
+                          to={`/partite/${m.id}`}
+                          className={`badge ${ESITO_INFO[e].badge}`}
+                          title={`${nomeAvversario(m) ?? ''} ${m.golFatti}-${m.golSubiti}`}
+                        >
+                          {e}
+                        </Link>
+                      )
+                    })}
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

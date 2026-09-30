@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
-import { TIPI_EVENTO, tipoEventoInfo, famigliaRuolo } from '../db/constants'
+import { TIPI_EVENTO, tipoEventoInfo, famigliaRuolo, incaricoInfo } from '../db/constants'
 import { MODULI_FORMATO, FORMATI, MODULO_DEFAULT } from '../lib/formazioni'
 import { risolviRuoli } from '../tactics/engine'
 import { nomeBreve } from '../lib/nomi'
 import { formatDataPartita } from '../lib/partite'
 import {
   DURATA_DEFAULT, calcolaMinuti, portiereIniziale, golDaEventi, disallineamentoRisultato,
-  occupantiPerSlot, campoAlMinuto, espulsiAlMinuto,
+  occupantiPerSlot, campoAlMinuto, espulsiAlMinuto, eventiIncoerenti,
 } from '../lib/storico'
 import { presentiIds } from '../lib/presenze'
 import PitchView from '../components/PitchView'
@@ -33,6 +33,9 @@ export default function PartitaRefertoPage() {
   const [durata, setDurata] = useState(DURATA_DEFAULT)
   const [eventi, setEventi] = useState([])
   const [incarichi, setIncarichi] = useState({}) // playerId -> incarico per fase
+  // playerId -> incarico davvero svolto in campo, da confrontare con quello
+  // assegnato: non è un voto, è la lettura di come ha interpretato la gara
+  const [svolti, setSvolti] = useState({})
   const [sel, setSel] = useState(null)
   const [bozza, setBozza] = useState(null) // evento in composizione
   const [loaded, setLoaded] = useState(false)
@@ -72,6 +75,7 @@ export default function PartitaRefertoPage() {
     setDurata(partita?.durata ?? DURATA_DEFAULT)
     setEventi(Array.isArray(partita?.eventi) ? [...partita.eventi] : [])
     setIncarichi(f?.incarichi && typeof f.incarichi === 'object' ? { ...f.incarichi } : {})
+    setSvolti(f?.incarichiSvolti && typeof f.incarichiSvolti === 'object' ? { ...f.incarichiSvolti } : {})
     setLoaded(true)
   }, [partita, team, loaded])
 
@@ -166,13 +170,15 @@ export default function PartitaRefertoPage() {
     setSel(null)
   }
 
-  const setIncarico = (pid, valore) =>
-    setIncarichi((m) => {
+  const aggiornaMappa = (setter) => (pid, valore) =>
+    setter((m) => {
       const next = { ...m }
       if (valore) next[pid] = valore
       else delete next[pid]
       return next
     })
+  const setIncarico = aggiornaMappa(setIncarichi)
+  const setSvolto = aggiornaMappa(setSvolti)
 
   // --- eventi ---------------------------------------------------------------
 
@@ -203,6 +209,14 @@ export default function PartitaRefertoPage() {
       alert(`${nomeDi(bozza.outId)} non è in campo al ${bozza.minuto}′`)
       return
     }
+    if (info.conCambio && bozza.inId != null && inCampoBozza.includes(bozza.inId)) {
+      alert(`${nomeDi(bozza.inId)} è già in campo al ${bozza.minuto}′`)
+      return
+    }
+    if (info.conCambio && bozza.inId != null && espulsiBozza.has(bozza.inId)) {
+      alert(`${nomeDi(bozza.inId)} è stato espulso prima del ${bozza.minuto}′`)
+      return
+    }
     if (info.conSpostamento && (bozza.playerId == null || bozza.slotIndex == null)) {
       alert('Scegli il giocatore e la nuova posizione')
       return
@@ -220,6 +234,16 @@ export default function PartitaRefertoPage() {
   const eliminaEvento = (evId) => setEventi((e) => e.filter((x) => x.id !== evId))
 
   const eventiOrdinati = [...eventi].sort((a, b) => (a.minuto ?? 0) - (b.minuto ?? 0))
+  // ricalcolato a ogni modifica: se si ritocca la formazione iniziale dopo
+  // aver registrato i cambi, gli eventi che non tornano più si vedono subito
+  const incoerenti = eventiIncoerenti(slots, eventi, nomeDi)
+
+  // Chi ha giocato, nell'ordine in cui è sceso in campo: titolari, poi
+  // subentrati. È l'elenco su cui si segnano incarico assegnato e svolto.
+  const hannoGiocato = [...new Set([
+    ...slots.filter(Boolean),
+    ...eventiOrdinati.filter((ev) => ev.tipo === 'cambio' && ev.inId != null).map((ev) => ev.inId),
+  ])]
 
   const descriviEvento = (ev) => {
     const dove = ev.slotIndex != null && sigle[ev.slotIndex] ? ` (${sigle[ev.slotIndex]})` : ''
@@ -251,12 +275,13 @@ export default function PartitaRefertoPage() {
     // incarichi solo di chi ha giocato: un titolare tolto dallo slot non
     // si porta dietro l'incarico nel referto salvato
     const giocato = new Set([...titolari, ...Object.keys(minuti).map(Number)])
+    const soloGiocato = (mappa) =>
+      Object.fromEntries(Object.entries(mappa).filter(([pid]) => giocato.has(Number(pid))))
     await db.matches.update(partitaId, {
       formazione: {
         formato, modulo: moduloKey, slots: [...slots], ...tattica,
-        incarichi: Object.fromEntries(
-          Object.entries(incarichi).filter(([pid]) => giocato.has(Number(pid)))
-        ),
+        incarichi: soloGiocato(incarichi),
+        incarichiSvolti: soloGiocato(svolti),
       },
       durata,
       eventi,
@@ -445,6 +470,16 @@ export default function PartitaRefertoPage() {
 
       <div className="section-title">Eventi ({eventi.length})</div>
 
+      {incoerenti.size > 0 && (
+        <div className="alert-card danger">
+          <span>⚠️</span>
+          <span>
+            {incoerenti.size === 1 ? 'Un evento non torna' : `${incoerenti.size} eventi non tornano`} con
+            la formazione: non hanno effetto su posizioni e minuti. Correggili o eliminali e reinseriscili.
+          </span>
+        </div>
+      )}
+
       {eventiOrdinati.map((ev) => {
         const info = tipoEventoInfo(ev.tipo)
         return (
@@ -455,6 +490,9 @@ export default function PartitaRefertoPage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <strong className="small">{info.label}</strong>
                 <div className="muted small">{descriviEvento(ev)}</div>
+                {incoerenti.has(ev.id) && (
+                  <div className="small" style={{ color: 'var(--danger)' }}>⚠️ {incoerenti.get(ev.id)}</div>
+                )}
               </div>
               <button
                 className="btn btn-sm"
@@ -638,6 +676,43 @@ export default function PartitaRefertoPage() {
         >
           + Aggiungi evento
         </button>
+      )}
+
+      {hannoGiocato.length > 0 && (
+        <>
+          <div className="section-title">Incarichi</div>
+          <p className="muted small" style={{ margin: '0 0 8px' }}>
+            Per ognuno: l'incarico che gli hai dato e quello che ha svolto davvero in campo.
+          </p>
+          {hannoGiocato.map((pid) => {
+            const a = incaricoInfo(incarichi[pid])
+            const s = incaricoInfo(svolti[pid])
+            return (
+              <div className="card" key={pid}>
+                <div className="row" style={{ marginBottom: 8 }}>
+                  <strong>{nomeDi(pid)}</strong>
+                  <span className="spacer" />
+                  {a && s && (
+                    <span className={`badge ${a.value === s.value ? 'badge-ok' : 'badge-warn'}`}>
+                      {a.value === s.value ? 'Rispettato' : `${a.icona} → ${s.icona}`}
+                    </span>
+                  )}
+                </div>
+                <IncaricoPicker
+                  label="Incarico assegnato"
+                  value={incarichi[pid] ?? null}
+                  onChange={(v) => setIncarico(pid, v)}
+                />
+                <IncaricoPicker
+                  label="Incarico svolto"
+                  value={svolti[pid] ?? null}
+                  onChange={(v) => setSvolto(pid, v)}
+                  comeAssegnato={incarichi[pid]}
+                />
+              </div>
+            )
+          })}
+        </>
       )}
 
       <button className="btn btn-primary btn-block" style={{ marginTop: 14 }} onClick={salva}>

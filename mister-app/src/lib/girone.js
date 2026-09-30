@@ -148,6 +148,15 @@ export function classifica(competitionId, dati) {
   return { righe: lista, pariNonRisolta: lista.some((r) => r.pariNonRisolta) }
 }
 
+// Senza scelta esplicita: la competizione con più gare inserite, a parità
+// la più recente. null se non ce n'è nessuna.
+export function competizioneDefault(competitions = [], dati) {
+  if (competitions.length === 0) return null
+  const tutte = gare(dati)
+  const quante = (c) => tutte.filter((g) => g.competitionId === c.id).length
+  return [...competitions].sort((a, b) => quante(b) - quante(a) || b.id - a.id)[0].id
+}
+
 // Per giornata: gare inserite (nostre comprese) su quelle attese. Le attese
 // sono squadre / 2, con le squadre contate su tutta la competizione.
 export function statoGiornate(competitionId, dati) {

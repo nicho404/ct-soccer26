@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   calcolaMinuti, golDaEventi, disallineamentoRisultato, refertoCompilato,
   portiereIniziale, aggregaGiocatori, classificaMarcatori, occupantiPerSlot,
-  campoAlMinuto, espulsiAlMinuto,
+  campoAlMinuto, espulsiAlMinuto, eventiIncoerenti, incarichiGiocatore,
 } from './storico'
 
 const SIGLE_7 = ['POR', 'DC', 'DC', 'ES', 'CC', 'ED', 'ATT']
@@ -245,6 +245,51 @@ describe('cambi volanti e posizioni', () => {
     expect(campoAlMinuto([1, 2, 3], eventi)).toEqual([1, null, 3])
     expect([...espulsiAlMinuto(eventi, 30)]).toEqual([2])
     expect([...espulsiAlMinuto(eventi, 20)]).toEqual([])
+  })
+})
+
+describe('eventi incoerenti', () => {
+  it('segnala chi esce senza essere in campo e chi entra essendoci già', () => {
+    const eventi = [
+      { id: 1, tipo: 'cambio', minuto: 10, outId: 3, inId: 4 },
+      { id: 2, tipo: 'cambio', minuto: 20, outId: 3, inId: 5 },
+      { id: 3, tipo: 'cambio', minuto: 30, outId: 1, inId: 4 },
+    ]
+    const p = eventiIncoerenti([1, 2, 3], eventi)
+    expect([...p.keys()]).toEqual([2, 3])
+    expect(p.get(2)).toBe('3 non è in campo al 20′')
+    expect(p.get(3)).toBe('4 è già in campo al 30′')
+  })
+
+  it('i cambi volanti coerenti non sono segnalati', () => {
+    const eventi = [
+      { id: 1, tipo: 'cambio', minuto: 10, outId: 3, inId: 4 },
+      { id: 2, tipo: 'cambio', minuto: 20, outId: 4, inId: 3 },
+      { id: 3, tipo: 'spostamento', minuto: 25, playerId: 3, slotIndex: 0 },
+    ]
+    expect(eventiIncoerenti([1, 2, 3], eventi).size).toBe(0)
+  })
+
+  it("l'espulso non può rientrare", () => {
+    const eventi = [
+      { id: 1, tipo: 'rosso', minuto: 10, playerId: 3 },
+      { id: 2, tipo: 'cambio', minuto: 20, outId: 2, inId: 3 },
+    ]
+    expect(eventiIncoerenti([1, 2, 3], eventi).get(2)).toBe('3 è stato espulso')
+  })
+})
+
+describe('incarichiGiocatore', () => {
+  it('elenca assegnato e svolto dalla partita più recente, saltando le vuote', () => {
+    const matches = [
+      { id: 1, data: '2026-09-22', formazione: { incarichi: { 2: 'difensivo' } } },
+      { id: 2, data: '2026-09-29', formazione: { incarichi: { 2: 'offensivo' }, incarichiSvolti: { 2: 'entrambe' } } },
+      { id: 3, data: '2026-09-15', formazione: { incarichi: { 5: 'offensivo' } } },
+    ]
+    expect(incarichiGiocatore(matches, 2)).toEqual([
+      { matchId: 2, data: '2026-09-29', opponentId: undefined, assegnato: 'offensivo', svolto: 'entrambe' },
+      { matchId: 1, data: '2026-09-22', opponentId: undefined, assegnato: 'difensivo', svolto: null },
+    ])
   })
 })
 
