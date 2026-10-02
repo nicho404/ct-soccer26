@@ -200,10 +200,10 @@ const MODULI_8 = {
     descrizione: 'Il più difensivo del calcio a 8: quattro difensori bloccano il centro dell\'area e lasciano l\'iniziativa all\'avversario. Ideale per difendere un risultato o arginare una squadra più forte. I due centrocampisti coprono tantissimo campo da soli, la punta lavora quasi sempre isolata.',
     slots: [
       { sigla: 'POR', u: 0.5, t: 0.07 },
-      { sigla: 'DC', u: 0.1, t: 0.28 },
+      { sigla: 'TS', u: 0.1, t: 0.28 },
       { sigla: 'DC', u: 0.37, t: 0.24 },
       { sigla: 'DC', u: 0.63, t: 0.24 },
-      { sigla: 'DC', u: 0.9, t: 0.28 },
+      { sigla: 'TD', u: 0.9, t: 0.28 },
       { sigla: 'CC', u: 0.3, t: 0.52 },
       { sigla: 'CC', u: 0.7, t: 0.52 },
       { sigla: 'ATT', u: 0.5, t: 0.84 },
@@ -289,14 +289,8 @@ export const inPosizione = (player, sigla) =>
 // slot CC non è fuori ruolo, è solo un'etichetta diversa del centrocampo.
 const SIGLE_AFFINI = { CC: ['CDC', 'COC'], CDC: ['CC'], COC: ['CC'] }
 
-// Sigle accettate da uno slot: la sua, quelle affini e — per i difensori
-// schierati larghi della difesa a 4 (es. 4-2-1), che il modulo etichetta DC —
-// anche i terzini.
-export function sigleAccettate(slot) {
-  const sigle = [slot.sigla, ...(SIGLE_AFFINI[slot.sigla] ?? [])]
-  if (slot.sigla === 'DC' && (slot.u <= 0.12 || slot.u >= 0.88)) sigle.push('TD', 'TS')
-  return sigle
-}
+// Sigle accettate da uno slot: la sua e quelle affini dello stesso reparto.
+export const sigleAccettate = (slot) => [slot.sigla, ...(SIGLE_AFFINI[slot.sigla] ?? [])]
 
 // Il triangolo ⚠️ sul campo: fuori ruolo solo se né la sua posizione (o una
 // affine) né i suoi ruoli tattici coprono quello che lo slot chiede. Chi ha

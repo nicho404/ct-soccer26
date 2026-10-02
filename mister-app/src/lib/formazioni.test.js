@@ -20,9 +20,11 @@ describe('fuoriRuolo: il triangolo solo quando serve', () => {
     expect(fuoriRuolo({ player, slot: slot('CC'), ruoloNome: 'Mediano' })).toBe(true)
   })
 
-  it('i difensori larghi del 4-2-1 accettano i terzini, i braccetti del 3-3-1 no', () => {
+  it('nel 4-2-1 gli esterni difensivi sono terzini (TS/TD), i braccetti del 3-3-1 restano DC', () => {
+    expect(MODULI_FORMATO[8]['4-2-1'].slots.map((s) => s.sigla))
+      .toEqual(['POR', 'TS', 'DC', 'DC', 'TD', 'CC', 'CC', 'ATT'])
     const [, sx, , , dx] = MODULI_FORMATO[8]['4-2-1'].slots
-    expect(sigleAccettate(sx)).toContain('TS')
+    expect(sigleAccettate(sx)).toEqual(['TS'])
     expect(fuoriRuolo({ player: { ruoloNaturale: 'TD' }, slot: dx })).toBe(false)
     const braccetto = MODULI_FORMATO[8]['3-3-1'].slots[1]
     expect(fuoriRuolo({ player: { ruoloNaturale: 'TD' }, slot: braccetto })).toBe(true)

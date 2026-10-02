@@ -265,7 +265,8 @@ Non tutte le combinazioni stanno in piedi. Il sistema deve **avvisare**, mai blo
 - I due CC si dividono per forza: uno `M-E`, uno `CC-M`.
 
 ### 4-2-1 (formato 8)
-`POR — 4 DC — 2 CC — PUNTA`
+`POR — TS · 2 DC · TD — 2 CC — PUNTA`
+- Difesa a quattro vera: i due esterni sono terzini (`TS`/`TD`, zona `TERZINO`), i due centrali una coppia senza distinzione centrale/laterale.
 - Reparto arretrato più numeroso fra tutti i moduli: 4 difensivi coprono qualunque richiesta di `REQUISITI_IMPOSTAZIONE.oltranza` con ampio margine.
 - Nessun esterno puro (0 slot `ESTERNO_OFFENSIVO`) → **gioco sulle ali** è strutturalmente `❌` (`REQUISITI_IMPOSTAZIONE`).
 - Un solo centrocampista davanti alla difesa e uno più avanzato, come in 2-4-1: nessun mediano dedicato, il primo CC assorbe il compito.
