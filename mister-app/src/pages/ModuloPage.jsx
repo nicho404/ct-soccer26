@@ -22,6 +22,7 @@ import IncaricoPicker from '../components/IncaricoPicker'
 import { IconBall } from '../components/icons'
 import Scelta from '../components/Scelta'
 import Modal from '../components/Modal'
+import { VOCI_VISTA, vistaCompleta } from '../lib/vistaCampo'
 
 const VUOTO = (formato) => Array(formato).fill(null)
 const OVERRIDE_VUOTO = () => ({ possesso: {}, nonPossesso: {} })
@@ -69,6 +70,8 @@ export default function ModuloPage() {
   const salvati = useLiveQuery(() => db.meta.get('moduliSalvati').then((s) => s ?? null), [])
   const matches = useLiveQuery(() => db.matches.toArray(), [])
   const opponents = useLiveQuery(() => db.opponents.toArray(), [])
+  const vistaRiga = useLiveQuery(() => db.meta.get('vistaCampo').then((v) => v ?? null), [])
+  const [finestraVista, setFinestraVista] = useState(false)
 
   useEffect(() => {
     db.meta.get('modulo').then((m) => {
@@ -104,7 +107,7 @@ export default function ModuloPage() {
     })
   }, [])
 
-  if (!players || !intese || !loaded || team === undefined || salvati === undefined || !matches || !opponents) return null
+  if (!players || !intese || !loaded || team === undefined || salvati === undefined || !matches || !opponents || vistaRiga === undefined) return null
 
   // Il formato arriva dalla configurazione squadra (onboarding/impostazioni):
   // qui si vedono solo i moduli di quel formato
@@ -438,6 +441,10 @@ export default function ModuloPage() {
   }
 
   const impInfo = IMPOSTAZIONI.find((i) => i.value === impostazione)
+  const vista = vistaCompleta(vistaRiga?.value)
+  const nascosti = Object.values(vista).filter((v) => !v).length
+  const alternaVista = (key) =>
+    db.meta.put({ key: 'vistaCampo', value: { ...vista, [key]: !vista[key] } })
   const coerenzaIcona = coerenza.livello === 'ok' ? '🟢' : coerenza.livello === 'rotto' ? '🔴' : '🟡'
 
   // Una voce della finestra Tattica: le opzioni come pulsanti, sotto la
@@ -601,6 +608,31 @@ export default function ModuloPage() {
             </Modal>
           )}
 
+          {finestraVista && (
+            <Modal titolo="Indicatori sul campo" onClose={() => setFinestraVista(false)}>
+              {VOCI_VISTA.map((v) => (
+                <div className="switch-row" key={v.key}>
+                  <div>
+                    <div className="label">{v.label}</div>
+                    <div className="muted small">{v.desc}</div>
+                  </div>
+                  <button
+                    type="button"
+                    className={`toggle ${vista[v.key] ? 'on' : ''}`}
+                    role="switch"
+                    aria-checked={vista[v.key]}
+                    aria-label={v.label}
+                    onClick={() => alternaVista(v.key)}
+                  />
+                </div>
+              ))}
+              <p className="muted small" style={{ margin: '8px 0 12px' }}>
+                Vale per il campo del Modulo. L'immagine da condividere non cambia.
+              </p>
+              <button className="btn btn-primary btn-block" onClick={() => setFinestraVista(false)}>Fatto</button>
+            </Modal>
+          )}
+
           {/* Switch di fase: lente esclusiva sul campo, mai le due mappe insieme */}
           <div className="schede" role="tablist">
             {[
@@ -621,8 +653,17 @@ export default function ModuloPage() {
             ))}
           </div>
 
-          <div className="pitch-wrap">
+          <div className="pitch-wrap" style={{ position: 'relative' }}>
+            <button
+              type="button"
+              className="btn btn-sm pitch-vista"
+              aria-label="Indicatori sul campo"
+              onClick={() => setFinestraVista(true)}
+            >
+              👁️ Vista{nascosti > 0 ? ` · ${nascosti} off` : ''}
+            </button>
             <PitchView
+              mostra={vista}
               modulo={modulo}
               ruoli={ruoli}
               coordinate={coordinate}

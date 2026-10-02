@@ -3,6 +3,7 @@ import { compatibilitaGiocatore } from '../tactics/engine'
 import { nomeBreve } from '../lib/nomi'
 import { pt, poly, areaPoly } from '../lib/pitchGeometry'
 import { fuoriRuolo } from '../lib/formazioni'
+import { vistaCompleta } from '../lib/vistaCampo'
 
 function nomeCorto(p) {
   const n = nomeBreve(p)
@@ -39,8 +40,10 @@ function BadgeCompatibilita({ x, y, livello }) {
 // nascondere (intese, badge di compatibilità), mai per ricalcolare qualcosa.
 export default function PitchView({
   modulo, ruoli, assignments, players, intese, selected, onSlotTap, badgeInfo,
-  coordinate, fase = 'possesso', cambi = {}, incarichi = {},
+  coordinate, fase = 'possesso', cambi = {}, incarichi = {}, mostra,
 }) {
+  // indicatori accesi/spenti dal mister (lib/vistaCampo): di default tutto
+  const vedi = vistaCompleta(mostra)
   const slots = modulo.slots
   const coords = coordinate ?? slots.map((s) => ({ u: s.u, t: s.t }))
   const posizioni = coords.map(({ u, t }) => pt(u, t))
@@ -53,7 +56,7 @@ export default function PitchView({
   // Linee intese tra giocatori schierati — solo in possesso: sono
   // combinazioni offensive, rumore su una mappa difensiva.
   const linee = []
-  if (fase === 'possesso') {
+  if (fase === 'possesso' && vedi.intese) {
     for (const intesa of intese) {
       const punti = (intesa.playerIds ?? [])
         .map((pid) => assignments.indexOf(pid))
@@ -141,8 +144,8 @@ export default function PitchView({
         const colore = COLORI_FAMIGLIA[famigliaRuolo(slot.sigla)] ?? '#9a9aad'
         const ruolo = ruoli[i]
         const isSel = selected === i
-        const warning = fuoriRuolo({ player: p, slot, ruoloNome: ruolo?.nome })
-        const compat = fase === 'possesso' && p && !warning
+        const warning = vedi.compatibilita && fuoriRuolo({ player: p, slot, ruoloNome: ruolo?.nome })
+        const compat = vedi.compatibilita && fase === 'possesso' && p && !warning
           ? compatibilitaGiocatore({ slotRuolo: ruolo.ruoloSuggerito, player: p })
           : null
         return (
@@ -157,7 +160,7 @@ export default function PitchView({
             {p ? (
               <>
                 <circle cx="0" cy="-4" r="16" fill="#14141c" stroke={colore} strokeWidth="2.5" />
-                {p.foto ? (
+                {p.foto && vedi.foto ? (
                   <>
                     <clipPath id={`avatar-slot-${i}`}>
                       <circle cx="0" cy="-4" r="14.8" />
@@ -178,7 +181,7 @@ export default function PitchView({
                   <text x="14" y="-14" fontSize="12">⚠️</text>
                 )}
                 {compat && <BadgeCompatibilita x={13} y={-14} livello={compat.livello} />}
-                {incaricoInfo(incarichi[p.id]) && (
+                {vedi.incarichi && incaricoInfo(incarichi[p.id]) && (
                   <text x="-22" y="-12" fontSize="11">{incaricoInfo(incarichi[p.id]).icona}</text>
                 )}
                 <text x="0" y="25" textAnchor="middle" fill="#ececf1" fontSize="10.5" fontWeight="700">
@@ -188,9 +191,11 @@ export default function PitchView({
                   {slot.sigla}
                   {ruolo.manuale && <tspan fill="#a78bfa" fontSize="8"> ✎</tspan>}
                 </text>
-                <text x="0" y="45" textAnchor="middle" fill="rgba(255,255,255,0.78)" fontSize="7.5">
-                  {ruolo.nome}
-                </text>
+                {vedi.ruoli && (
+                  <text x="0" y="45" textAnchor="middle" fill="rgba(255,255,255,0.78)" fontSize="7.5">
+                    {ruolo.nome}
+                  </text>
+                )}
                 {cambi[i] != null && (() => {
                   const entrante = players.find((pl) => pl.id === cambi[i])
                   if (!entrante) return null
@@ -214,7 +219,7 @@ export default function PitchView({
                   tocca
                 </text>
                 <text x="0" y="36" textAnchor="middle" fontSize="7.5" fill="rgba(255,255,255,0.55)">
-                  {ruolo.nome}
+                  {vedi.ruoli ? ruolo.nome : ''}
                   {ruolo.manuale && <tspan fill="#a78bfa"> ✎</tspan>}
                 </text>
               </>

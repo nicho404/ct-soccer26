@@ -531,6 +531,11 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 .modulo-tattica-testo > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .modulo-tattica-testo .muted { font-size: 0.75rem; }
 
+.btn.pitch-vista {
+  position: absolute; top: 10px; right: 10px; z-index: 2;
+  min-height: 30px; padding: 4px 10px; font-size: 0.8rem; background: rgba(20, 20, 28, 0.92);
+}
+
 /* Home: stagione e forma */
 .stagione-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
 .stagione-grid .stat-tile { padding: 10px 4px; text-decoration: none; color: inherit; }

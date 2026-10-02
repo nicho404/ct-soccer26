@@ -728,3 +728,25 @@ describe('modulo: tattica in finestra e assetti compatti', () => {
     await waitFor(async () => expect((await db.meta.get('modulo'))?.value?.byFormato?.[7]?.slots?.[4]).toBe(1))
   })
 })
+
+describe('modulo: indicatori sul campo', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+    await db.players.add({ id: 1, nome: 'Mario Rossi', soprannome: 'Rossi', ruoloNaturale: 'CC', statoAttivita: 'sicuro' })
+  })
+
+  afterEach(cleanup)
+
+  it('spegnere un indicatore lo salva e lo toglie dal campo', async () => {
+    montaPagina(ModuloPage)
+    const ruoloSulCampo = () => document.querySelector('.pitch-svg').textContent
+    fireEvent.click(await screen.findByRole('button', { name: 'Indicatori sul campo' }))
+    const prima = ruoloSulCampo()
+    fireEvent.click(screen.getByRole('switch', { name: 'Ruolo tattico' }))
+    await waitFor(async () => expect((await db.meta.get('vistaCampo'))?.value?.ruoli).toBe(false))
+    await waitFor(() => expect(ruoloSulCampo().length).toBeLessThan(prima.length))
+    expect(screen.getByRole('button', { name: 'Indicatori sul campo' }).textContent).toContain('1 off')
+  })
+})
