@@ -462,6 +462,12 @@ export default function PlayerDetailPage() {
                 <strong>{LABEL_DOMANDA[k] ?? k}:</strong> {testo}
               </p>
             ))}
+            {o.ruolo && (
+              <p className="small" style={{ margin: '8px 0 0', color: o.ruolo.ok ? 'var(--ok)' : 'var(--danger)' }}>
+                {o.ruolo.ok ? '✓' : '✗'} Ruolo da {o.ruolo.nome}
+                {o.ruolo.motivo && <span className="muted">: {o.ruolo.motivo}</span>}
+              </p>
+            )}
             {o.notaGenerale && <p className="small" style={{ margin: '8px 0 0' }}>{o.notaGenerale}</p>}
           </div>
         ))

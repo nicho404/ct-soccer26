@@ -3,9 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import {
-  CRITERI_OSSERVAZIONE, CONTESTI_OSSERVAZIONE, criteriOsservazione, famigliaRuolo, isAttivo, ruoloOrdine,
+  CRITERI_OSSERVAZIONE, CONTESTI_OSSERVAZIONE, famigliaRuolo, isAttivo, ruoloOrdine, ruoloLabel,
 } from '../db/constants'
 import { MODULI_FORMATO, FORMATI } from '../lib/formazioni'
+import { risolviRuoli } from '../tactics/engine'
 import { refertoCompilato, occupantiPerSlot } from '../lib/storico'
 import { presentiIds } from '../lib/presenze'
 import EmptyState from '../components/EmptyState'
@@ -16,16 +17,15 @@ import { IconEye } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
 import { formatDataPartita, oggiISO, perDataDecrescente } from '../lib/partite'
 
-// A bordo campo un voto da 1 a 5 è lento e cambia con chi lo dà. Qui si
-// confronta il giocatore con se stesso: sotto il suo solito, nella norma,
-// sopra. Si salva sulla stessa scala di prima (2, 3, 4), così scheda
-// giocatore e Capitano continuano a leggerlo senza cambiare niente.
+// A bordo campo un voto da 1 a 5 è lento e cambia con chi lo dà: qui tre
+// pollici, giù / di lato / su. Si salvano sulla stessa scala di prima (2, 3,
+// 4), così scheda giocatore e Capitano continuano a leggerli.
 const LIVELLI = [
-  { voto: 2, icona: '▼', label: 'Sotto il suo solito', classe: 'sotto' },
-  { voto: 3, icona: '●', label: 'Nella norma', classe: 'norma' },
-  { voto: 4, icona: '▲', label: 'Sopra il suo solito', classe: 'sopra' },
+  { voto: 2, icona: '👎', label: 'Negativo', classe: 'sotto' },
+  { voto: 3, icona: '👍', label: 'Neutro', classe: 'norma' },
+  { voto: 4, icona: '👍', label: 'Positivo', classe: 'sopra' },
 ]
-// anche i voti 1-5 già salvati si leggono come freccia
+// anche i voti 1-5 già salvati si leggono come pollice
 const livelloDi = (v) => (v == null ? null : v <= 2 ? LIVELLI[0] : v === 3 ? LIVELLI[1] : LIVELLI[2])
 
 // Etichette corte: stanno su una riga accanto ai tre pulsanti
@@ -40,7 +40,8 @@ const ETICHETTE = {
 }
 const scalaKeys = new Set(CRITERI_OSSERVAZIONE.map((c) => c.key))
 
-const VUOTA = () => ({ voti: {}, nota: '' })
+// ruoloOk: true (sì) / false (no) / null (non risposto); con "no" serve il motivo
+const VUOTA = () => ({ voti: {}, nota: '', ruoloOk: null, motivo: '' })
 
 export default function ObservationPage() {
   const navigate = useNavigate()
@@ -77,6 +78,22 @@ export default function ObservationPage() {
   const modulo = partita ? MODULI_FORMATO[formato]?.[partita.formazione?.modulo] : null
   const occupanti = partita && modulo ? occupantiPerSlot(partita, modulo) : []
   const slotDi = (pid) => occupanti.find((s) => s.playerIds.includes(pid))?.sigla ?? null
+  // Il ruolo su cui si chiede "lo svolge bene?": in partita quello tattico
+  // dello slot occupato in quella gara (es. "Stopper (DC)"), altrimenti la
+  // sua posizione naturale (es. "Difensore centrale").
+  const ruoliPartita = partita && modulo
+    ? risolviRuoli({
+      modulo,
+      impostazione: partita.formazione?.impostazione ?? 'possesso',
+      costruzione: partita.formazione?.costruzione ?? 'equilibrata',
+    })
+    : []
+  const ruoloDi = (p) => {
+    const occ = occupanti.find((s) => s.playerIds.includes(p.id))
+    const tattico = occ ? ruoliPartita[occ.slotIndex]?.nome : null
+    if (contesto === 'partita' && tattico) return `${tattico} (${occ.sigla})`
+    return ruoloLabel(p.ruoloNaturale)
+  }
 
   // In partita: solo chi ha giocato (o almeno era presente). Altrimenti gli attivi.
   const giocatori = (() => {
@@ -94,20 +111,16 @@ export default function ObservationPage() {
   for (const o of sessione) osservati.set(o.playerId, [...(osservati.get(o.playerId) ?? []), o])
 
   const selezionato = selId != null ? players.find((p) => p.id === selId) : null
-  const criteri = selezionato
-    ? criteriOsservazione({ contesto, slot: contesto === 'partita' ? slotDi(selId) : null })
-    : []
-  const scala = criteri.filter((c) => scalaKeys.has(c.key))
-  const domande = criteri.filter((c) => !scalaKeys.has(c.key))
+  const scala = CRITERI_OSSERVAZIONE
 
   const apri = (pid) => { setSelId(pid); setBozza(VUOTA()) }
   const chiudi = () => {
-    const pieno = bozza.nota.trim() || Object.keys(bozza.voti).length > 0
+    const pieno = bozza.nota.trim() || Object.keys(bozza.voti).length > 0 || bozza.ruoloOk != null
     if (pieno && !window.confirm('Chiudere senza salvare questa osservazione?')) return
     setSelId(null)
     setBozza(VUOTA())
   }
-  // ritoccare il pulsante già scelto lo toglie: tutto è facoltativo
+  // ritoccare il pulsante già scelto lo toglie; per salvare basta un dato
   const segna = (key, voto) =>
     setBozza((b) => {
       const voti = { ...b.voti }
@@ -117,8 +130,13 @@ export default function ObservationPage() {
     })
 
   const salva = async () => {
-    if (!bozza.nota.trim() && Object.keys(bozza.voti).length === 0) {
+    if (!bozza.nota.trim() && Object.keys(bozza.voti).length === 0 && bozza.ruoloOk == null) {
       alert('Scrivi una nota o segna almeno un aspetto')
+      return
+    }
+    // "no" sul ruolo senza motivo: l'errore lo mostra la finestra, sotto il campo
+    if (bozza.ruoloOk === false && !bozza.motivo.trim()) {
+      setBozza((b) => ({ ...b, mostraErrore: true }))
       return
     }
     await db.observations.add({
@@ -129,6 +147,15 @@ export default function ObservationPage() {
       voti: bozza.voti,
       noteCriteri: {},
       notaGenerale: bozza.nota.trim(),
+      ...(bozza.ruoloOk != null
+        ? {
+          ruolo: {
+            nome: ruoloDi(selezionato),
+            ok: bozza.ruoloOk,
+            ...(bozza.ruoloOk ? {} : { motivo: bozza.motivo.trim() }),
+          },
+        }
+        : {}),
     })
     setSelId(null)
     setBozza(VUOTA())
@@ -256,11 +283,16 @@ export default function ObservationPage() {
                           const l = livelloDi(v)
                           return (
                             <span key={k} className={`badge oss-badge ${l.classe}`} title={l.label}>
-                              {l.icona} {ETICHETTE[k] ?? k}
+                              <span className="pollice">{l.icona}</span> {ETICHETTE[k] ?? k}
                             </span>
                           )
                         })}
                       </div>
+                      {o.ruolo && (
+                        <span className="small" style={{ color: o.ruolo.ok ? 'var(--ok)' : 'var(--danger)' }}>
+                          {o.ruolo.ok ? '✓' : '✗'} Ruolo da {o.ruolo.nome}{o.ruolo.motivo ? `: ${o.ruolo.motivo}` : ''}
+                        </span>
+                      )}
                       {o.notaGenerale && <span className="voce-anteprima">{o.notaGenerale}</span>}
                     </div>
                   ))}
@@ -285,10 +317,7 @@ export default function ObservationPage() {
             aria-label="Nota"
           />
 
-          <div className="oss-sezione">
-            <span>Rispetto al suo solito</span>
-            <span className="muted small">facoltativo</span>
-          </div>
+          <div style={{ height: 8 }} />
           {scala.map((c) => (
             <div className="oss-riga" key={c.key}>
               <span className="oss-etichetta">{ETICHETTE[c.key] ?? c.label}</span>
@@ -302,38 +331,47 @@ export default function ObservationPage() {
                     aria-pressed={bozza.voti[c.key] === l.voto}
                     onClick={() => segna(c.key, l.voto)}
                   >
-                    {l.icona}
+                    <span className="pollice">{l.icona}</span>
                   </button>
                 ))}
               </span>
             </div>
           ))}
 
-          {domande.length > 0 && (
-            <>
-              <div className="oss-sezione">
-                <span>Compiti del ruolo</span>
-                <span className="muted small">{slotDi(selId)}</span>
-              </div>
-              {domande.map((c) => (
-                <div className="oss-domanda" key={c.key}>
-                  <span className="small">{c.label}</span>
-                  <span className="oss-livelli">
-                    {[{ v: 1, t: 'Sì' }, { v: 0, t: 'No' }].map(({ v, t }) => (
-                      <button
-                        key={v}
-                        type="button"
-                        className={`oss-livello ${v ? 'sopra' : 'sotto'} ${bozza.voti[c.key] === v ? 'on' : ''}`}
-                        aria-pressed={bozza.voti[c.key] === v}
-                        onClick={() => segna(c.key, v)}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </span>
-                </div>
+          <div className="oss-sezione"><span>Ruolo</span></div>
+          <div className="oss-domanda">
+            <span className="small">Svolge bene il suo ruolo da <strong>{ruoloDi(selezionato)}</strong>?</span>
+            <span className="oss-livelli">
+              {[{ ok: true, t: 'Sì', classe: 'sopra' }, { ok: false, t: 'No', classe: 'sotto' }].map((r) => (
+                <button
+                  key={r.t}
+                  type="button"
+                  className={`oss-livello ${r.classe} ${bozza.ruoloOk === r.ok ? 'on' : ''}`}
+                  aria-pressed={bozza.ruoloOk === r.ok}
+                  aria-label={`Ruolo: ${r.t}`}
+                  onClick={() => setBozza((b) => ({
+                    ...b, ruoloOk: b.ruoloOk === r.ok ? null : r.ok, mostraErrore: false,
+                  }))}
+                >
+                  {r.t}
+                </button>
               ))}
-            </>
+            </span>
+          </div>
+          {bozza.ruoloOk === false && (
+            <div style={{ marginTop: 8 }}>
+              <textarea
+                className="textarea"
+                style={{ minHeight: 56 }}
+                value={bozza.motivo}
+                onChange={(e) => setBozza((b) => ({ ...b, motivo: e.target.value, mostraErrore: false }))}
+                placeholder="Perché no? Es. sale troppo e lascia scoperto il centrale…"
+                aria-label="Motivo"
+              />
+              {bozza.mostraErrore && (
+                <p className="errore-piccolo">Inserisci il motivo della valutazione</p>
+              )}
+            </div>
           )}
 
           <div className="row" style={{ gap: 10, marginTop: 14 }}>

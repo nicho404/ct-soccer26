@@ -660,14 +660,14 @@ describe('osservazione da bordo campo', () => {
 
   afterEach(() => { cleanup(); vi.restoreAllMocks() })
 
-  it('nota e frecce rispetto al suo solito, salvate sulla scala di sempre', async () => {
+  it('nota e pollici, salvati sulla scala di sempre', async () => {
     montaPagina(ObservationPage)
     fireEvent.click(await screen.findByRole('button', { name: /Bianchi/ }))
     const finestra = screen.getByRole('dialog')
     fireEvent.change(screen.getByLabelText('Nota'), { target: { value: 'Tiene palla e fa salire la squadra' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Lettura del gioco: Sopra il suo solito' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Intensità: Sotto il suo solito' }))
-    expect(finestra.textContent).not.toContain('Compiti del ruolo')
+    fireEvent.click(screen.getByRole('button', { name: 'Lettura del gioco: Positivo' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Intensità: Negativo' }))
+    expect(finestra.textContent).not.toContain('Rispetto al suo solito')
     fireEvent.click(screen.getByRole('button', { name: 'Salva' }))
 
     await waitFor(async () => expect(await db.observations.count()).toBe(1))
@@ -679,15 +679,15 @@ describe('osservazione da bordo campo', () => {
     expect(screen.getByRole('button', { name: /Bianchi/ }).textContent).toContain('✓')
   })
 
-  it('in partita mostra solo chi ha giocato e le domande del suo ruolo', async () => {
+  it('in partita mostra solo chi ha giocato, senza domande sì/no del ruolo', async () => {
     render(
       <MemoryRouter initialEntries={['/osservazione?matchId=1&playerId=1']}>
         <Routes><Route path="/osservazione" element={<ObservationPage />} /></Routes>
       </MemoryRouter>
     )
     const finestra = await screen.findByRole('dialog')
-    expect(finestra.textContent).toContain('Compiti del ruolo')
-    expect(finestra.textContent).toContain('Tiene la linea entro la metà campo?')
+    expect(finestra.textContent).not.toContain('Tiene la linea entro la metà campo?')
+    expect(screen.getAllByRole('button', { name: /: Positivo$/ })).toHaveLength(7)
     fireEvent.click(screen.getByRole('button', { name: 'Chiudi' }))
     expect(screen.getByRole('button', { name: /Rossi/ })).toBeTruthy()
     expect(screen.queryByRole('button', { name: /Bianchi/ })).toBeNull()
@@ -770,5 +770,97 @@ describe('referto: stessa vista del modulo', () => {
     )
     const vista = await screen.findByRole('button', { name: 'Indicatori sul campo' })
     expect(vista.textContent).toContain('1 off')
+  })
+})
+
+describe('primo avvio: nuova squadra o backup', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+  })
+
+  afterEach(cleanup)
+
+  it('carica un backup e sblocca l\'app senza compilare la squadra', async () => {
+    const { default: OnboardingPage } = await import('./OnboardingPage')
+    render(<OnboardingPage team={null} />)
+    expect(screen.getByText('Nuova squadra')).toBeTruthy()
+    const backup = JSON.stringify({
+      format: 'mister-app-backup',
+      dbVersion: 1,
+      tables: {
+        meta: [{ key: 'team', nome: 'Squadra dal backup', formato: 8 }],
+        players: [{ id: 1, nome: 'Mario Rossi', ruoloNaturale: 'CC', statoAttivita: 'sicuro' }],
+      },
+    })
+    const file = new File([backup], 'backup.json', { type: 'application/json' })
+    fireEvent.change(screen.getByLabelText('File di backup'), { target: { files: [file] } })
+    await waitFor(async () => expect((await db.meta.get('team'))?.setupDone).toBe(true))
+    expect((await db.meta.get('team')).nome).toBe('Squadra dal backup')
+    expect(await db.players.count()).toBe(1)
+  })
+
+  it('"Nuova squadra" porta al form di sempre', async () => {
+    const { default: OnboardingPage } = await import('./OnboardingPage')
+    render(<OnboardingPage team={null} />)
+    fireEvent.click(screen.getByText('Nuova squadra'))
+    expect(screen.getByPlaceholderText('Es. Vecchia Guardia FC')).toBeTruthy()
+  })
+})
+
+describe('osservazione: basta un dato per salvare', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+    await db.players.add({ id: 1, nome: 'Mario Rossi', soprannome: 'Rossi', ruoloNaturale: 'CC', statoAttivita: 'sicuro' })
+  })
+
+  afterEach(cleanup)
+
+  it('un solo pollice, senza nota, si salva', async () => {
+    montaPagina(ObservationPage)
+    fireEvent.click(await screen.findByRole('button', { name: /Rossi/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Leadership: Neutro' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Salva' }))
+    await waitFor(async () => expect(await db.observations.count()).toBe(1))
+    expect((await db.observations.toArray())[0]).toMatchObject({ voti: { leadership: 3 }, notaGenerale: '' })
+  })
+})
+
+describe('osservazione: domanda sul ruolo', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+    await db.players.add({ id: 1, nome: 'Mario Rossi', soprannome: 'Rossi', ruoloNaturale: 'DC', statoAttivita: 'sicuro' })
+  })
+
+  afterEach(cleanup)
+
+  it('con "No" senza motivo non salva e lo dice; con il motivo salva', async () => {
+    montaPagina(ObservationPage)
+    fireEvent.click(await screen.findByRole('button', { name: /Rossi/ }))
+    expect(screen.getByRole('dialog').textContent).toContain('Svolge bene il suo ruolo da Difensore centrale?')
+    fireEvent.click(screen.getByRole('button', { name: 'Ruolo: No' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Salva' }))
+    expect(await screen.findByText('Inserisci il motivo della valutazione')).toBeTruthy()
+    expect(await db.observations.count()).toBe(0)
+
+    fireEvent.change(screen.getByLabelText('Motivo'), { target: { value: 'Esce sempre fuori posizione' } })
+    expect(screen.queryByText('Inserisci il motivo della valutazione')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Salva' }))
+    await waitFor(async () => expect(await db.observations.count()).toBe(1))
+    expect((await db.observations.toArray())[0].ruolo).toEqual({
+      nome: 'Difensore centrale', ok: false, motivo: 'Esce sempre fuori posizione',
+    })
+  })
+
+  it('"Sì" da solo basta per salvare', async () => {
+    montaPagina(ObservationPage)
+    fireEvent.click(await screen.findByRole('button', { name: /Rossi/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Ruolo: Sì' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Salva' }))
+    await waitFor(async () => expect(await db.observations.count()).toBe(2))
   })
 })
