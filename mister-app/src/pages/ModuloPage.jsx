@@ -157,7 +157,14 @@ export default function ModuloPage() {
   const esporta = async () => {
     setEsitoExport(null)
     try {
-      const esito = await esportaModulo({ modulo, moduloKey, slots, players, formato, team })
+      // legato a una partita: anche la panchina dei convocati e contro chi si gioca
+      const esito = await esportaModulo({
+        modulo, moduloKey, slots, players, formato, team,
+        panchina: matchSelezionata ? panchina : [],
+        partita: matchSelezionata
+          ? { avversario: nomeAvversarioDi(matchSelezionata), data: formatDataPartita(matchSelezionata.data) }
+          : null,
+      })
       if (esito !== 'annullata') {
         setEsitoExport(esito === 'condivisa' ? 'Immagine condivisa.' : 'Immagine salvata nei download.')
       }
