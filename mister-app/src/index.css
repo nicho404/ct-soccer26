@@ -520,6 +520,17 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 .oss-badge.norma { color: #facc15; }
 .oss-badge.sopra { color: var(--ok); }
 
+/* Modulo: assetto in una riga */
+.card.modulo-assetto { display: flex; align-items: center; gap: 8px; padding: 8px; margin-bottom: 8px; }
+.modulo-tattica {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; min-height: 38px; padding: 6px 10px;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2);
+  color: inherit; font: inherit; font-size: 0.85rem; text-align: left; cursor: pointer;
+}
+.modulo-tattica-testo { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.modulo-tattica-testo > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.modulo-tattica-testo .muted { font-size: 0.75rem; }
+
 /* Home: stagione e forma */
 .stagione-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
 .stagione-grid .stat-tile { padding: 10px 4px; text-decoration: none; color: inherit; }

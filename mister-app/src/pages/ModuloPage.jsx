@@ -18,7 +18,6 @@ import {
 } from '../tactics/engine'
 import PitchView from '../components/PitchView'
 import EmptyState from '../components/EmptyState'
-import ArrowSelect from '../components/ArrowSelect'
 import IncaricoPicker from '../components/IncaricoPicker'
 import { IconBall } from '../components/icons'
 import Scelta from '../components/Scelta'
@@ -51,8 +50,10 @@ export default function ModuloPage() {
   const [linea, setLinea] = useState('normale')
   const [sel, setSel] = useState(null)
   const [loaded, setLoaded] = useState(false)
-  // quale dei 4 selettori mostra la descrizione nel box condiviso sotto la griglia
-  const [descDi, setDescDi] = useState(null)
+  // finestra "Tattica" (modulo, impostazione, costruzione, linea) e assetto
+  // salvato aperto: il dettaglio si vede solo quando serve
+  const [finestraTattica, setFinestraTattica] = useState(false)
+  const [assettoAperto, setAssettoAperto] = useState(null)
   const [scegliManuale, setScegliManuale] = useState(false)
   // lente sul campo, non configurazione: non persistita, default possesso
   const [fase, setFase] = useState('possesso')
@@ -256,9 +257,10 @@ export default function ModuloPage() {
   }
 
   const eliminaSalvato = async (s) => {
-    if (!window.confirm(`Eliminare la formazione "${s.nome}"?`)) return
+    if (!window.confirm(`Eliminare la formazione "${s.nome}"?`)) return false
     const tutti = (salvati?.value ?? []).filter((x) => x.id !== s.id)
     await db.meta.put({ key: 'moduliSalvati', value: tutti })
+    return true
   }
 
   const cambiaModulo = (key) => {
@@ -428,32 +430,60 @@ export default function ModuloPage() {
     persist({ matchId: next })
   }
 
+  const impInfo = IMPOSTAZIONI.find((i) => i.value === impostazione)
+  const coerenzaIcona = coerenza.livello === 'ok' ? '🟢' : coerenza.livello === 'rotto' ? '🔴' : '🟡'
+
+  // Una voce della finestra Tattica: le opzioni come pulsanti, sotto la
+  // descrizione di quella scelta e l'eventuale problema di coerenza.
+  const voceTattica = ({ titolo, opzioni, valore, onScegli, descrizione, problema }) => (
+    <div className="field">
+      <label>{titolo}</label>
+      <div className="chip-row">
+        {opzioni.map((o) => (
+          <button
+            key={o.value}
+            className={`chip chip-sm ${valore === o.value ? 'selected' : ''}`}
+            onClick={() => onScegli(o.value)}
+          >
+            {o.icona ? `${o.icona} ` : ''}{o.label}
+          </button>
+        ))}
+      </div>
+      {descrizione && <p className="muted small" style={{ margin: '6px 0 0' }}>{descrizione}</p>}
+      {problema && <p className="small" style={{ margin: '6px 0 0', color: 'var(--warn)' }}>🟡 {problema}</p>}
+    </div>
+  )
+
   return (
-    <div className="page" style={{ paddingLeft: 10, paddingRight: 10 }}>
-      <div className="page-header" style={{ paddingLeft: 6 }}>
+    <div className="page">
+      <div className="page-header">
         <h1>Modulo</h1>
         <button className="btn btn-sm" onClick={svuota}>Svuota</button>
         {attivi.length > 0 && (
-          <button className="btn btn-sm" onClick={esporta}>📷 Immagine</button>
+          <button className="btn btn-sm" aria-label="Esporta immagine" onClick={esporta}>📷</button>
         )}
       </div>
 
       {/* Sempre visibile, anche a rosa vuota: altrimenti selezionare una
           partita senza presenti segnati blocca la pagina senza via d'uscita
           se non seguire il link "Vai alla partita". */}
-      <div style={{ margin: '0 6px 10px' }}>
-        <ArrowSelect
-          compact
-          label="Partita"
-          options={opzioniPartita}
+      <div style={{ marginBottom: 8 }}>
+        <Scelta
+          titolo="Giocatori di quale partita?"
+          className="select select-compatta"
           value={matchId ?? '__nessuna__'}
-          onChange={cambiaPartita}
-        />
+          onChange={(e) => cambiaPartita(e.target.value === '__nessuna__' ? '__nessuna__' : Number(e.target.value))}
+        >
+          {opzioniPartita.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.value === '__nessuna__' ? '👥 Tutti gli attivi' : `⚽ ${o.label}`}
+            </option>
+          ))}
+        </Scelta>
       </div>
       {matchSelezionata && (
-        <p className="muted small" style={{ margin: '0 6px 10px' }}>
-          Disponibili e panchina limitati ai {presentiIds(matchSelezionata).length} presenti per{' '}
-          {nomeAvversarioDi(matchSelezionata)}.
+        <p className="muted small" style={{ margin: '0 0 10px' }}>
+          Solo i {presentiIds(matchSelezionata).length} presenti per {nomeAvversarioDi(matchSelezionata)}.
         </p>
       )}
 
@@ -480,107 +510,108 @@ export default function ModuloPage() {
         />
       ) : (
         <>
-          <div className="tactics-grid">
-            <ArrowSelect
-              compact
-              label="Tattica"
-              options={IMPOSTAZIONI}
-              value={impostazione}
-              onChange={(v) => {
-                setDescDi('tattica')
-                cambiaImpostazione(v)
-              }}
-            />
-            <ArrowSelect
-              compact
-              label={`Modulo (c. a ${formato})`}
-              options={Object.entries(MODULI).map(([key, m]) => ({
-                value: key,
-                label: key,
-                descrizione: m.descrizione,
-              }))}
-              value={moduloKey}
-              warning={problemaModulo ? problemaModulo.messaggio : null}
-              onChange={(v) => {
-                setDescDi('modulo')
-                cambiaModulo(v)
-              }}
-            />
-            <ArrowSelect
-              compact
-              label="Costruzione"
-              options={COSTRUZIONI}
-              value={costruzione}
-              warning={problemaCostruzione ? problemaCostruzione.messaggio : null}
-              onChange={(v) => {
-                setDescDi('costruzione')
-                setCostruzione(v)
-                persist({ costruzione: v })
-              }}
-            />
-            <ArrowSelect
-              compact
-              label="Linea difensiva"
-              options={LINEE_DIFESA}
-              value={linea}
-              warning={problemaLinea ? problemaLinea.messaggio : null}
-              onChange={(v) => {
-                setDescDi('linea')
-                setLinea(v)
-                persist({ linea: v })
-              }}
-            />
+          {/* Assetto in una riga: il modulo si cambia al volo, la tattica
+              (impostazione, costruzione, linea) si apre in finestra */}
+          <div className="card modulo-assetto">
+            <div style={{ width: 92, flexShrink: 0 }}>
+              <Scelta
+                titolo={`Modulo (calcio a ${formato})`}
+                className="select select-compatta"
+                value={moduloKey}
+                onChange={(e) => cambiaModulo(e.target.value)}
+              >
+                {Object.keys(MODULI).map((key) => (
+                  <option key={key} value={key}>{key}</option>
+                ))}
+              </Scelta>
+            </div>
+            <button
+              type="button"
+              className="modulo-tattica"
+              aria-label="Tattica"
+              onClick={() => setFinestraTattica(true)}
+            >
+              <span aria-hidden="true">{coerenzaIcona}</span>
+              <span className="modulo-tattica-testo">
+                <strong>{impInfo?.icona} {impInfo?.label}</strong>
+                <span className="muted">
+                  {costruzioneInfo(costruzione).label} · Linea {lineaDifesaInfo(linea).label.toLowerCase()}
+                </span>
+              </span>
+              <span className="muted">✎</span>
+            </button>
           </div>
-
-          {descDi && (() => {
-            const box = {
-              tattica: IMPOSTAZIONI.find((i) => i.value === impostazione),
-              modulo: { label: moduloKey, descrizione: modulo.descrizione },
-              costruzione: costruzioneInfo(costruzione),
-              linea: lineaDifesaInfo(linea),
-            }[descDi]
-            return (
-              <Modal titolo={`${box.icona ? `${box.icona} ` : ''}${box.label}`} onClose={() => setDescDi(null)}>
-                <p style={{ margin: 0 }}>{box.descrizione}</p>
-              </Modal>
-            )
-          })()}
-
           {coerenza.livello !== 'ok' && (
             <div className={`coerenza-banner coerenza-banner-${coerenza.livello}`}>
               {coerenza.problemi.map((p, i) => (
-                <span key={i}>
-                  {coerenza.livello === 'rotto' ? '🔴' : '🟡'} {p.messaggio}
-                </span>
+                <span key={i}>{coerenza.livello === 'rotto' ? '🔴' : '🟡'} {p.messaggio}</span>
               ))}
             </div>
           )}
-          {coerenza.livello === 'ok' && (
-            <div className="coerenza-banner coerenza-banner-ok">
-              <span>🟢 Modulo, impostazione, costruzione e linea sono coerenti.</span>
-            </div>
+
+          {finestraTattica && (
+            <Modal titolo="Tattica" onClose={() => setFinestraTattica(false)}>
+              <p className="small" style={{ margin: '0 0 12px' }}>
+                {coerenzaIcona}{' '}
+                {coerenza.livello === 'ok'
+                  ? 'Modulo, impostazione, costruzione e linea sono coerenti.'
+                  : 'Qualcosa non torna: vedi gli avvisi sotto le voci.'}
+              </p>
+              {voceTattica({
+                titolo: `Modulo (calcio a ${formato})`,
+                opzioni: Object.keys(MODULI).map((k) => ({ value: k, label: k })),
+                valore: moduloKey,
+                onScegli: cambiaModulo,
+                descrizione: modulo.descrizione,
+                problema: problemaModulo?.messaggio,
+              })}
+              {voceTattica({
+                titolo: 'Impostazione',
+                opzioni: IMPOSTAZIONI,
+                valore: impostazione,
+                onScegli: cambiaImpostazione,
+                descrizione: impInfo?.descrizione,
+              })}
+              {voceTattica({
+                titolo: 'Costruzione',
+                opzioni: COSTRUZIONI,
+                valore: costruzione,
+                onScegli: (v) => { setCostruzione(v); persist({ costruzione: v }) },
+                descrizione: costruzioneInfo(costruzione).descrizione,
+                problema: problemaCostruzione?.messaggio,
+              })}
+              {voceTattica({
+                titolo: 'Linea difensiva',
+                opzioni: LINEE_DIFESA,
+                valore: linea,
+                onScegli: (v) => { setLinea(v); persist({ linea: v }) },
+                descrizione: lineaDifesaInfo(linea).descrizione,
+                problema: problemaLinea?.messaggio,
+              })}
+              <button className="btn btn-primary btn-block" onClick={() => setFinestraTattica(false)}>
+                Fatto
+              </button>
+            </Modal>
           )}
 
           {/* Switch di fase: lente esclusiva sul campo, mai le due mappe insieme */}
-          <div className="chip-row" style={{ margin: '0 6px 10px' }}>
-            <button
-              className={`chip chip-sm ${fase === 'possesso' ? 'selected' : ''}`}
-              onClick={() => { setFase('possesso'); setSel(null); setScegliManuale(false) }}
-            >
-              ⚽ Con palla
-            </button>
-            <button
-              className={`chip chip-sm ${fase === 'nonPossesso' ? 'selected' : ''}`}
-              onClick={() => { setFase('nonPossesso'); setSel(null); setScegliManuale(false) }}
-            >
-              🛡️ Senza palla
-            </button>
-            <button
-              className={`chip chip-sm ${fase === 'cambi' ? 'selected' : ''}`}
-              onClick={() => { setFase('cambi'); setSel(null); setScegliManuale(false) }}
-            >
-              🔁 Cambi
-            </button>
+          <div className="schede" role="tablist">
+            {[
+              { value: 'possesso', label: '⚽ Con palla' },
+              { value: 'nonPossesso', label: '🛡️ Senza palla' },
+              { value: 'cambi', label: '🔁 Cambi' },
+            ].map((f) => (
+              <button
+                key={f.value}
+                type="button"
+                role="tab"
+                aria-selected={fase === f.value}
+                className={`scheda ${fase === f.value ? 'attiva' : ''}`}
+                onClick={() => { setFase(f.value); setSel(null); setScegliManuale(false) }}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
 
           <div className="pitch-wrap">
@@ -607,13 +638,13 @@ export default function ModuloPage() {
           </div>
 
           {esitoExport && (
-            <p className="muted small" style={{ margin: '0 6px 10px' }} onClick={() => setEsitoExport(null)}>
+            <p className="muted small" style={{ margin: '0 0 10px' }} onClick={() => setEsitoExport(null)}>
               {esitoExport} L’immagine mostra solo campo, posizioni e nomi: niente indicazioni tattiche.
             </p>
           )}
 
           {fase === 'nonPossesso' && TRANSIZIONE[impostazione]?.nota && (
-            <p className="muted small" style={{ margin: '0 6px 10px' }}>
+            <p className="muted small" style={{ margin: '0 0 10px' }}>
               <strong>Transizione:</strong> {TRANSIZIONE[impostazione].nota}
             </p>
           )}
@@ -802,14 +833,14 @@ export default function ModuloPage() {
               </p>
             </div>
           ) : (
-            <p className="muted small" style={{ margin: '10px 6px 0' }}>
+            <p className="muted small" style={{ margin: '10px 0 0' }}>
               Tocca una posizione sul campo per schierare, togliere o scambiare un giocatore.
               {panchina.length > 0 && ` In panchina: ${panchina.map(nomeBreve).join(', ')}.`}
             </p>
           )}
 
-          <div className="section-title row" style={{ paddingLeft: 6 }}>
-            <span style={{ flex: 1 }}>Gestione squadra</span>
+          <div className="section-title row">
+            <span style={{ flex: 1 }}>Assetti salvati ({listaSalvati.length})</span>
             <button className="btn btn-sm" onClick={apriSalvaCorrente}>+ Salva assetto</button>
           </div>
 
@@ -938,67 +969,99 @@ export default function ModuloPage() {
           )}
 
           {listaSalvati.length === 0 ? (
-            <div className="card muted small" style={{ marginLeft: 6, marginRight: 6 }}>
+            <div className="card muted small">
               Salva l'assetto attuale (modulo, undici, tattica, costruzione e linea) con un nome:
-              potrai richiamarlo con un tocco, come i piani partita di FC26.
+              potrai richiamarlo con un tocco.
             </div>
           ) : (
-            listaSalvati.map((s) => (
-              <div className="card" key={s.id} style={{ marginLeft: 6, marginRight: 6 }}>
-                <div className="row">
-                  <strong>{s.nome}</strong>
-                  <span className="badge badge-accent">{s.modulo}</span>
-                  <span className="spacer" />
-                  <button className="btn btn-sm" onClick={() => caricaSalvato(s)}>Carica</button>
-                  <button
-                    className="btn btn-sm btn-danger"
-                    aria-label={`Elimina assetto ${s.nome}`}
-                    onClick={() => eliminaSalvato(s)}
-                  >
-                    ×
-                  </button>
+            <div className="card referto-cronologia">
+              {listaSalvati.map((a) => (
+                <button
+                  type="button"
+                  key={a.id}
+                  className="incarico-riga"
+                  aria-label={`Assetto ${a.nome}`}
+                  onClick={() => setAssettoAperto(a.id)}
+                >
+                  <strong className="incarico-nome">{a.nome}</strong>
+                  <span className="badge badge-accent">{a.modulo}</span>
+                  {(a.cambiPrevisti ?? []).length > 0 && (
+                    <span className="badge" title="Cambi previsti">🔁 {a.cambiPrevisti.length}</span>
+                  )}
+                  <span className="muted">›</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {(() => {
+            const a = listaSalvati.find((x) => x.id === assettoAperto)
+            if (!a) return null
+            const nomeDi = (pid) => nomeBreve(players.find((p) => p.id === pid))
+            return (
+              <Modal titolo={a.nome} onClose={() => setAssettoAperto(null)}>
+                <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                  <span className="badge badge-accent">{a.modulo}</span>
+                  <span className="muted small">
+                    {[
+                      IMPOSTAZIONI.find((i) => i.value === a.impostazione)?.label,
+                      costruzioneInfo(a.costruzione).label,
+                      `Linea ${lineaDifesaInfo(a.linea).label.toLowerCase()}`,
+                      `${a.slots.filter(Boolean).length}/${a.formato} schierati`,
+                    ].filter(Boolean).join(' · ')}
+                  </span>
                 </div>
-                <div className="muted small" style={{ marginTop: 6 }}>
-                  {[
-                    IMPOSTAZIONI.find((i) => i.value === s.impostazione)?.label,
-                    costruzioneInfo(s.costruzione).label,
-                    `Linea ${lineaDifesaInfo(s.linea).label.toLowerCase()}`,
-                  ].filter(Boolean).join(' · ')}
-                  {' · '}
-                  {s.slots.filter(Boolean).length}/{s.formato} schierati
-                </div>
-                {Object.keys(s.incarichi ?? {}).length > 0 && (
-                  <div className="muted small" style={{ marginTop: 6 }}>
-                    {Object.entries(s.incarichi)
+                {Object.keys(a.incarichi ?? {}).length > 0 && (
+                  <p className="small muted" style={{ margin: '0 0 10px' }}>
+                    {Object.entries(a.incarichi)
                       .map(([pid, v]) => {
-                        const pl = players.find((p) => p.id === Number(pid))
                         const info = incaricoInfo(v)
+                        const pl = players.find((p) => p.id === Number(pid))
                         return pl && info ? `${info.icona} ${nomeBreve(pl)}` : null
                       })
                       .filter(Boolean)
                       .join(' · ')}
-                  </div>
+                  </p>
                 )}
-                {(s.cambiPrevisti ?? []).length > 0 && (
-                  <div className="muted small" style={{ marginTop: 6 }}>
-                    {s.cambiPrevisti.map((r) => (
-                      <div key={r.id}>
-                        🔁 {r.escePlayerId != null ? nomeBreve(players.find((p) => p.id === r.escePlayerId)) : '?'}
-                        {' → '}
-                        {nomeBreve(players.find((p) => p.id === r.entraPlayerId))}
-                        {r.slotIndex != null && MODULI[s.modulo]?.slots[r.slotIndex]
-                          ? ` (${MODULI[s.modulo].slots[r.slotIndex].sigla})`
-                          : ''}
-                        {' · '}
-                        {TRIGGER_CAMBIO.find((t) => t.value === r.trigger)?.label}
-                        {r.dettaglio ? ` (${r.dettaglio})` : ''}
+                {(a.cambiPrevisti ?? []).length > 0 && (
+                  <>
+                    <div className="oss-sezione"><span>Cambi previsti</span></div>
+                    {a.cambiPrevisti.map((r) => (
+                      <div className="evento-riga" key={r.id}>
+                        <span className="evento-icona">🔁</span>
+                        <span className="evento-testo">
+                          {r.escePlayerId != null ? nomeDi(r.escePlayerId) : '?'} → {nomeDi(r.entraPlayerId)}
+                          {r.slotIndex != null && MODULI[a.modulo]?.slots[r.slotIndex]
+                            ? ` (${MODULI[a.modulo].slots[r.slotIndex].sigla})`
+                            : ''}
+                          <span className="muted small" style={{ display: 'block' }}>
+                            {TRIGGER_CAMBIO.find((t) => t.value === r.trigger)?.label}
+                            {r.dettaglio ? ` · ${r.dettaglio}` : ''}
+                          </span>
+                        </span>
                       </div>
                     ))}
-                  </div>
+                  </>
                 )}
-              </div>
-            ))
-          )}
+                <div className="row" style={{ gap: 10, marginTop: 14 }}>
+                  <button
+                    className="btn btn-primary"
+                    style={{ flex: 1 }}
+                    onClick={() => { caricaSalvato(a); setAssettoAperto(null) }}
+                  >
+                    Carica in campo
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    aria-label={`Elimina assetto ${a.nome}`}
+                    onClick={async () => { if (await eliminaSalvato(a)) setAssettoAperto(null) }}
+                  >
+                    Elimina
+                  </button>
+                </div>
+              </Modal>
+            )
+          })()}
         </>
       )}
     </div>

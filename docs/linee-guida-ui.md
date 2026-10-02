@@ -60,6 +60,11 @@ tocco. Prima di ridisegnare un'altra sezione, verificare questi punti.
   osservato. Il tocco apre una finestra con la **nota in cima** (è ciò che si usa davvero) e,
   facoltativi, gli aspetti **rispetto al suo solito** (▼ ● ▲, salvati come 2/3/4) al posto dei
   voti 1-5, più i compiti del ruolo Sì/No in partita.
+- **Modulo**: partita in `Scelta`; assetto in una riga (modulo in `Scelta`, tattica riassunta su
+  due righe con il pallino di coerenza, ✎ apre la finestra con modulo, impostazione,
+  costruzione e linea come pulsanti con descrizione); avviso di coerenza solo se qualcosa non
+  torna; fasi in schede; assetti salvati come righe (nome, modulo, 🔁 cambi), dettaglio in
+  finestra con "Carica in campo" ed "Elimina".
 - **Riquadri in cima**: classe `stat-grid compatto`, etichette di una parola.
 
 ## Componenti

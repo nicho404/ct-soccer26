@@ -693,3 +693,38 @@ describe('osservazione da bordo campo', () => {
     expect(screen.queryByRole('button', { name: /Bianchi/ })).toBeNull()
   })
 })
+
+describe('modulo: tattica in finestra e assetti compatti', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+    await db.players.add({ id: 1, nome: 'Mario Rossi', ruoloNaturale: 'CC', statoAttivita: 'sicuro' })
+    await db.meta.put({
+      key: 'moduliSalvati',
+      value: [{
+        id: 5, nome: 'Titolari', formato: 7, modulo: '2-3-1', slots: [null, null, null, null, 1, null, null],
+        impostazione: 'possesso', costruzione: 'equilibrata', linea: 'normale',
+        cambiPrevisti: [{ id: 'c1', escePlayerId: 1, entraPlayerId: 1, trigger: 'minuto', dettaglio: 'ripresa' }],
+      }],
+    })
+  })
+
+  afterEach(cleanup)
+
+  it('la tattica si sceglie in finestra e gli assetti si aprono dalla riga', async () => {
+    montaPagina(ModuloPage)
+    fireEvent.click(await screen.findByRole('button', { name: 'Tattica' }))
+    expect(screen.getByRole('dialog', { name: 'Tattica' })).toBeTruthy()
+    fireEvent.click(screen.getByText('Fatto'))
+
+    const riga = screen.getByRole('button', { name: 'Assetto Titolari' })
+    expect(riga.textContent).toContain('🔁 1')
+    fireEvent.click(riga)
+    const finestra = screen.getByRole('dialog', { name: 'Titolari' })
+    expect(finestra.textContent).toContain('ripresa')
+    fireEvent.click(screen.getByText('Carica in campo'))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    await waitFor(async () => expect((await db.meta.get('modulo'))?.value?.byFormato?.[7]?.slots?.[4]).toBe(1))
+  })
+})

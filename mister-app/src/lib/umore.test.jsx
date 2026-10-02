@@ -1,5 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest'
+import { useState } from 'react'
+import { render, screen, fireEvent, cleanup } from '@testing-library/react'
+import { EmojiUmore, LegendaPopup } from '../components/UmoreLegenda'
 import { calcolaUmore, impegno, minutaggio, badgePresenze, umoreDa } from './umore'
 
 // Una partita con referto da 50′ in cui il giocatore 1 era presente e ha
@@ -94,9 +97,6 @@ describe('umoreDa: presenze bassissime e pochi minuti non fanno arrabbiare', () 
 
 describe('legenda umore', () => {
   it('il ? apre la legenda con le soglie del calcolo', async () => {
-    const { render, screen, fireEvent, cleanup } = await import('@testing-library/react')
-    const { EmojiUmore, LegendaPopup } = await import('../components/UmoreLegenda')
-    const { useState } = await import('react')
     function Prova() {
       const [aperta, setAperta] = useState(false)
       return (
