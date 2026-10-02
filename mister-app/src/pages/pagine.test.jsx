@@ -842,6 +842,7 @@ describe('osservazione: domanda sul ruolo', () => {
     montaPagina(ObservationPage)
     fireEvent.click(await screen.findByRole('button', { name: /Rossi/ }))
     expect(screen.getByRole('dialog').textContent).toContain('Svolge bene il suo ruolo da Difensore centrale?')
+    expect(screen.getByRole('dialog').textContent).toContain('Difensore centrale: Tiene la linea al centro')
     fireEvent.click(screen.getByRole('button', { name: 'Ruolo: No' }))
     fireEvent.click(screen.getByRole('button', { name: 'Salva' }))
     expect(await screen.findByText('Inserisci il motivo della valutazione')).toBeTruthy()

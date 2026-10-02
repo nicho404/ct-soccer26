@@ -553,6 +553,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 .card.onboarding-scelta strong { font-size: 1.05rem; }
 .onboarding-scelta-icona { font-size: 1.8rem; flex-shrink: 0; }
 
+.oss-ruolo-desc { display: block; margin-top: 3px; font-size: 0.75rem; color: var(--muted); line-height: 1.3; }
 .errore-piccolo { margin: 4px 0 0; font-size: 0.75rem; color: var(--danger); }
 
 /* Home: stagione e forma */

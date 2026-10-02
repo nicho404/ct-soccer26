@@ -3,19 +3,22 @@ import { criteriPerSlot } from '../lib/domandeRuolo'
 // Posizioni con le sigle stile FC26.
 // Colori per famiglia: giallo portiere, verde difesa, blu centrocampo, rosso attacco.
 export const RUOLI = [
-  { value: 'POR', label: 'Portiere', famiglia: 'por' },
-  { value: 'DC', label: 'Difensore centrale', famiglia: 'dif' },
-  { value: 'TD', label: 'Terzino destro', famiglia: 'dif' },
-  { value: 'TS', label: 'Terzino sinistro', famiglia: 'dif' },
-  { value: 'CDC', label: 'Centrocampista difensivo', famiglia: 'cen' },
-  { value: 'CC', label: 'Centrocampista centrale', famiglia: 'cen' },
-  { value: 'COC', label: 'Centrocampista offensivo', famiglia: 'cen' },
-  { value: 'ED', label: 'Esterno destro', famiglia: 'cen' },
-  { value: 'ES', label: 'Esterno sinistro', famiglia: 'cen' },
-  { value: 'AD', label: 'Ala destra', famiglia: 'att' },
-  { value: 'AS', label: 'Ala sinistra', famiglia: 'att' },
-  { value: 'ATT', label: 'Attaccante', famiglia: 'att' },
+  { value: 'POR', label: 'Portiere', famiglia: 'por', desc: 'Difende la porta, guida la difesa e fa ripartire il gioco.' },
+  { value: 'DC', label: 'Difensore centrale', famiglia: 'dif', desc: 'Tiene la linea al centro, marca la punta e chiude gli spazi davanti alla porta.' },
+  { value: 'TD', label: 'Terzino destro', famiglia: 'dif', desc: "Difende la fascia destra e, quando può, accompagna l'azione." },
+  { value: 'TS', label: 'Terzino sinistro', famiglia: 'dif', desc: "Difende la fascia sinistra e, quando può, accompagna l'azione." },
+  { value: 'CDC', label: 'Centrocampista difensivo', famiglia: 'cen', desc: 'Fa da schermo davanti alla difesa e recupera palloni.' },
+  { value: 'CC', label: 'Centrocampista centrale', famiglia: 'cen', desc: 'Lega difesa e attacco: smista il gioco e copre in mezzo.' },
+  { value: 'COC', label: 'Centrocampista offensivo', famiglia: 'cen', desc: 'Gioca tra le linee dietro la punta: rifinisce e si inserisce.' },
+  { value: 'ED', label: 'Esterno destro', famiglia: 'cen', desc: 'Copre tutta la fascia destra: spinge in avanti e rientra in difesa.' },
+  { value: 'ES', label: 'Esterno sinistro', famiglia: 'cen', desc: 'Copre tutta la fascia sinistra: spinge in avanti e rientra in difesa.' },
+  { value: 'AD', label: 'Ala destra', famiglia: 'att', desc: "Attacca sulla destra: punta l'uomo, crossa o rientra al tiro." },
+  { value: 'AS', label: 'Ala sinistra', famiglia: 'att', desc: "Attacca sulla sinistra: punta l'uomo, crossa o rientra al tiro." },
+  { value: 'ATT', label: 'Attaccante', famiglia: 'att', desc: 'Il riferimento davanti: tiene palla, attacca la profondità e finalizza.' },
 ]
+
+// Descrizione breve di una posizione (sigla): cosa ci si aspetta da chi la gioca
+export const descrizionePosizione = (value) => RUOLI.find((r) => r.value === value)?.desc ?? ''
 
 export const ruoloLabel = (value) =>
   RUOLI.find((r) => r.value === value)?.label ?? value ?? '—'

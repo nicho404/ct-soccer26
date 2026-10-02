@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import {
   CRITERI_OSSERVAZIONE, CONTESTI_OSSERVAZIONE, famigliaRuolo, isAttivo, ruoloOrdine, ruoloLabel,
+  descrizionePosizione,
 } from '../db/constants'
 import { MODULI_FORMATO, FORMATI } from '../lib/formazioni'
 import { risolviRuoli } from '../tactics/engine'
@@ -88,12 +89,17 @@ export default function ObservationPage() {
       costruzione: partita.formazione?.costruzione ?? 'equilibrata',
     })
     : []
-  const ruoloDi = (p) => {
+  // → { nome: 'Falso 9 (ATT)', titolo: 'Falso 9', desc: compito del ruolo }
+  const ruoloInfoDi = (p) => {
     const occ = occupanti.find((s) => s.playerIds.includes(p.id))
-    const tattico = occ ? ruoliPartita[occ.slotIndex]?.nome : null
-    if (contesto === 'partita' && tattico) return `${tattico} (${occ.sigla})`
-    return ruoloLabel(p.ruoloNaturale)
+    const tattico = occ ? ruoliPartita[occ.slotIndex] : null
+    if (contesto === 'partita' && tattico?.nome) {
+      return { nome: `${tattico.nome} (${occ.sigla})`, titolo: tattico.nome, desc: tattico.compito }
+    }
+    const label = ruoloLabel(p.ruoloNaturale)
+    return { nome: label, titolo: label, desc: descrizionePosizione(p.ruoloNaturale) }
   }
+  const ruoloDi = (p) => ruoloInfoDi(p).nome
 
   // In partita: solo chi ha giocato (o almeno era presente). Altrimenti gli attivi.
   const giocatori = (() => {
@@ -340,7 +346,14 @@ export default function ObservationPage() {
 
           <div className="oss-sezione"><span>Ruolo</span></div>
           <div className="oss-domanda">
-            <span className="small">Svolge bene il suo ruolo da <strong>{ruoloDi(selezionato)}</strong>?</span>
+            <span className="small">
+              Svolge bene il suo ruolo da <strong>{ruoloDi(selezionato)}</strong>?
+              {ruoloInfoDi(selezionato).desc && (
+                <span className="oss-ruolo-desc">
+                  <strong>{ruoloInfoDi(selezionato).titolo}:</strong> {ruoloInfoDi(selezionato).desc}
+                </span>
+              )}
+            </span>
             <span className="oss-livelli">
               {[{ ok: true, t: 'Sì', classe: 'sopra' }, { ok: false, t: 'No', classe: 'sotto' }].map((r) => (
                 <button
