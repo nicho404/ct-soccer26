@@ -18,6 +18,7 @@ import { fasciaDi } from '../lib/fascia'
 import { formatDataPartita } from '../lib/partite'
 import { DOMANDE_PER_SLOT } from '../lib/domandeRuolo'
 import Avatar from '../components/Avatar'
+import Modal from '../components/Modal'
 import { nomeBreve } from '../lib/nomi'
 
 // Etichetta di ogni domanda di ruolo per id, per mostrare le risposte sì/no
@@ -42,6 +43,7 @@ export default function PlayerDetailPage() {
   const playerId = Number(id)
 
   const [legendaUmore, setLegendaUmore] = useState(false)
+  const [rivedi, setRivedi] = useState(false)
   const player = useLiveQuery(() => db.players.get(playerId), [playerId])
   const observations = useLiveQuery(
     () => db.observations.where('playerId').equals(playerId).reverse().sortBy('data'),
@@ -198,13 +200,14 @@ export default function PlayerDetailPage() {
               ))
             : '—'}
           {player.ruoliTatticiDaRivedere && (
-            <span
+            <button
+              type="button"
               className="badge badge-warn tappable"
-              style={{ marginLeft: 4 }}
-              onClick={() => navigate(`/rosa/${player.id}/modifica`)}
+              style={{ marginLeft: 4, border: 0, font: 'inherit', cursor: 'pointer' }}
+              onClick={() => setRivedi(true)}
             >
               ⚠️ da rivedere
-            </span>
+            </button>
           )}
         </InfoRow>
         <InfoRow label="Piede">
@@ -261,6 +264,34 @@ export default function PlayerDetailPage() {
             ))}
             {umore.nota && <p className="muted small" style={{ margin: '8px 0 0' }}>{umore.nota}</p>}
             {legendaUmore && <LegendaPopup onClose={() => setLegendaUmore(false)} />}
+      {rivedi && (
+        <Modal titolo="Ruoli tattici da rivedere" onClose={() => setRivedi(false)}>
+          <p className="small" style={{ marginTop: 0 }}>
+            Un aggiornamento dell'app ha reso più precisi alcuni ruoli tattici: questo
+            giocatore ne aveva uno da ricontrollare. Sono i ruoli tattici a decidere se in
+            Modulo è "nel suo ruolo" (niente triangolo ⚠️).
+          </p>
+          <p className="small muted">
+            Ruoli attuali: {(player.ruoliTattici ?? []).length ? player.ruoliTattici.join(', ') : 'nessuno'}
+            {player.ruoliTatticiLegacy?.length ? ` · prima: ${player.ruoliTatticiLegacy.join(', ')}` : ''}
+          </p>
+          <div className="row" style={{ gap: 10 }}>
+            <button className="btn" style={{ flex: 1 }} onClick={() => navigate(`/rosa/${player.id}/modifica`)}>
+              Modifica ruoli
+            </button>
+            <button
+              className="btn btn-primary"
+              style={{ flex: 1 }}
+              onClick={async () => {
+                await db.players.update(player.id, { ruoliTatticiDaRivedere: false })
+                setRivedi(false)
+              }}
+            >
+              Vanno bene così
+            </button>
+          </div>
+        </Modal>
+      )}
           </>
         ) : (
           <div className="row">

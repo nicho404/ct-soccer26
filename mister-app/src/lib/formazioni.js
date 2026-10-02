@@ -284,3 +284,28 @@ export const lineaDifesaInfo = (value) =>
 // Un giocatore è "in posizione" se la sigla è la sua naturale o una copertura
 export const inPosizione = (player, sigla) =>
   player.ruoloNaturale === sigla || (player.ruoliAdattati ?? []).includes(sigla)
+
+// Sigle dello stesso reparto che giocano la stessa posizione: un CDC in uno
+// slot CC non è fuori ruolo, è solo un'etichetta diversa del centrocampo.
+const SIGLE_AFFINI = { CC: ['CDC', 'COC'], CDC: ['CC'], COC: ['CC'] }
+
+// Sigle accettate da uno slot: la sua, quelle affini e — per i difensori
+// schierati larghi della difesa a 4 (es. 4-2-1), che il modulo etichetta DC —
+// anche i terzini.
+export function sigleAccettate(slot) {
+  const sigle = [slot.sigla, ...(SIGLE_AFFINI[slot.sigla] ?? [])]
+  if (slot.sigla === 'DC' && (slot.u <= 0.12 || slot.u >= 0.88)) sigle.push('TD', 'TS')
+  return sigle
+}
+
+// Il triangolo ⚠️ sul campo: fuori ruolo solo se né la sua posizione (o una
+// affine) né i suoi ruoli tattici coprono quello che lo slot chiede. Chi ha
+// già il ruolo tattico richiesto (es. "Mediano" nello slot da mediano) non è
+// mai fuori ruolo, qualunque sia la sigla.
+export function fuoriRuolo({ player, slot, ruoloNome }) {
+  if (!player || !slot) return false
+  const posizioni = [player.ruoloNaturale, ...(player.ruoliAdattati ?? [])]
+  if (sigleAccettate(slot).some((s) => posizioni.includes(s))) return false
+  if (ruoloNome && (player.ruoliTattici ?? []).includes(ruoloNome)) return false
+  return true
+}

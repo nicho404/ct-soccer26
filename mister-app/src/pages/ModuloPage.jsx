@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, convertiSlotRuoliOverride } from '../db/db'
 import {
   MODULI_FORMATO, FORMATI, MODULO_DEFAULT, IMPOSTAZIONI, COSTRUZIONI, LINEE_DIFESA,
-  costruzioneInfo, lineaDifesaInfo, inPosizione,
+  costruzioneInfo, lineaDifesaInfo, fuoriRuolo,
 } from '../lib/formazioni'
 import { nomeBreve } from '../lib/nomi'
 import { partiteInProgramma, partiteGiocate, formatDataPartita } from '../lib/partite'
@@ -794,7 +794,7 @@ export default function ModuloPage() {
 
               <div className="chip-row">
                 {candidati.map((p) => {
-                  const ok = inPosizione(p, slotSel.sigla)
+                  const ok = !fuoriRuolo({ player: p, slot: slotSel, ruoloNome: ruoloSel.nome })
                   // il badge di compatibilità confronta contro ruoliTattici
                   // osservati (vocabolario di possesso): in non possesso non
                   // si calcola, non è una svista — vedi PitchView/engine.

@@ -2,6 +2,7 @@ import { COLORI_FAMIGLIA, famigliaRuolo, TIPI_INTESA, incaricoInfo } from '../db
 import { compatibilitaGiocatore } from '../tactics/engine'
 import { nomeBreve } from '../lib/nomi'
 import { pt, poly, areaPoly } from '../lib/pitchGeometry'
+import { fuoriRuolo } from '../lib/formazioni'
 
 function nomeCorto(p) {
   const n = nomeBreve(p)
@@ -140,8 +141,7 @@ export default function PitchView({
         const colore = COLORI_FAMIGLIA[famigliaRuolo(slot.sigla)] ?? '#9a9aad'
         const ruolo = ruoli[i]
         const isSel = selected === i
-        const warning =
-          p && p.ruoloNaturale !== slot.sigla && !(p.ruoliAdattati ?? []).includes(slot.sigla)
+        const warning = fuoriRuolo({ player: p, slot, ruoloNome: ruolo?.nome })
         const compat = fase === 'possesso' && p && !warning
           ? compatibilitaGiocatore({ slotRuolo: ruolo.ruoloSuggerito, player: p })
           : null
