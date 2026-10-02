@@ -16,6 +16,8 @@ import PitchView from '../components/PitchView'
 import IncaricoPicker from '../components/IncaricoPicker'
 import Scelta from '../components/Scelta'
 import Modal from '../components/Modal'
+import VistaCampo from '../components/VistaCampo'
+import { vistaCompleta } from '../lib/vistaCampo'
 
 const VUOTO = (n) => Array(n).fill(null)
 
@@ -61,6 +63,7 @@ export default function PartitaRefertoPage() {
   const team = useLiveQuery(() => db.meta.get('team').then((t) => t ?? null), [])
   const salvati = useLiveQuery(() => db.meta.get('moduliSalvati').then((s) => s ?? null), [])
   const moduloCorrente = useLiveQuery(() => db.meta.get('modulo').then((m) => m ?? null), [])
+  const vistaRiga = useLiveQuery(() => db.meta.get('vistaCampo').then((v) => v ?? null), [])
 
   const formato = FORMATI.includes(team?.formato) ? team.formato : 7
 
@@ -86,7 +89,7 @@ export default function PartitaRefertoPage() {
   }, [partita, team, loaded])
 
   if (!players || !opponents || partita === undefined || team === undefined ||
-      salvati === undefined || moduloCorrente === undefined || !loaded) return null
+      salvati === undefined || moduloCorrente === undefined || vistaRiga === undefined || !loaded) return null
 
   if (!partita) {
     return (
@@ -309,6 +312,7 @@ export default function PartitaRefertoPage() {
   const disallineato = disallineamentoRisultato({ ...partita, eventi })
   const daEventi = golDaEventi(eventi)
 
+  const vista = vistaCompleta(vistaRiga?.value)
   const esitoUfficiale = esitoPartita(partita)
   const golEventi = daEventi.fatti + daEventi.subiti
 
@@ -394,16 +398,20 @@ export default function PartitaRefertoPage() {
         </button>
       </div>
 
-      <PitchView
-        modulo={modulo}
-        ruoli={ruoli}
-        assignments={slots}
-        players={players}
-        intese={[]}
-        incarichi={incarichi}
-        selected={sel}
-        onSlotTap={modoLive ? apriOsservazione : (i) => setSel(sel === i ? null : i)}
-      />
+      <div className="pitch-wrap" style={{ position: 'relative' }}>
+        <VistaCampo vista={vista} />
+        <PitchView
+          modulo={modulo}
+          ruoli={ruoli}
+          assignments={slots}
+          players={players}
+          intese={[]}
+          incarichi={incarichi}
+          mostra={vista}
+          selected={sel}
+          onSlotTap={modoLive ? apriOsservazione : (i) => setSel(sel === i ? null : i)}
+        />
+      </div>
 
       {modoLive ? (
         <p className="muted small">

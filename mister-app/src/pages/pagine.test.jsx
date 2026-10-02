@@ -750,3 +750,25 @@ describe('modulo: indicatori sul campo', () => {
     expect(screen.getByRole('button', { name: 'Indicatori sul campo' }).textContent).toContain('1 off')
   })
 })
+
+describe('referto: stessa vista del modulo', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+    await db.meta.put({ key: 'vistaCampo', value: { ruoli: false } })
+    await db.matches.add({ id: 1, data: '2026-09-27', presenze: {} })
+  })
+
+  afterEach(cleanup)
+
+  it('il pulsante Vista c\'è anche sul referto e legge la stessa scelta', async () => {
+    render(
+      <MemoryRouter initialEntries={['/partite/1/referto']}>
+        <Routes><Route path="/partite/:id/referto" element={<PartitaRefertoPage />} /></Routes>
+      </MemoryRouter>
+    )
+    const vista = await screen.findByRole('button', { name: 'Indicatori sul campo' })
+    expect(vista.textContent).toContain('1 off')
+  })
+})
