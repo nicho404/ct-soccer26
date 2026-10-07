@@ -200,7 +200,7 @@ export default function PitchView({
                   const entrante = players.find((pl) => pl.id === cambi[i])
                   if (!entrante) return null
                   return (
-                    <text x="0" y="57" textAnchor="middle" fill="#ef4444" fontSize="8.5" fontWeight="800">
+                    <text x="0" y={vedi.ruoli ? 57 : 47} textAnchor="middle" fill="#ef4444" fontSize="8.5" fontWeight="800">
                       🔁 {nomeCorto(entrante)}
                     </text>
                   )
