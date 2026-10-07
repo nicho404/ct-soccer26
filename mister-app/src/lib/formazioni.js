@@ -167,6 +167,20 @@ const MODULI_8 = {
       { sigla: 'ATT', u: 0.5, t: 0.84 },
     ],
   },
+  '2-4-1 rombo': {
+    nome: '2-4-1 rombo',
+    descrizione: 'Il 2-4-1 con centrocampo a rombo: mediano e centrocampista offensivo in verticale, non in linea. Il mediano fa da schermo fisso davanti ai due difensori e copre chi dei due esce; il vertice alto riceve tra le linee, rifinisce e accompagna la punta. Gli esterni tengono in piedi il rombo: larghi quando si attacca, stretti a fianco del mediano quando si difende. Ottimo per palleggio e pressing, ma se il mediano resta troppo basso la squadra si spezza in due.',
+    slots: [
+      { sigla: 'POR', u: 0.5, t: 0.07 },
+      { sigla: 'DC', u: 0.3, t: 0.28 },
+      { sigla: 'DC', u: 0.7, t: 0.28 },
+      { sigla: 'CDC', u: 0.5, t: 0.44 },
+      { sigla: 'ES', u: 0.12, t: 0.58 },
+      { sigla: 'ED', u: 0.88, t: 0.58 },
+      { sigla: 'COC', u: 0.5, t: 0.68 },
+      { sigla: 'ATT', u: 0.5, t: 0.92 },
+    ],
+  },
   '3-2-1-1': {
     nome: '3-2-1-1',
     descrizione: 'Il trequartista tra le linee è la chiave: collega centrocampo e attacco e libera la punta in area. Struttura solida con difesa a tre e doppio centrale di centrocampo; serve un trequartista di qualità e generoso, altrimenti la squadra si spezza in due.',

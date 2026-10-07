@@ -259,6 +259,14 @@ Non tutte le combinazioni stanno in piedi. Il sistema deve **avvisare**, mai blo
 - Più adatto a: **possesso**, **gioco sulle ali**. Sconsigliato con **difesa a oltranza**.
 - ⚠️ Punto di rottura noto: senza automatismi consolidati, la difesa a 2 è il primo reparto a saltare.
 
+### 2-4-1 rombo (formato 8)
+`POR — 2 DC — 1 MEDIANO — 2 ESTERNI — 1 CC OFFENSIVO — PUNTA`
+- Mediano e centrocampista offensivo in verticale: il mediano dedicato (`CDC`) segue la costruzione ed è lo schermo fisso davanti alla difesa a 2, copre il centrale che esce; il vertice alto (`COC`) segue l'impostazione, riceve tra le linee e accompagna la punta.
+- Rispetto al 2-4-1 in linea non serve dividere i compiti fra i due centrali: sono già scaglionati, un filtrante non li salta entrambi.
+- Gli esterni reggono la forma del rombo: larghi in possesso (sono l'unica ampiezza), stretti a fianco del mediano in non possesso.
+- Punto di rottura noto: mediano troppo basso → buco fra lui e il vertice alto, squadra spezzata in due.
+- Più adatto a: **possesso**, **contropiede**, pressing. Fragile su **gioco sulle ali** (se gli esterni salgono insieme resta il solo mediano davanti ai due difensori).
+
 ### 3-2-1 (formato 7)
 `POR — 3 DC — 2 CC — PUNTA`
 - Nessun esterno puro: l'ampiezza è a carico dei DC laterali e dei CC che allargano.
@@ -292,6 +300,7 @@ Le ❌ sono **derivate dalla struttura** del modulo (quante zone possiede, non q
 | 3-2-2 (c.8) | ✅ | ❌ | ✅ | ✅ | ✅ |
 | 3-1-2-1 (c.8) | ✅ | ❌ | ⚠️ | ✅ | ✅ |
 | 2-4-1 (c.8) | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
+| 2-4-1 rombo (c.8) | ✅ | ⚠️ | ✅ | ✅ | ❌ |
 | 3-2-1-1 (c.8) | ✅ | ❌ | ✅ | ✅ | ✅ |
 | 3-1-3 (c.8) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | 4-2-1 (c.8) | ⚠️ | ❌ | ⚠️ | ✅ | ✅ |

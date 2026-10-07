@@ -264,6 +264,9 @@ export const ECCEZIONI_MODULO = {
     lunga: { livello: 'warn', messaggio: 'La punta è sola sulla sponda e la difesa a due è lontanissima dalla seconda palla: ogni rimbalzo è una ripartenza avversaria.' },
     contropiede: { livello: 'warn', messaggio: 'Quattro centrocampisti in ripartenza sono un vantaggio, ma la difesa a due resta in parità numerica su ogni recupero fallito.' },
   },
+  '2-4-1 rombo': {
+    ali: { livello: 'warn', messaggio: 'Nel rombo l\'ampiezza la danno solo i due esterni, che sono anche quelli che devono stringere a fianco del mediano: se salgono insieme al cross, davanti alla difesa a due resta un uomo solo.' },
+  },
   '4-2-1': {
     possesso: { livello: 'warn', messaggio: 'Solo due centrocampisti e nessun esterno puro: il palleggio si stringe al centro e con un minimo di pressione diventa prevedibile.' },
     lunga: { livello: 'warn', messaggio: 'La punta è sola sulla sponda e i due centrocampisti sono lontani dalla seconda palla: il lancio raramente produce una vera ripartenza.' },

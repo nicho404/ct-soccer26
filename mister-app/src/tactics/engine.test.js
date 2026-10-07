@@ -99,6 +99,26 @@ describe('regola di precedenza sul centrocampo conteso', () => {
     // mai entrambi in avanti: uno solo dei due può essere nella zona d'impostazione
     expect(zoneCC.filter((z) => z === 'centrocampista-centrale')).toHaveLength(1)
   })
+
+  it('2-4-1 rombo: il mediano (CDC) segue la costruzione, il vertice alto (COC) l\'impostazione', () => {
+    const modulo = MODULI_FORMATO[8]['2-4-1 rombo']
+    expect(modulo.slots).toHaveLength(8)
+    const iCDC = modulo.slots.findIndex((s) => s.sigla === 'CDC')
+    const iCOC = modulo.slots.findIndex((s) => s.sigla === 'COC')
+    // in verticale, non in linea: stessa corsia, profondità diversa
+    expect(modulo.slots[iCDC].u).toBe(modulo.slots[iCOC].u)
+    expect(modulo.slots[iCDC].t).toBeLessThan(modulo.slots[iCOC].t)
+
+    for (const { value: costruzione } of COSTRUZIONI) {
+      for (const { value: impostazione } of IMPOSTAZIONI) {
+        const ruoli = risolviRuoli({ modulo, impostazione, costruzione })
+        expect(ruoli[iCDC].zona).toBe('mediano')
+        expect(medianoCodici).toContain(ruoli[iCDC].ruoloSuggerito)
+        expect(ruoli[iCOC].zona).toBe('centrocampista-centrale')
+        expect(ruoli[iCOC].ruoloSuggerito.startsWith('CC-')).toBe(true)
+      }
+    }
+  })
 })
 
 describe('compatibilitaGiocatore', () => {
