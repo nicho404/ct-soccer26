@@ -751,12 +751,27 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   display: flex;
   align-items: center;
   gap: 12px;
-  background: linear-gradient(120deg, rgba(124, 58, 237, 0.18), rgba(124, 58, 237, 0.04));
-  border: 1px solid rgba(167, 139, 250, 0.3);
+  /* --tema: colore del riquadro (terna rgb). Di base il viola dell'app, con
+     un badge presenze prende il colore del badge (tema-*, qui sotto). */
+  --tema: 124, 58, 237;
+  --tema-testo: var(--accent);
+  background: linear-gradient(120deg, rgba(var(--tema), 0.24), rgba(var(--tema), 0.05));
+  border: 1px solid rgba(var(--tema), 0.45);
   border-radius: var(--radius);
   padding: 14px;
   margin-bottom: 16px;
 }
+
+.player-card.tema-diamante { --tema: 103, 232, 249; --tema-testo: #a5f3fc; }
+.player-card.tema-oro { --tema: 251, 191, 36; --tema-testo: #fcd34d; }
+.player-card.tema-argento { --tema: 203, 213, 225; --tema-testo: #e2e8f0; }
+.player-card.tema-bronzo { --tema: 205, 127, 50; --tema-testo: #e9a66b; }
+.player-card.tema-ferro { --tema: 107, 114, 128; --tema-testo: #b6bcc7; }
+.player-card.tema-legno { --tema: 139, 90, 43; --tema-testo: #c69261; }
+.player-card.tema-cartone { --tema: 200, 184, 154; --tema-testo: #c8b89a; }
+
+.player-card-centro { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.player-card-umore { gap: 8px; flex-wrap: wrap; }
 
 .player-card-photo {
   position: relative;
@@ -782,14 +797,14 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   gap: 2px;
   flex-shrink: 0;
   padding-left: 10px;
-  border-left: 1px solid rgba(167, 139, 250, 0.25);
+  border-left: 1px solid rgba(var(--tema), 0.35);
 }
 
 .player-card-overall .ovr {
   font-size: 1.9rem;
   font-weight: 800;
   line-height: 1;
-  color: var(--accent);
+  color: var(--tema-testo);
 }
 
 .player-card-overall .ovr-label {

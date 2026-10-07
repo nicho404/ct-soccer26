@@ -168,7 +168,7 @@ export default function ModuloPage() {
           ? { avversario: nomeAvversarioDi(matchSelezionata), data: formatDataPartita(matchSelezionata.data) }
           : null,
         mostra: vistaCompleta(vistaRiga?.value),
-        ruoli: ruoliPossesso, intese, incarichi,
+        ruoli: ruoliPossesso, intese, incarichi, cambi,
       })
       if (esito !== 'annullata') {
         setEsitoExport(esito === 'condivisa' ? 'Immagine condivisa.' : 'Immagine salvata nei download.')

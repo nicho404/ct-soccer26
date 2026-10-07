@@ -130,15 +130,17 @@ export default function PlayerDetailPage() {
         </button>
       </div>
 
-      {/* Card stile FC26: foto, badge stato, overall dai voti reali */}
-      <div className="player-card">
+      {/* Card stile FC26: foto, badge stato, overall dai voti reali. Il badge
+          presenze dà il colore a tutto il riquadro; sotto gli stati, umore e badge. */}
+      <div className={`player-card ${badge ? `tema-${badge.value}` : ''}`}>
         <div className="player-card-photo">
           <Avatar src={player.foto} size={76} />
           {player.numero !== '' && player.numero != null && (
             <span className="shirt-number player-card-num">{player.numero}</span>
           )}
         </div>
-        <div className="row" style={{ flex: 1, flexWrap: 'wrap', gap: 6, minWidth: 0 }}>
+        <div className="player-card-centro">
+        <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
           <Fascia tipo={fasciaDi(playerId, { capitanoId: capitano?.value ?? null, viceId: vice?.value ?? null })} />
           <button
             className={`star-toggle ${player.titolare ? 'on' : ''}`}
@@ -154,6 +156,18 @@ export default function PlayerDetailPage() {
           {player.porta !== 'no' && (
             <span className="badge badge-warn">🧤 {portaInfo(player.porta).label}</span>
           )}
+        </div>
+        {(umore || badge) && (
+          <div className="row player-card-umore">
+            {umore && <EmojiUmore umore={umore} size={30} onClick={() => setLegendaUmore(true)} />}
+            {umore && <strong className="small">{umore.label}</strong>}
+            {badge && (
+              <span className={`badge badge-medaglia medaglia-${badge.value}`} title={`Presenze: ${badge.label}`}>
+                {badge.icona} {badge.label}
+              </span>
+            )}
+          </div>
+        )}
         </div>
         <div className="player-card-overall">
           <div className="ovr">{overall ?? '—'}</div>

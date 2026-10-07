@@ -196,7 +196,7 @@ export default function PitchView({
                     {ruolo.nome}
                   </text>
                 )}
-                {cambi[i] != null && (() => {
+                {vedi.cambi && cambi[i] != null && (() => {
                   const entrante = players.find((pl) => pl.id === cambi[i])
                   if (!entrante) return null
                   return (

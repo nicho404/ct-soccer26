@@ -37,9 +37,10 @@ describe('immagine del modulo', () => {
       ],
       intese: [{ id: 1, tipo: 'confermata', playerIds: [1, 2] }],
       incarichi: { 1: 'offensivo' },
+      cambi: { 7: 2 },
     }
-    const tutti = { foto: true, intese: true, ruoli: true, compatibilita: true, incarichi: true }
-    const nessuno = { foto: false, intese: false, ruoli: false, compatibilita: false, incarichi: false }
+    const tutti = { foto: true, intese: true, ruoli: true, compatibilita: true, incarichi: true, cambi: true }
+    const nessuno = { foto: false, intese: false, ruoli: false, compatibilita: false, incarichi: false, cambi: false }
 
     it('tutti spenti: solo campo, posizioni e nomi', () => {
       const svg = svgModulo({ ...dati, mostra: nessuno })
@@ -48,6 +49,7 @@ describe('immagine del modulo', () => {
       expect(svg).not.toContain('stroke-dasharray="6 4"')
       expect(svg).not.toContain('⚔️')
       expect(svg).not.toContain('#34d399')
+      expect(svg).not.toContain('🔁')
       expect(svg).toContain('Rossi')
     })
 
@@ -58,6 +60,7 @@ describe('immagine del modulo', () => {
       expect(svg).toContain('stroke-dasharray="6 4"')
       expect(svg).toContain('⚔️')
       expect(svg).toContain('#34d399') // "+" ruolo suo
+      expect(svg).toContain('🔁 Bianchi')
       expect(svg).toContain('⚠️') // il DC schierato da terzino è fuori ruolo
     })
 

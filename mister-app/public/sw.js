@@ -10,7 +10,7 @@
 //
 // - gli ASSET con hash nel nome (JS, CSS, immagini) sono immutabili: lì la
 //   cache è sempre giusta e si risponde subito, aggiornando in background.
-const CACHE = 'mister-app-v3' // v3: nuova icona (pallone con la M)
+const CACHE = 'mister-app-v4' // v4: nuova icona (la M come schema tattico)
 
 self.addEventListener('install', () => {
   self.skipWaiting()

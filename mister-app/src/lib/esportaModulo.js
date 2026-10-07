@@ -1,6 +1,6 @@
 // Immagine del modulo da mostrare ai giocatori: il campo, le posizioni
 // (POR, CC, ED…) e chi le occupa (numero + nome). Gli indicatori del mister
-// (foto, intese, ruolo tattico, ruolo ricoperto, incarico — lib/vistaCampo)
+// (foto, intese, ruolo tattico, ruolo ricoperto, incarico, cambi — lib/vistaCampo)
 // finiscono nell'immagine solo se sono accesi nel momento in cui la si crea:
 // tutti spenti, resta la sola formazione. Se il modulo è legato a una partita,
 // sotto il campo c'è anche la panchina: chi è convocato e non parte titolare.
@@ -54,7 +54,7 @@ function segnoCompatibilita({ slot, player, ruolo }) {
     <text x="13" y="-10.2" text-anchor="middle" fill="${stile.testo}" font-size="11" font-weight="900">${stile.segno}</text>`
 }
 
-function figura(slot, player, [x, y], { vedi = {}, ruolo = null, incarico = null, indice = 0 } = {}) {
+function figura(slot, player, [x, y], { vedi = {}, ruolo = null, incarico = null, entrante = null, indice = 0 } = {}) {
   const colore = COLORI_FAMIGLIA[famigliaRuolo(slot.sigla)] ?? '#9a9aad'
   const numero = player && player.numero !== '' && player.numero != null ? player.numero : null
   const nomeRuolo = vedi.ruoli && ruolo?.nome ? ruolo.nome : ''
@@ -81,6 +81,7 @@ function figura(slot, player, [x, y], { vedi = {}, ruolo = null, incarico = null
     <text x="0" y="26" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">${esc(nomeCorto(player))}</text>
     <text x="0" y="37" text-anchor="middle" fill="${colore}" font-size="10" font-weight="800">${esc(slot.sigla)}</text>
     ${nomeRuolo ? `<text x="0" y="46" text-anchor="middle" fill="rgba(255,255,255,0.78)" font-size="7.5">${esc(nomeRuolo)}</text>` : ''}
+    ${vedi.cambi && entrante ? `<text x="0" y="${nomeRuolo ? 58 : 48}" text-anchor="middle" fill="#ef4444" font-size="8.5" font-weight="800">🔁 ${esc(nomeCorto(entrante))}</text>` : ''}
   </g>`
 }
 
@@ -128,7 +129,7 @@ function svgPanchina(panchina, y0) {
 // slot: l'immagine è sempre la formazione schierata, non la mappa difensiva.
 export function svgModulo({
   modulo, moduloKey, slots, players, formato, team, panchina = [], partita = null,
-  mostra = {}, ruoli = [], intese = [], incarichi = {},
+  mostra = {}, ruoli = [], intese = [], incarichi = {}, cambi = {},
 }) {
   const vedi = mostra ?? {}
   const altezza = altezzaImmagine({ panchina })
@@ -139,6 +140,7 @@ export function svgModulo({
       const p = id ? players.find((pl) => pl.id === id) : null
       return figura(slot, p ?? null, posizioni[i], {
         vedi, ruolo: ruoli[i], incarico: p ? incarichi[p.id] : null, indice: i,
+        entrante: cambi[i] != null ? players.find((pl) => pl.id === cambi[i]) ?? null : null,
       })
     })
     .join('\n')

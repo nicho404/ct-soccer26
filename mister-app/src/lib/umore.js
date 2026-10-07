@@ -15,14 +15,14 @@ import { refertoCompilato, DURATA_DEFAULT } from './storico'
 
 // Dal più felice al più scontento: l'indice è il "gradino".
 export const LIVELLI_UMORE = [
-// `colore` va dal verde scuro al rosso scuro passando per il giallo del
+// `colore` va dal verde al rosso passando per il giallo del
 // neutro: è il fondo della faccina disegnata (components/FacciaUmore).
 // `emoji` resta per i testi semplici.
-  { value: 'sorridente', label: 'Sorridente', emoji: '😁', colore: '#15803d' },
-  { value: 'contento', label: 'Contento', emoji: '🙂', colore: '#84cc16' },
+  { value: 'sorridente', label: 'Sorridente', emoji: '😁', colore: '#22c55e' },
+  { value: 'contento', label: 'Contento', emoji: '🙂', colore: '#a3e635' },
   { value: 'neutro', label: 'Neutro', emoji: '😐', colore: '#facc15' },
-  { value: 'triste', label: 'Triste', emoji: '😢', colore: '#f97316' },
-  { value: 'arrabbiato', label: 'Arrabbiato', emoji: '😠', colore: '#b91c1c' },
+  { value: 'triste', label: 'Triste', emoji: '😢', colore: '#fb923c' },
+  { value: 'arrabbiato', label: 'Arrabbiato', emoji: '😠', colore: '#ef4444' },
 ]
 
 export const umoreInfo = (value) => LIVELLI_UMORE.find((l) => l.value === value) ?? null
