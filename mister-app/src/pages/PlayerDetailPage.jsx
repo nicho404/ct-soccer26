@@ -12,7 +12,7 @@ import { famigliaRuoloTattico } from '../tactics/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
 import { aggregaGiocatori, incarichiGiocatore } from '../lib/storico'
 import { calcolaUmore, impegno, badgePresenze } from '../lib/umore'
-import { EmojiUmore, LegendaPopup, BadgePresenze } from '../components/UmoreLegenda'
+import { EmojiUmore, LegendaPopup } from '../components/UmoreLegenda'
 import Fascia from '../components/Fascia'
 import { fasciaDi } from '../lib/fascia'
 import { formatDataPartita } from '../lib/partite'
@@ -84,7 +84,9 @@ export default function PlayerDetailPage() {
   const stagione = aggregaGiocatori(matches).find((r) => r.playerId === playerId)
   const incarichiPartite = incarichiGiocatore(matches, playerId)
   const umore = calcolaUmore({ trainings, matches }, playerId)
-  const badge = badgePresenze(impegno({ trainings, matches }, playerId)?.quota)
+  const presenze = impegno({ trainings, matches }, playerId)
+  const badge = badgePresenze(presenze?.quota)
+  const minutaggioUmore = umore?.fattori.find((f) => f.nome === 'Minutaggio')
   const nomeDi = (pid) => {
     const p = allPlayers.find((x) => x.id === pid)
     return nomeBreve(p)
@@ -131,7 +133,8 @@ export default function PlayerDetailPage() {
       </div>
 
       {/* Card stile FC26: foto, badge stato, overall dai voti reali. Il badge
-          presenze dà il colore a tutto il riquadro; sotto gli stati, umore e badge. */}
+          presenze dà il colore a tutto il riquadro; sotto gli stati, umore, badge
+          e minutaggio; in fondo al riquadro il dettaglio dei due numeri. */}
       <div className={`player-card ${badge ? `tema-${badge.value}` : ''}`}>
         <div className="player-card-photo">
           <Avatar src={player.foto} size={76} />
@@ -160,12 +163,12 @@ export default function PlayerDetailPage() {
         {(umore || badge) && (
           <div className="row player-card-umore">
             {umore && <EmojiUmore umore={umore} size={30} onClick={() => setLegendaUmore(true)} />}
-            {umore && <strong className="small">{umore.label}</strong>}
             {badge && (
               <span className={`badge badge-medaglia medaglia-${badge.value}`} title={`Presenze: ${badge.label}`}>
-                {badge.icona} {badge.label}
+                {badge.icona} {badge.label} · {Math.round(presenze.quota * 100)}%
               </span>
             )}
+            {minutaggioUmore && <span className="badge">⏱ {minutaggioUmore.valore} minuti</span>}
           </div>
         )}
         </div>
@@ -176,6 +179,15 @@ export default function PlayerDetailPage() {
             {player.ruoloNaturale || '—'}
           </span>
         </div>
+        {(presenze?.totale > 0 || umore) && (
+          <div className="player-card-dettaglio muted small">
+            {presenze && presenze.totale > 0 && (
+              <div>Presenze: {presenze.presenti} su {presenze.totale} tra allenamenti e partite</div>
+            )}
+            {minutaggioUmore && <div>Minuti: {minutaggioUmore.dettaglio}</div>}
+            {umore?.nota && <div>{umore.nota}</div>}
+          </div>
+        )}
       </div>
 
       <div className="card">
@@ -259,62 +271,6 @@ export default function PlayerDetailPage() {
         </InfoRow>
         {player.condizione && <InfoRow label="Condizione">{player.condizione}</InfoRow>}
         {player.note && <InfoRow label="Note">{player.note}</InfoRow>}
-      </div>
-
-      <div className="section-title">Umore</div>
-      <div className="card">
-        {umore ? (
-          <>
-            <div className="row" style={{ marginBottom: 8 }}>
-              <EmojiUmore umore={umore} size={40} onClick={() => setLegendaUmore(true)} />
-              <strong>{umore.label}</strong>
-              <span className="spacer" />
-              <BadgePresenze badge={badge} />
-            </div>
-            {umore.fattori.map((f) => (
-              <InfoRow key={f.nome} label={f.nome}>
-                {f.valore} <span className="muted small">· {f.dettaglio}</span>
-              </InfoRow>
-            ))}
-            {umore.nota && <p className="muted small" style={{ margin: '8px 0 0' }}>{umore.nota}</p>}
-            {legendaUmore && <LegendaPopup onClose={() => setLegendaUmore(false)} />}
-      {rivedi && (
-        <Modal titolo="Ruoli tattici da rivedere" onClose={() => setRivedi(false)}>
-          <p className="small" style={{ marginTop: 0 }}>
-            Un aggiornamento dell'app ha reso più precisi alcuni ruoli tattici: questo
-            giocatore ne aveva uno da ricontrollare. Sono i ruoli tattici a decidere se in
-            Modulo è "nel suo ruolo" (niente triangolo ⚠️).
-          </p>
-          <p className="small muted">
-            Ruoli attuali: {(player.ruoliTattici ?? []).length ? player.ruoliTattici.join(', ') : 'nessuno'}
-            {player.ruoliTatticiLegacy?.length ? ` · prima: ${player.ruoliTatticiLegacy.join(', ')}` : ''}
-          </p>
-          <div className="row" style={{ gap: 10 }}>
-            <button className="btn" style={{ flex: 1 }} onClick={() => navigate(`/rosa/${player.id}/modifica`)}>
-              Modifica ruoli
-            </button>
-            <button
-              className="btn btn-primary"
-              style={{ flex: 1 }}
-              onClick={async () => {
-                await db.players.update(player.id, { ruoliTatticiDaRivedere: false })
-                setRivedi(false)
-              }}
-            >
-              Vanno bene così
-            </button>
-          </div>
-        </Modal>
-      )}
-          </>
-        ) : (
-          <div className="row">
-            <span className="muted small" style={{ flex: 1 }}>
-              Umore non ancora calcolabile: serve almeno una partita con referto in cui era presente.
-            </span>
-            <BadgePresenze badge={badge} />
-          </div>
-        )}
       </div>
 
       <div className="section-title">Stagione</div>
@@ -509,6 +465,36 @@ export default function PlayerDetailPage() {
       <button className="btn btn-danger btn-block" onClick={remove}>
         Elimina giocatore
       </button>
+
+      {legendaUmore && <LegendaPopup onClose={() => setLegendaUmore(false)} />}
+      {rivedi && (
+        <Modal titolo="Ruoli tattici da rivedere" onClose={() => setRivedi(false)}>
+          <p className="small" style={{ marginTop: 0 }}>
+            Un aggiornamento dell'app ha reso più precisi alcuni ruoli tattici: questo
+            giocatore ne aveva uno da ricontrollare. Sono i ruoli tattici a decidere se in
+            Modulo è "nel suo ruolo" (niente triangolo ⚠️).
+          </p>
+          <p className="small muted">
+            Ruoli attuali: {(player.ruoliTattici ?? []).length ? player.ruoliTattici.join(', ') : 'nessuno'}
+            {player.ruoliTatticiLegacy?.length ? ` · prima: ${player.ruoliTatticiLegacy.join(', ')}` : ''}
+          </p>
+          <div className="row" style={{ gap: 10 }}>
+            <button className="btn" style={{ flex: 1 }} onClick={() => navigate(`/rosa/${player.id}/modifica`)}>
+              Modifica ruoli
+            </button>
+            <button
+              className="btn btn-primary"
+              style={{ flex: 1 }}
+              onClick={async () => {
+                await db.players.update(player.id, { ruoliTatticiDaRivedere: false })
+                setRivedi(false)
+              }}
+            >
+              Vanno bene così
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

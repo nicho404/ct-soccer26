@@ -749,6 +749,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 /* Card giocatore stile FC26 */
 .player-card {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   /* --tema: colore del riquadro (terna rgb). Di base il viola dell'app, con
@@ -772,6 +773,13 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 
 .player-card-centro { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .player-card-umore { gap: 8px; flex-wrap: wrap; }
+/* riga a tutta larghezza in fondo al riquadro: da dove vengono i due numeri */
+.player-card-dettaglio {
+  flex-basis: 100%;
+  padding-top: 10px;
+  border-top: 1px solid rgba(var(--tema), 0.25);
+  line-height: 1.5;
+}
 
 .player-card-photo {
   position: relative;
