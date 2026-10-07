@@ -155,8 +155,8 @@ export default function ModuloPage() {
   const problemaLinea = coerenza.problemi.find((p) => p.tipo === 'linea')
   const problemaModulo = coerenza.problemi.find((p) => p.tipo === 'modulo')
 
-  // Immagine per i giocatori: campo, posizioni e nomi. Volutamente non passa
-  // ruoli, fase, intese o coerenza — quella è la lavagna del mister.
+  // Immagine per i giocatori: campo, posizioni e nomi, più gli indicatori
+  // accesi in questo momento (lib/vistaCampo). Tutti spenti → solo formazione.
   const esporta = async () => {
     setEsitoExport(null)
     try {
@@ -167,6 +167,8 @@ export default function ModuloPage() {
         partita: matchSelezionata
           ? { avversario: nomeAvversarioDi(matchSelezionata), data: formatDataPartita(matchSelezionata.data) }
           : null,
+        mostra: vistaCompleta(vistaRiga?.value),
+        ruoli: ruoliPossesso, intese, incarichi,
       })
       if (esito !== 'annullata') {
         setEsitoExport(esito === 'condivisa' ? 'Immagine condivisa.' : 'Immagine salvata nei download.')
@@ -652,7 +654,7 @@ export default function ModuloPage() {
 
           {esitoExport && (
             <p className="muted small" style={{ margin: '0 0 10px' }} onClick={() => setEsitoExport(null)}>
-              {esitoExport} L’immagine mostra solo campo, posizioni e nomi: niente indicazioni tattiche.
+              {esitoExport} L’immagine riporta gli indicatori accesi sul campo: spegnili tutti per avere solo posizioni e nomi.
             </p>
           )}
 
