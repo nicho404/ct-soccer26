@@ -86,12 +86,14 @@ const MODULI_7 = {
     descrizione: 'Come il 1-4-1 ma con centrocampo a rombo, meno lineare e più dinamico: più difficile da assimilare, ma con numerosi benefici. Servono mobilità e smarcamento continui per creare triangoli; i due centrali scaglionati evitano di farsi superare entrambi da un filtrante e danno due soluzioni in ripartenza.',
     slots: [
       { sigla: 'POR', u: 0.5, t: 0.07 },
-      { sigla: 'DC', u: 0.5, t: 0.26 },
-      { sigla: 'CDC', u: 0.5, t: 0.44 },
-      { sigla: 'ES', u: 0.12, t: 0.58 },
-      { sigla: 'ED', u: 0.88, t: 0.58 },
-      { sigla: 'COC', u: 0.5, t: 0.68 },
-      { sigla: 'ATT', u: 0.5, t: 0.92 },
+      // quattro uomini sulla stessa verticale: distanziati in modo uniforme
+      // perché le scritte sotto un pallino non finiscano su quello sotto
+      { sigla: 'DC', u: 0.5, t: 0.22 },
+      { sigla: 'CDC', u: 0.5, t: 0.39 },
+      { sigla: 'ES', u: 0.12, t: 0.52 },
+      { sigla: 'ED', u: 0.88, t: 0.52 },
+      { sigla: 'COC', u: 0.5, t: 0.615 },
+      { sigla: 'ATT', u: 0.5, t: 0.94 },
     ],
   },
 }
@@ -174,11 +176,13 @@ const MODULI_8 = {
       { sigla: 'POR', u: 0.5, t: 0.07 },
       { sigla: 'DC', u: 0.3, t: 0.28 },
       { sigla: 'DC', u: 0.7, t: 0.28 },
-      { sigla: 'CDC', u: 0.5, t: 0.44 },
-      { sigla: 'ES', u: 0.12, t: 0.58 },
-      { sigla: 'ED', u: 0.88, t: 0.58 },
-      { sigla: 'COC', u: 0.5, t: 0.68 },
-      { sigla: 'ATT', u: 0.5, t: 0.92 },
+      // tre uomini sulla stessa verticale: distanziati quanto basta perché
+      // nome, ruolo e cambio sotto un pallino non finiscano su quello sotto
+      { sigla: 'CDC', u: 0.5, t: 0.38 },
+      { sigla: 'ES', u: 0.12, t: 0.52 },
+      { sigla: 'ED', u: 0.88, t: 0.52 },
+      { sigla: 'COC', u: 0.5, t: 0.61 },
+      { sigla: 'ATT', u: 0.5, t: 0.94 },
     ],
   },
   '3-2-1-1': {
@@ -189,10 +193,12 @@ const MODULI_8 = {
       { sigla: 'DC', u: 0.18, t: 0.3 },
       { sigla: 'DC', u: 0.5, t: 0.26 },
       { sigla: 'DC', u: 0.82, t: 0.3 },
-      { sigla: 'CC', u: 0.32, t: 0.5 },
-      { sigla: 'CC', u: 0.68, t: 0.5 },
-      { sigla: 'COC', u: 0.5, t: 0.68 },
-      { sigla: 'ATT', u: 0.5, t: 0.92 },
+      // COC e punta distanziati perché le scritte della punta non coprano
+      // il COC; i due CC un filo più larghi e bassi per fargli posto
+      { sigla: 'CC', u: 0.3, t: 0.48 },
+      { sigla: 'CC', u: 0.7, t: 0.48 },
+      { sigla: 'COC', u: 0.5, t: 0.61 },
+      { sigla: 'ATT', u: 0.5, t: 0.94 },
     ],
   },
   '3-1-3': {
