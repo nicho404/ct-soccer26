@@ -38,7 +38,8 @@ tocco. Prima di ridisegnare un'altra sezione, verificare questi punti.
 - **Home**: prossima partita (con la posizione dell'avversario), ultima partita, stagione in
   quattro numeri (posizione, punti, V-N-P, gol) e forma dalla più vecchia alla più recente.
 - **Partite**: due schede Precampionato / Campionato (solo se ci sono partite in entrambe; il
-  confine è l'inizio del campionato, amichevoli e coppe seguono la data), riquadri compatti
+  confine è l'inizio del campionato, che il mister cambia dalla riga "Campionato dal … ✎";
+  amichevoli e coppe seguono la data), riquadri compatti
   (V-N-P, gol, referti da fare) sulla fase scelta. Una riga per partita su tre livelli:
   avversario, data e ora, poi in piccolo campo, giornata e presenti; a sinistra il risultato o
   i giorni mancanti in forma corta ("9 gg"). La competizione principale sta in cima, sulla riga

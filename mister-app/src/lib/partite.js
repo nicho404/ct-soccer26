@@ -120,17 +120,24 @@ export function quandoBreve(iso, oggi = oggiISO()) {
   return `${giorni} gg`
 }
 
-// Fasi della stagione. Il confine è l'inizio del campionato: la data di
-// inizio della competizione, o la sua prima partita se viene prima (o se la
-// data manca). Senza un campionato non ci sono fasi: null.
+// Fasi della stagione. Il confine è l'inizio del campionato: la data scritta
+// sulla competizione (la decide il mister) o, se manca, la sua prima partita.
+// Con più campionati vale quello che parte prima. Senza: null, niente fasi.
+export function campionatoDiRiferimento(partite, competitions = []) {
+  return competitions
+    .filter((c) => c.tipo === 'campionato')
+    .map((c) => ({
+      id: c.id,
+      inizio: c.inizio
+        || partite.filter((m) => m.competitionId === c.id && m.data).map((m) => m.data).sort()[0]
+        || null,
+    }))
+    .filter((c) => c.inizio)
+    .sort((a, b) => a.inizio.localeCompare(b.inizio))[0] ?? null
+}
+
 export function inizioCampionato(partite, competitions = []) {
-  const campionati = competitions.filter((c) => c.tipo === 'campionato')
-  const ids = new Set(campionati.map((c) => c.id))
-  const date = [
-    ...campionati.map((c) => c.inizio),
-    ...partite.filter((m) => ids.has(m.competitionId)).map((m) => m.data),
-  ].filter(Boolean).sort()
-  return date[0] ?? null
+  return campionatoDiRiferimento(partite, competitions)?.inizio ?? null
 }
 
 // 'precampionato' | 'campionato'. Amichevoli e coppe non hanno una fase

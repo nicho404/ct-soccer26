@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from 'vitest
 import {
   partitaGiocata, esitoPartita, partiteInProgramma, partiteGiocate,
   prossimaPartita, bilancio, formatDataPartita, quandoPartita, partiteContro,
-  oggiISO, campiForm, quandoBreve, inizioCampionato, fasePartita,
+  oggiISO, campiForm, quandoBreve, inizioCampionato, campionatoDiRiferimento, fasePartita,
 } from './partite'
 
 const OGGI = '2026-10-10'
@@ -178,6 +178,12 @@ describe('fasi della stagione', () => {
   it('senza data di inizio vale la prima partita di campionato', () => {
     const senzaData = [competitions[0], { id: 2, nome: 'Lega', tipo: 'campionato', inizio: '' }]
     expect(inizioCampionato(partite, senzaData)).toBe('2026-10-20')
+  })
+
+  it('la data scritta dal mister vale anche se sposta il confine in avanti', () => {
+    const spostato = [competitions[0], { ...competitions[1], inizio: '2026-10-10' }]
+    expect(campionatoDiRiferimento(partite, spostato)).toEqual({ id: 2, inizio: '2026-10-10' })
+    expect(fasePartita(partite[1], inizioCampionato(partite, spostato))).toBe('precampionato')
   })
 
   it('senza campionato non ci sono fasi', () => {

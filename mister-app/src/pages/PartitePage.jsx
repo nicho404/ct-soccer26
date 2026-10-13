@@ -1,12 +1,14 @@
+import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { campoPartitaInfo } from '../db/constants'
 import EmptyState from '../components/EmptyState'
+import Modal from '../components/Modal'
 import { IconCalendar } from '../components/icons'
 import {
   partiteInProgramma, partiteGiocate, esitoPartita, ESITO_INFO,
-  formatDataPartita, quandoBreve, bilancio, inizioCampionato, fasePartita, oggiISO,
+  formatDataPartita, quandoBreve, bilancio, campionatoDiRiferimento, fasePartita, oggiISO,
 } from '../lib/partite'
 import { presentiIds } from '../lib/presenze'
 import { refertoCompilato } from '../lib/storico'
@@ -61,12 +63,15 @@ export default function PartitePage() {
   const tutte = useLiveQuery(() => db.matches.toArray(), [])
   const opponents = useLiveQuery(() => db.opponents.toArray(), [])
   const competitions = useLiveQuery(() => db.competitions.toArray(), [])
+  // Data in modifica nella finestra "Inizio campionato"; null = finestra chiusa
+  const [nuovoInizio, setNuovoInizio] = useState(null)
 
   if (!tutte || !opponents || !competitions) return null
 
   // Precampionato e campionato sono due stagioni diverse: bilancio ed elenco
   // riguardano una fase alla volta. La scelta compare solo se servono entrambe.
-  const inizio = inizioCampionato(tutte, competitions)
+  const campionato = campionatoDiRiferimento(tutte, competitions)
+  const inizio = campionato?.inizio ?? null
   const conFasi = FASI.every((f) => tutte.some((m) => fasePartita(m, inizio) === f.value))
   const richiesta = params.get('f')
   const fase = FASI.some((f) => f.value === richiesta)
@@ -88,6 +93,12 @@ export default function PartitePage() {
   const giocate = partiteGiocate(partite)
   const b = bilancio(partite)
   const refertiMancanti = giocate.filter((m) => esitoPartita(m) && !refertoCompilato(m)).length
+
+  const salvaInizio = async () => {
+    if (!nuovoInizio) return
+    await db.competitions.update(campionato.id, { inizio: nuovoInizio })
+    setNuovoInizio(null)
+  }
 
   const riga = (partita, futura) => (
     <RigaPartita
@@ -121,6 +132,32 @@ export default function PartitePage() {
             </button>
           ))}
         </div>
+      )}
+
+      {campionato && (
+        <button type="button" className="partite-inizio muted small" onClick={() => setNuovoInizio(inizio)}>
+          Campionato dal {formatDataPartita(inizio)} ✎
+        </button>
+      )}
+
+      {nuovoInizio !== null && (
+        <Modal titolo="Inizio campionato" onClose={() => setNuovoInizio(null)}>
+          <div className="field">
+            <label>Il campionato parte dal</label>
+            <input
+              className="input"
+              type="date"
+              value={nuovoInizio}
+              onChange={(e) => setNuovoInizio(e.target.value)}
+            />
+            <p className="muted small" style={{ margin: '6px 0 0' }}>
+              Le partite prima di questa data contano come precampionato.
+            </p>
+          </div>
+          <button className="btn btn-primary" disabled={!nuovoInizio} onClick={salvaInizio}>
+            Salva
+          </button>
+        </Modal>
       )}
 
       {tutte.length === 0 ? (

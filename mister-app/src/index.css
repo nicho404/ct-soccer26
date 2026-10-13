@@ -412,6 +412,10 @@ a.card {
 .partita-riga-testo strong { font-size: 1rem; }
 .partita-riga-quando { font-size: 0.86rem; font-weight: 600; }
 .partita-riga-testo .partita-riga-dettagli { font-size: 0.76rem; }
+.partite-inizio {
+  display: block; margin: -4px 0 12px auto; padding: 4px 0; border: 0; background: none;
+  font: inherit; font-size: 0.8rem; cursor: pointer;
+}
 .card.partita-voce {
   display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
   font: inherit; color: inherit; cursor: pointer;
