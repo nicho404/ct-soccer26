@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from 'vitest
 import {
   partitaGiocata, esitoPartita, partiteInProgramma, partiteGiocate,
   prossimaPartita, bilancio, formatDataPartita, quandoPartita, partiteContro,
-  oggiISO, campiForm,
+  oggiISO, campiForm, quandoBreve, inizioCampionato, fasePartita,
 } from './partite'
 
 const OGGI = '2026-10-10'
@@ -151,6 +151,43 @@ describe('formattazione date', () => {
     expect(quandoPartita('2026-10-09', OGGI)).toBe('Ieri')
     expect(quandoPartita('2026-10-15', OGGI)).toBe('tra 5 giorni')
     expect(quandoPartita('2026-10-07', OGGI)).toBe('3 giorni fa')
+  })
+
+  it('ha una forma corta per il riquadro della riga', () => {
+    expect(quandoBreve('2026-10-10', OGGI)).toBe('Oggi')
+    expect(quandoBreve('2026-10-11', OGGI)).toBe('Domani')
+    expect(quandoBreve('2026-11-10', OGGI)).toBe('31 gg')
+  })
+})
+
+describe('fasi della stagione', () => {
+  const competitions = [
+    { id: 1, nome: 'Torneo estivo', tipo: 'amichevoli' },
+    { id: 2, nome: 'Lega', tipo: 'campionato', inizio: '2026-10-01' },
+  ]
+  const partite = [
+    P('2026-09-15', { competitionId: 1 }),
+    P('2026-10-08', { competitionId: null }),
+    P('2026-10-20', { competitionId: 2 }),
+  ]
+
+  it('il confine è la data di inizio del campionato', () => {
+    expect(inizioCampionato(partite, competitions)).toBe('2026-10-01')
+  })
+
+  it('senza data di inizio vale la prima partita di campionato', () => {
+    const senzaData = [competitions[0], { id: 2, nome: 'Lega', tipo: 'campionato', inizio: '' }]
+    expect(inizioCampionato(partite, senzaData)).toBe('2026-10-20')
+  })
+
+  it('senza campionato non ci sono fasi', () => {
+    expect(inizioCampionato(partite, [competitions[0]])).toBe(null)
+    expect(fasePartita(partite[0], null)).toBe('campionato')
+  })
+
+  it("un'amichevole segue il calendario: prima o dopo l'inizio", () => {
+    expect(partite.map((m) => fasePartita(m, '2026-10-01')))
+      .toEqual(['precampionato', 'campionato', 'campionato'])
   })
 })
 

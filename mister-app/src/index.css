@@ -404,10 +404,14 @@ a.card {
 
 /* Partite: righe e scheda */
 .card.partita-riga { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
-.partita-riga-esito { width: 58px; flex-shrink: 0; display: flex; justify-content: center; }
-.partita-riga-esito .badge { width: 100%; text-align: center; font-weight: 800; }
-.partita-riga-testo { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.partita-riga-testo strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.partita-riga-esito { width: 60px; flex-shrink: 0; display: flex; justify-content: center; }
+.partita-riga-esito .badge { width: 100%; justify-content: center; padding: 3px 4px; font-weight: 800; white-space: nowrap; }
+/* Tre livelli: avversario, quando si gioca, il resto in piccolo */
+.partita-riga-testo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.partita-riga-testo > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.partita-riga-testo strong { font-size: 1rem; }
+.partita-riga-quando { font-size: 0.86rem; font-weight: 600; }
+.partita-riga-testo .partita-riga-dettagli { font-size: 0.76rem; }
 .card.partita-voce {
   display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
   font: inherit; color: inherit; cursor: pointer;

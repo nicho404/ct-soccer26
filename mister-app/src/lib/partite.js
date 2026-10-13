@@ -109,6 +109,36 @@ export function quandoPartita(iso, oggi = oggiISO()) {
   return giorni > 0 ? `tra ${giorni} giorni` : `${-giorni} giorni fa`
 }
 
+// Come quandoPartita, ma per il riquadro stretto della riga: "Oggi" /
+// "Domani" / "9 gg". Solo per le partite in programma.
+export function quandoBreve(iso, oggi = oggiISO()) {
+  if (!iso) return ''
+  const giorni = Math.round((Date.parse(iso) - Date.parse(oggi)) / 86400000)
+  if (Number.isNaN(giorni)) return ''
+  if (giorni === 0) return 'Oggi'
+  if (giorni === 1) return 'Domani'
+  return `${giorni} gg`
+}
+
+// Fasi della stagione. Il confine è l'inizio del campionato: la data di
+// inizio della competizione, o la sua prima partita se viene prima (o se la
+// data manca). Senza un campionato non ci sono fasi: null.
+export function inizioCampionato(partite, competitions = []) {
+  const campionati = competitions.filter((c) => c.tipo === 'campionato')
+  const ids = new Set(campionati.map((c) => c.id))
+  const date = [
+    ...campionati.map((c) => c.inizio),
+    ...partite.filter((m) => ids.has(m.competitionId)).map((m) => m.data),
+  ].filter(Boolean).sort()
+  return date[0] ?? null
+}
+
+// 'precampionato' | 'campionato'. Amichevoli e coppe non hanno una fase
+// propria: seguono il calendario, prima o dopo l'inizio del campionato.
+export function fasePartita(m, inizio) {
+  return inizio && (m.data ?? '') !== '' && m.data < inizio ? 'precampionato' : 'campionato'
+}
+
 // Scontri diretti con una squadra, dalla più recente: la memoria del girone.
 export function partiteContro(partite, opponentId) {
   if (opponentId == null) return []

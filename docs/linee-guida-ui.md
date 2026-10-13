@@ -37,9 +37,12 @@ tocco. Prima di ridisegnare un'altra sezione, verificare questi punti.
   (stato, acciaccato, tesseramento) compaiono sotto il nome solo se ci sono.
 - **Home**: prossima partita (con la posizione dell'avversario), ultima partita, stagione in
   quattro numeri (posizione, punti, V-N-P, gol) e forma dalla più vecchia alla più recente.
-- **Partite**: riquadri compatti (V-N-P, gol, referti da fare), una riga per partita con il
-  risultato a sinistra; il nome della competizione solo se ce n'è più d'una; "da fare" solo se
-  manca qualcosa.
+- **Partite**: due schede Precampionato / Campionato (solo se ci sono partite in entrambe; il
+  confine è l'inizio del campionato, amichevoli e coppe seguono la data), riquadri compatti
+  (V-N-P, gol, referti da fare) sulla fase scelta. Una riga per partita su tre livelli:
+  avversario, data e ora, poi in piccolo campo, giornata e presenti; a sinistra il risultato o
+  i giorni mancanti in forma corta ("9 gg"). La competizione principale sta in cima, sulla riga
+  solo se è un'altra; "da fare" solo se manca qualcosa.
 - **Scheda partita**: riepilogo in cima (risultato, avversario, data, competizione) con ✎ per i
   dati in finestra; risultato modificabile subito sotto; Presenze, Referto e Marcatori avversari
   come righe con stato, il dettaglio in finestra o nel referto. In creazione i dati restano in
