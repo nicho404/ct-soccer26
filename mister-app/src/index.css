@@ -1572,6 +1572,55 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   justify-content: center;
 }
 
+/* Con la sottobarra il titolo della pagina ripete la scheda accesa: resta
+   solo per i lettori di schermo, le azioni della page-header vanno a destra.
+   Un'intestazione con il solo titolo sparisce del tutto. */
+.con-sottobarra > .page:not(.page-errore) > .page-header > h1,
+.con-sottobarra .colonna-elenco > .page > .page-header > h1 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.con-sottobarra > .page:not(.page-errore) > .page-header > h1 + *,
+.con-sottobarra .colonna-elenco > .page > .page-header > h1 + * {
+  margin-left: auto;
+}
+
+.con-sottobarra > .page:not(.page-errore) > .page-header:has(> h1:only-child),
+.con-sottobarra .colonna-elenco > .page > .page-header:has(> h1:only-child) {
+  display: none;
+}
+
+/* Modulo: pallino di coerenza, problemi nel loro colore, icone nelle schede */
+.coerenza-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.coerenza-dot-ok { background: var(--ok); }
+.coerenza-dot-warn { background: var(--warn); }
+.coerenza-dot-rotto { background: var(--danger); }
+.coerenza-problema,
+.coerenza-voce { display: flex; align-items: flex-start; gap: 8px; }
+.coerenza-problema .coerenza-dot,
+.coerenza-voce .coerenza-dot { margin-top: 5px; }
+.coerenza-voce { margin: 6px 0 0; }
+.coerenza-voce-warn { color: var(--warn); }
+.coerenza-voce-rotto { color: var(--danger); }
+.modulo-tattica-modifica { display: flex; }
+.chip-avviso { display: inline-flex; margin-left: 4px; color: var(--warn); vertical-align: -2px; }
+.scheda-icona {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  white-space: nowrap; font-size: 0.92rem;
+}
+.scheda-icona svg { flex-shrink: 0; }
+
 /* ---------- Desktop (da 1024px) ----------
    Sotto questa soglia non cambia niente. Sopra: menu laterale fisso al
    posto della barra in basso, contenuto centrato a 960px, finestre come
