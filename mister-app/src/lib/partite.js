@@ -24,9 +24,9 @@ export function esitoPartita(m) {
 }
 
 export const ESITO_INFO = {
-  V: { label: 'Vittoria', badge: 'badge-ok' },
-  N: { label: 'Pareggio', badge: 'badge-warn' },
-  P: { label: 'Sconfitta', badge: 'badge-danger' },
+  V: { label: 'Vittoria' },
+  N: { label: 'Pareggio' },
+  P: { label: 'Sconfitta' },
 }
 
 // Ordinamento cronologico: a parità di giorno decide l'ora, se c'è.

@@ -100,6 +100,8 @@ modo: sopra il verde si usano `--campo-linee` e i colori di stato schiariti.
 
 | Componente | Uso |
 |---|---|
+| `simboli.jsx` | Unica mappa valore → icona (eventi, incarichi, impostazioni, analisi), `Cartellino`, toni dei badge e colori di reparto/intesa. Le costanti in `db/` e `lib/` restano solo valori ed etichette |
+| `icons.jsx` | Icone outline 24×24 a `currentColor`; mai emoji nell'interfaccia (un test lo controlla) |
 | `Modal` | Finestra a schermo con titolo e ✕; si chiude anche toccando fuori o con Esc |
 | `Scelta` | Al posto di `<select>`: stesso uso (figli `<option>`), la scelta avviene in un `Modal` |
 | `FacciaUmore` | Faccina dell'umore disegnata, colore dal verde scuro al rosso scuro |

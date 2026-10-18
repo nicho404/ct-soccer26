@@ -99,11 +99,11 @@ export const PIEDI = [
 
 // Stato attività: rosa allargata (~28 in chat) vs rosa attiva (~13-14 reali)
 export const STATI_ATTIVITA = [
-  { value: 'sicuro', label: 'Sicuro', badge: 'ok' },
-  { value: 'condizionale', label: 'Condizionale', badge: 'accent' },
-  { value: 'tiepido', label: 'Tiepido', badge: 'warn' },
-  { value: 'infortunato', label: 'Infortunato', badge: 'danger' },
-  { value: 'inattivo', label: 'Inattivo', badge: '' },
+  { value: 'sicuro', label: 'Sicuro' },
+  { value: 'condizionale', label: 'Condizionale' },
+  { value: 'tiepido', label: 'Tiepido' },
+  { value: 'infortunato', label: 'Infortunato' },
+  { value: 'inattivo', label: 'Inattivo' },
 ]
 
 export const statoAttivitaInfo = (value) =>
@@ -113,9 +113,9 @@ export const statoAttivitaInfo = (value) =>
 export const isAttivo = (player) => player.statoAttivita !== 'inattivo'
 
 export const TESSERAMENTO = [
-  { value: 'ok', label: 'Tesserato', badge: 'ok' },
-  { value: 'da_verificare', label: 'Da verificare', badge: 'warn' },
-  { value: 'non_tesserabile', label: 'Non tesserabile', badge: 'danger' },
+  { value: 'ok', label: 'Tesserato' },
+  { value: 'da_verificare', label: 'Da verificare' },
+  { value: 'non_tesserabile', label: 'Non tesserabile' },
 ]
 
 export const tesseramentoInfo = (value) =>
@@ -150,28 +150,28 @@ export const NOTE_FISICHE = [
 // Stili di gioco alla FC26 (PlayStyles): un giocatore può averne più di uno.
 // value = etichetta salvata sul giocatore (retrocompatibile coi dati esistenti)
 export const STILI_GIOCO = [
-  { value: 'Tecnico', icona: '🪄', descrizione: 'Tocco di qualità superiore: controlli orientati, giocate pulite anche in spazi stretti.' },
-  { value: 'Funambolo', icona: '🤹', descrizione: 'Dribbling e finte nell\'uno contro uno: cerca il duello e spesso lo vince.' },
-  { value: 'Estro', icona: '✨', descrizione: 'Giocate imprevedibili: tacchi, no-look, invenzioni che spaccano le difese schierate.' },
-  { value: 'Primo controllo', icona: '🧲', descrizione: 'Primo tocco che addomestica qualsiasi pallone, anche in corsa o sotto pressione.' },
-  { value: 'Tiro a giro', icona: '🌀', descrizione: 'Conclusioni a giro sul secondo palo, specialità dal limite dell\'area.' },
-  { value: 'Tiro potente', icona: '💥', descrizione: 'Conclusioni violente anche da fuori: quando carica il tiro, il portiere lo sente.' },
-  { value: 'Palle inattive', icona: '🎯', descrizione: 'Specialista di punizioni, rigori e angoli: palla ferma, occasione vera.' },
-  { value: 'Palla lunga', icona: '🚀', descrizione: 'Lanci lunghi precisi a cambiare campo o pescare la profondità.' },
-  { value: 'Passaggio filtrante', icona: '🔑', descrizione: 'Vede e serve l\'ultimo passaggio: filtranti che tagliano le linee.' },
-  { value: 'Cross teso', icona: '🥏', descrizione: 'Traversoni tesi e velenosi dal fondo o da posizione arretrata.' },
-  { value: 'Acrobata', icona: '🤸', descrizione: 'Rovesciate, volée e giocate acrobatiche: colpisce qualsiasi pallone sporco in area.' },
-  { value: 'Gioco aereo', icona: '✈️', descrizione: 'Domina di testa: stacco, tempo di salto e colpi di testa pericolosi in entrambe le aree.' },
-  { value: 'Scatto', icona: '⚡', descrizione: 'Bruciante sui primi metri: vince i duelli in velocità e attacca la profondità.' },
-  { value: 'Instancabile', icona: '🔋', descrizione: 'Corre per due per tutta la partita: recupera la posizione anche nei finali.' },
-  { value: 'Anti-pressing', icona: '🧊', descrizione: 'Freddo sotto pressione: protegge palla e esce dal raddoppio senza perderla.' },
-  { value: 'Anticipo', icona: '⏱️', descrizione: 'Legge l\'azione prima degli altri: arriva primo sul pallone senza fare fallo.' },
-  { value: 'Intercetto', icona: '🕸️', descrizione: 'Chiude le linee di passaggio: mette il corpo dove passerà il pallone.' },
-  { value: 'Muro', icona: '🧱', descrizione: 'Si immola sulle conclusioni: blocca tiri e cross col corpo.' },
-  { value: 'Scivolata', icona: '🛝', descrizione: 'Tackle in scivolata puliti e tempestivi, anche come ultima risorsa.' },
-  { value: 'Fisico', icona: '🐂', descrizione: 'Usa il corpo: spalla a spalla, protezione palla e duelli vinti di forza.' },
-  { value: 'Marcatura', icona: '🔒', descrizione: 'Segue l\'uomo come un\'ombra: non perde mai il suo riferimento.' },
-  { value: 'Rimessa lunga', icona: '🤾', descrizione: 'Rimesse laterali lunghe fino in area: un angolo in più a ogni laterale.' },
+  { value: 'Tecnico', descrizione: 'Tocco di qualità superiore: controlli orientati, giocate pulite anche in spazi stretti.' },
+  { value: 'Funambolo', descrizione: 'Dribbling e finte nell\'uno contro uno: cerca il duello e spesso lo vince.' },
+  { value: 'Estro', descrizione: 'Giocate imprevedibili: tacchi, no-look, invenzioni che spaccano le difese schierate.' },
+  { value: 'Primo controllo', descrizione: 'Primo tocco che addomestica qualsiasi pallone, anche in corsa o sotto pressione.' },
+  { value: 'Tiro a giro', descrizione: 'Conclusioni a giro sul secondo palo, specialità dal limite dell\'area.' },
+  { value: 'Tiro potente', descrizione: 'Conclusioni violente anche da fuori: quando carica il tiro, il portiere lo sente.' },
+  { value: 'Palle inattive', descrizione: 'Specialista di punizioni, rigori e angoli: palla ferma, occasione vera.' },
+  { value: 'Palla lunga', descrizione: 'Lanci lunghi precisi a cambiare campo o pescare la profondità.' },
+  { value: 'Passaggio filtrante', descrizione: 'Vede e serve l\'ultimo passaggio: filtranti che tagliano le linee.' },
+  { value: 'Cross teso', descrizione: 'Traversoni tesi e velenosi dal fondo o da posizione arretrata.' },
+  { value: 'Acrobata', descrizione: 'Rovesciate, volée e giocate acrobatiche: colpisce qualsiasi pallone sporco in area.' },
+  { value: 'Gioco aereo', descrizione: 'Domina di testa: stacco, tempo di salto e colpi di testa pericolosi in entrambe le aree.' },
+  { value: 'Scatto', descrizione: 'Bruciante sui primi metri: vince i duelli in velocità e attacca la profondità.' },
+  { value: 'Instancabile', descrizione: 'Corre per due per tutta la partita: recupera la posizione anche nei finali.' },
+  { value: 'Anti-pressing', descrizione: 'Freddo sotto pressione: protegge palla e esce dal raddoppio senza perderla.' },
+  { value: 'Anticipo', descrizione: 'Legge l\'azione prima degli altri: arriva primo sul pallone senza fare fallo.' },
+  { value: 'Intercetto', descrizione: 'Chiude le linee di passaggio: mette il corpo dove passerà il pallone.' },
+  { value: 'Muro', descrizione: 'Si immola sulle conclusioni: blocca tiri e cross col corpo.' },
+  { value: 'Scivolata', descrizione: 'Tackle in scivolata puliti e tempestivi, anche come ultima risorsa.' },
+  { value: 'Fisico', descrizione: 'Usa il corpo: spalla a spalla, protezione palla e duelli vinti di forza.' },
+  { value: 'Marcatura', descrizione: 'Segue l\'uomo come un\'ombra: non perde mai il suo riferimento.' },
+  { value: 'Rimessa lunga', descrizione: 'Rimesse laterali lunghe fino in area: un angolo in più a ogni laterale.' },
 ]
 
 export const stileInfo = (value) => STILI_GIOCO.find((s) => s.value === value)
@@ -255,12 +255,12 @@ export const tipoCompetizioneLabel = (value) =>
 // Eventi del referto partita (M6). `conGiocatore` = chiede chi l'ha fatto,
 // `conAssist` = chiede anche chi ha servito, `conCambio` = chiede chi esce e chi entra.
 export const TIPI_EVENTO = [
-  { value: 'gol', label: 'Gol', icona: '⚽', conGiocatore: true, conAssist: true },
-  { value: 'golSubito', label: 'Gol subito', icona: '🥅' },
-  { value: 'cambio', label: 'Cambio', icona: '🔁', conCambio: true },
-  { value: 'spostamento', label: 'Cambio posizione', icona: '🔀', conSpostamento: true },
-  { value: 'giallo', label: 'Ammonizione', icona: '🟨', conGiocatore: true },
-  { value: 'rosso', label: 'Espulsione', icona: '🟥', conGiocatore: true },
+  { value: 'gol', label: 'Gol', conGiocatore: true, conAssist: true },
+  { value: 'golSubito', label: 'Gol subito' },
+  { value: 'cambio', label: 'Cambio', conCambio: true },
+  { value: 'spostamento', label: 'Cambio posizione', conSpostamento: true },
+  { value: 'giallo', label: 'Ammonizione', conGiocatore: true },
+  { value: 'rosso', label: 'Espulsione', conGiocatore: true },
 ]
 
 export const tipoEventoInfo = (value) =>
@@ -271,9 +271,9 @@ export const tipoEventoInfo = (value) =>
 // deve concentrarsi. Salvato per playerId, così segue il giocatore negli
 // scambi di posizione.
 export const INCARICHI_FASE = [
-  { value: 'offensivo', label: 'Offensivo', icona: '⚔️' },
-  { value: 'difensivo', label: 'Difensivo', icona: '🛡️' },
-  { value: 'entrambe', label: 'Entrambe le fasi', icona: '🔄' },
+  { value: 'offensivo', label: 'Offensivo' },
+  { value: 'difensivo', label: 'Difensivo' },
+  { value: 'entrambe', label: 'Entrambe le fasi' },
 ]
 
 export const incaricoInfo = (value) => INCARICHI_FASE.find((i) => i.value === value) ?? null

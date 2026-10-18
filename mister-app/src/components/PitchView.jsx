@@ -1,16 +1,24 @@
 import { famigliaRuolo, incaricoInfo } from '../db/constants'
-import { coloreFamiglia, coloreIntesa } from './simboli'
+import { coloreFamiglia, coloreIntesa, Simbolo } from './simboli'
 import { compatibilitaGiocatore } from '../tactics/engine'
 import { nomeBreve } from '../lib/nomi'
 import { pt, poly, areaPoly } from '../lib/pitchGeometry'
 import { fuoriRuolo } from '../lib/formazioni'
 import { vistaCompleta } from '../lib/vistaCampo'
+import { IconAlert, IconPencil, IconSwap } from './icons'
 
 // Il campo resta verde e scuro con qualsiasi tema: linee e scritte usano
 // --campo-linee, e i colori di stato si schiariscono verso le linee per
 // restare leggibili sul verde anche quando il tema chiaro li scurisce.
 const tratto = (pc) => `color-mix(in srgb, var(--campo-linee) ${pc}%, transparent)`
 const sulCampo = (token) => `color-mix(in srgb, var(--${token}) 70%, var(--campo-linee))`
+
+// Matita accanto al ruolo scelto a mano dal mister
+const Manuale = ({ x, y }) => (
+  <g transform={`translate(${x} ${y})`} style={{ color: sulCampo('accent') }}>
+    <IconPencil size={8} aria-label="Ruolo manuale" />
+  </g>
+)
 
 function nomeCorto(p) {
   const n = nomeBreve(p)
@@ -128,7 +136,7 @@ export default function PitchView({
       {badgeInfo && (
         <g>
           <rect x="8" y="8" width={badgeW} height="30" rx="15" fill="color-mix(in srgb, var(--campo-pedina) 92%, transparent)" stroke={sulCampo('accent')} strokeWidth="1" />
-          <text x="18" y="28" fontSize="15">{badgeInfo.icona}</text>
+          <g transform="translate(17 15)" style={{ color: 'var(--campo-linee)' }}>{badgeInfo.icona}</g>
           <text x="40" y="27" fill="var(--campo-linee)" fontSize="11" fontWeight="700">{badgeInfo.label}</text>
         </g>
       )}
@@ -185,19 +193,23 @@ export default function PitchView({
                   </text>
                 )}
                 {warning && (
-                  <text x="14" y="-14" fontSize="12">⚠️</text>
+                  <g transform="translate(7 -27)" style={{ color: sulCampo('warn') }}>
+                    <IconAlert size={14} aria-label="Fuori ruolo" />
+                  </g>
                 )}
                 {compat && <BadgeCompatibilita x={13} y={-14} livello={compat.livello} />}
                 {vedi.incarichi && incaricoInfo(incarichi[p.id]) && (
-                  <text x="-22" y="-12" fontSize="11">{incaricoInfo(incarichi[p.id]).icona}</text>
+                  <g transform="translate(-30 -24)" style={{ color: 'var(--campo-linee)' }}>
+                    <Simbolo gruppo="incarico" valore={incarichi[p.id]} size={13} />
+                  </g>
                 )}
                 <text x="0" y="25" textAnchor="middle" fill="var(--campo-linee)" fontSize="10.5" fontWeight="700">
                   {nomeCorto(p)}
                 </text>
                 <text x="0" y="36" textAnchor="middle" fill={colore} fontSize="9.5" fontWeight="800">
                   {slot.sigla}
-                  {ruolo.manuale && <tspan fill={sulCampo('accent')} fontSize="8"> ✎</tspan>}
                 </text>
+                {ruolo.manuale && <Manuale x={slot.sigla.length * 3.4 + 2} y={29} />}
                 {vedi.ruoli && (
                   <text x="0" y="45" textAnchor="middle" fill={tratto(78)} fontSize="7.5">
                     {ruolo.nome}
@@ -207,9 +219,14 @@ export default function PitchView({
                   const entrante = players.find((pl) => pl.id === cambi[i])
                   if (!entrante) return null
                   return (
-                    <text x="0" y={vedi.ruoli ? 57 : 47} textAnchor="middle" fill={sulCampo('danger')} fontSize="8.5" fontWeight="800">
-                      🔁 {nomeCorto(entrante)}
-                    </text>
+                    <g style={{ color: sulCampo('danger') }}>
+                      <g transform={`translate(${-nomeCorto(entrante).length * 2.45 - 12} ${vedi.ruoli ? 50 : 40})`}>
+                        <IconSwap size={9} />
+                      </g>
+                      <text x="2" y={vedi.ruoli ? 57 : 47} textAnchor="middle" fill="currentColor" fontSize="8.5" fontWeight="800">
+                        {nomeCorto(entrante)}
+                      </text>
+                    </g>
                   )
                 })()}
               </>
@@ -227,8 +244,10 @@ export default function PitchView({
                 </text>
                 <text x="0" y="36" textAnchor="middle" fontSize="7.5" fill={tratto(55)}>
                   {vedi.ruoli ? ruolo.nome : ''}
-                  {ruolo.manuale && <tspan fill={sulCampo('accent')}> ✎</tspan>}
                 </text>
+                {ruolo.manuale && (
+                  <Manuale x={vedi.ruoli ? ruolo.nome.length * 1.9 + 2 : -4} y={30} />
+                )}
               </>
             )}
           </g>

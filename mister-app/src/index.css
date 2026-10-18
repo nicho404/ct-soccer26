@@ -510,6 +510,17 @@ a.card {
 }
 .salva-fisso .btn { box-shadow: 0 6px 20px color-mix(in srgb, var(--ombra) 50%, transparent); }
 
+/* Cartellini: rettangoli pieni nel colore dello stato */
+.cartellino {
+  display: inline-block; width: calc(var(--cartellino-h, 14px) * 0.72); height: var(--cartellino-h, 14px);
+  border-radius: 2px; vertical-align: -2px; flex-shrink: 0;
+}
+.cartellino-giallo { background: var(--warn); }
+.cartellino-rosso { background: var(--danger); }
+/* icone in linea col testo (badge, etichette, pulsanti) */
+.icona-testo { display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; }
+.icona-testo svg { flex-shrink: 0; }
+
 /* Impostazioni: palette come tessere con anteprima */
 .tema-griglia { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .tema-tessera {

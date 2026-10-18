@@ -1,8 +1,8 @@
 import { useId, useState } from 'react'
 import { TIPI_EVENTO_AVVERSARI, pulisciNome } from '../lib/girone'
 import { chiaveEvento } from '../db/girone'
-
-const iconaDi = (tipo) => TIPI_EVENTO_AVVERSARI.find((t) => t.value === tipo)?.icona ?? ''
+import { Simbolo } from './simboli'
+import { IconClose } from './icons'
 
 // Gol e cartellini degli avversari, per una squadra (le nostre partite) o per
 // due (il girone). `lati`: [{ key, nome, opponentId }], opponentId null se la
@@ -37,7 +37,7 @@ export default function EventiAvversari({ eventi, onChange, lati, giocatori }) {
       ) : (
         eventi.map((e) => (
           <div className="row" key={e.key} style={{ gap: 8, padding: '3px 0' }}>
-            <span aria-hidden="true">{iconaDi(e.tipo)}</span>
+            <span className="icona-testo" aria-hidden="true"><Simbolo gruppo="eventoAvversari" valore={e.tipo} /></span>
             <span className="small" style={{ flex: 1, minWidth: 0 }}>
               {e.nome}
               {lati.length > 1 && <span className="muted"> · {nomeLato(e.lato)}</span>}
@@ -50,7 +50,7 @@ export default function EventiAvversari({ eventi, onChange, lati, giocatori }) {
                 onChange(eventi.filter((x) => x.key !== e.key))
               }}
             >
-              ✕
+              <IconClose size={16} />
             </button>
           </div>
         ))
@@ -63,7 +63,7 @@ export default function EventiAvversari({ eventi, onChange, lati, giocatori }) {
             className={`chip chip-sm ${tipo === t.value ? 'selected' : ''}`}
             onClick={() => setTipo(t.value)}
           >
-            {t.icona} {t.label}
+            <span className="icona-testo"><Simbolo gruppo="eventoAvversari" valore={t.value} size={14} /> {t.label}</span>
           </button>
         ))}
       </div>

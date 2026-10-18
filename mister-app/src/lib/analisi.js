@@ -8,9 +8,9 @@
 import { formatDataPartita } from './partite'
 
 export const TIPI_PUNTO = [
-  { value: 'problema', label: 'Da risolvere', icona: '⚠️' },
-  { value: 'forza', label: 'Funziona', icona: '✅' },
-  { value: 'novita', label: 'Novità', icona: '💡' },
+  { value: 'problema', label: 'Da risolvere' },
+  { value: 'forza', label: 'Funziona' },
+  { value: 'novita', label: 'Novità' },
 ]
 
 export const tipoPuntoInfo = (tipo) => TIPI_PUNTO.find((t) => t.value === tipo) ?? TIPI_PUNTO[2]

@@ -27,6 +27,7 @@ import PannelloSlot from '../components/modulo/PannelloSlot'
 import PannelloCambi from '../components/modulo/PannelloCambi'
 import FinestraSalvaAssetto from '../components/modulo/FinestraSalvaAssetto'
 import AssettiSalvati from '../components/modulo/AssettiSalvati'
+import { Simbolo } from '../components/simboli'
 
 // Switch di fase: lente esclusiva sul campo, mai le due mappe insieme
 const FASI = [
@@ -328,10 +329,10 @@ export default function ModuloPage() {
               onSlotTap={fase === 'cambi' ? onSlotTapCambi : onSlotTap}
               badgeInfo={
                 fase === 'possesso'
-                  ? impInfo
+                  ? { icona: <Simbolo gruppo="impostazione" valore={impostazione} />, label: impInfo.label }
                   : fase === 'nonPossesso'
-                  ? { icona: '🛡️', label: `Senza palla — linea ${lineaDifesaInfo(linea).label.toLowerCase()}` }
-                  : { icona: '🔁', label: 'Cambi pianificati' }
+                  ? { icona: <IconShield size={16} />, label: `Senza palla — linea ${lineaDifesaInfo(linea).label.toLowerCase()}` }
+                  : { icona: <IconSwap size={16} />, label: 'Cambi pianificati' }
               }
             />
           </div>

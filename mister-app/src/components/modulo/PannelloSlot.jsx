@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Modal from '../Modal'
 import IncaricoPicker from '../IncaricoPicker'
-import { IconAlert } from '../icons'
+import { IconAlert, IconStar } from '../icons'
 import { nomeBreve } from '../../lib/nomi'
 import { fuoriRuolo } from '../../lib/formazioni'
 import { famigliaRuolo } from '../../db/constants'
@@ -96,7 +96,7 @@ export default function PannelloSlot({
               onClick={() => onAssegna(p.id)}
             >
               <span className={`role-dot ${famigliaRuolo(p.ruoloNaturale)}`} style={{ marginRight: 6 }} />
-              {p.titolare && <span className="star-on">★ </span>}
+              {p.titolare && <span className="star-on" title="Titolare"><IconStar size={12} fill="currentColor" /> </span>}
               {nomeBreve(p)}
               {inCampo.has(p.id) ? ' (in campo)' : ''}
               {compat?.livello === 'naturale' && <span className="fit-plus"> +</span>}

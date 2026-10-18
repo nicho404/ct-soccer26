@@ -14,7 +14,7 @@ import EmptyState from '../components/EmptyState'
 import Modal from '../components/Modal'
 import Scelta from '../components/Scelta'
 import Avatar from '../components/Avatar'
-import { IconEye } from '../components/icons'
+import { IconCheck, IconClipboard, IconClose, IconEye, IconLink, IconPencil, IconThumb } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
 import { formatDataPartita, oggiISO, perDataDecrescente } from '../lib/partite'
 
@@ -22,10 +22,17 @@ import { formatDataPartita, oggiISO, perDataDecrescente } from '../lib/partite'
 // pollici, giù / di lato / su. Si salvano sulla stessa scala di prima (2, 3,
 // 4), così scheda giocatore e Capitano continuano a leggerli.
 const LIVELLI = [
-  { voto: 2, icona: '👎', label: 'Negativo', classe: 'sotto' },
-  { voto: 3, icona: '👍', label: 'Neutro', classe: 'norma' },
-  { voto: 4, icona: '👍', label: 'Positivo', classe: 'sopra' },
+  { voto: 2, label: 'Negativo', classe: 'sotto' },
+  { voto: 3, label: 'Neutro', classe: 'norma' },
+  { voto: 4, label: 'Positivo', classe: 'sopra' },
 ]
+
+// Pollice in su; girato in giù per il negativo, di lato (dal CSS) per il neutro
+const Pollice = ({ livello, size = 18 }) => (
+  <span className="pollice">
+    <IconThumb size={size} style={livello.classe === 'sotto' ? { transform: 'rotate(180deg)' } : undefined} />
+  </span>
+)
 // anche i voti 1-5 già salvati si leggono come pollice
 const livelloDi = (v) => (v == null ? null : v <= 2 ? LIVELLI[0] : v === 3 ? LIVELLI[1] : LIVELLI[2])
 
@@ -173,7 +180,7 @@ export default function ObservationPage() {
     <div className="page">
       <div className="page-header">
         <h1>Osservazione</h1>
-        <button className="btn btn-sm" onClick={() => navigate('/intese/nuova')}>🔗 Intesa</button>
+        <button className="btn btn-sm" onClick={() => navigate('/intese/nuova')}><IconLink size={16} /> Intesa</button>
       </div>
 
       {/* Dove e quando: tre schede uguali, poi una riga sola */}
@@ -236,13 +243,13 @@ export default function ObservationPage() {
               className={`chip chip-sm ${vista === 'osserva' ? 'selected' : ''}`}
               onClick={() => setVista('osserva')}
             >
-              ✏️ Osserva
+              <span className="icona-testo"><IconPencil size={14} /> Osserva</span>
             </button>
             <button
               className={`chip chip-sm ${vista === 'riepilogo' ? 'selected' : ''}`}
               onClick={() => setVista('riepilogo')}
             >
-              📋 Riepilogo ({osservati.size})
+              <span className="icona-testo"><IconClipboard size={14} /> Riepilogo ({osservati.size})</span>
             </button>
           </div>
 
@@ -264,7 +271,7 @@ export default function ObservationPage() {
                     >
                       <span className="oss-avatar">
                         <Avatar src={p.foto} size={40} />
-                        {n > 0 && <span className="oss-conta">✓{n > 1 ? n : ''}</span>}
+                        {n > 0 && <span className="oss-conta"><IconCheck size={10} strokeWidth="3" />{n > 1 ? n : ''}</span>}
                       </span>
                       <strong>{nomeBreve(p)}</strong>
                       {sigla && <span className={`badge oss-sigla badge-role-${famigliaRuolo(sigla) || 'none'}`}>{sigla}</span>}
@@ -289,14 +296,14 @@ export default function ObservationPage() {
                           const l = livelloDi(v)
                           return (
                             <span key={k} className={`badge oss-badge ${l.classe}`} title={l.label}>
-                              <span className="pollice">{l.icona}</span> {ETICHETTE[k] ?? k}
+                              <Pollice livello={l} size={13} /> {ETICHETTE[k] ?? k}
                             </span>
                           )
                         })}
                       </div>
                       {o.ruolo && (
                         <span className="small" style={{ color: o.ruolo.ok ? 'var(--ok)' : 'var(--danger)' }}>
-                          {o.ruolo.ok ? '✓' : '✗'} Ruolo da {o.ruolo.nome}{o.ruolo.motivo ? `: ${o.ruolo.motivo}` : ''}
+                          {o.ruolo.ok ? <IconCheck size={13} /> : <IconClose size={13} />} Ruolo da {o.ruolo.nome}{o.ruolo.motivo ? `: ${o.ruolo.motivo}` : ''}
                         </span>
                       )}
                       {o.notaGenerale && <span className="voce-anteprima">{o.notaGenerale}</span>}
@@ -337,7 +344,7 @@ export default function ObservationPage() {
                     aria-pressed={bozza.voti[c.key] === l.voto}
                     onClick={() => segna(c.key, l.voto)}
                   >
-                    <span className="pollice">{l.icona}</span>
+                    <Pollice livello={l} />
                   </button>
                 ))}
               </span>

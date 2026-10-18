@@ -242,23 +242,23 @@ export const MODULO_DEFAULT = { 7: '2-3-1', 8: '3-3-1' }
 // il calcolo dei ruoli (vedi src/tactics/engine.js, src/tactics/constants.js).
 export const IMPOSTAZIONI = [
   {
-    value: 'possesso', label: 'Possesso palla', icona: '⚽',
+    value: 'possesso', label: 'Possesso palla',
     descrizione: 'Tieni tu il pallone e sposta l\'avversario col giro palla: esterni larghi e alti, un regista tra le linee, punta che si abbassa a legare il gioco. Ampiezza alta, 2-3 uomini in area. Serve tecnica diffusa e pazienza.',
   },
   {
-    value: 'ali', label: 'Gioco sulle ali', icona: '🦅',
+    value: 'ali', label: 'Gioco sulle ali',
     descrizione: 'Il gioco si allarga sugli esterni: ali di cross che puntano il fondo, un incursore pronto a entrare in area sul traversone, punta d\'area che finalizza. Ampiezza massima, 3-4 uomini in area.',
   },
   {
-    value: 'lunga', label: 'Palla lunga', icona: '🚀',
+    value: 'lunga', label: 'Palla lunga',
     descrizione: 'Salti il centrocampo con lanci diretti sulla punta di riferimento: esterni bassi in fase, alti in ripartenza, incursori sulla seconda palla. Ampiezza media, 2-3 uomini sulla seconda palla.',
   },
   {
-    value: 'contropiede', label: 'Contropiede', icona: '⚡',
+    value: 'contropiede', label: 'Contropiede',
     descrizione: 'Blocco compatto e ripartenza immediata: esterni di strappo in campo aperto, mezzala che attacca lo spazio, punta di profondità sulle spalle della difesa. Ampiezza bassa che esplode in ripartenza, 2 uomini in area.',
   },
   {
-    value: 'oltranza', label: 'Difesa a oltranza', icona: '🛡️',
+    value: 'oltranza', label: 'Difesa a oltranza',
     descrizione: 'Tutti sotto la linea della palla: esterni bassi, un solo uomo davanti a orientare il pressing. Ampiezza minima, 1 uomo in area. Per difendere un risultato o arginare un avversario più forte.',
   },
 ]
@@ -312,7 +312,7 @@ const SIGLE_AFFINI = { CC: ['CDC', 'COC'], CDC: ['CC'], COC: ['CC'] }
 // Sigle accettate da uno slot: la sua e quelle affini dello stesso reparto.
 export const sigleAccettate = (slot) => [slot.sigla, ...(SIGLE_AFFINI[slot.sigla] ?? [])]
 
-// Il triangolo ⚠️ sul campo: fuori ruolo solo se né la sua posizione (o una
+// Il triangolo di avviso sul campo: fuori ruolo solo se né la sua posizione (o una
 // affine) né i suoi ruoli tattici coprono quello che lo slot chiede. Chi ha
 // già il ruolo tattico richiesto (es. "Mediano" nello slot da mediano) non è
 // mai fuori ruolo, qualunque sia la sigla.

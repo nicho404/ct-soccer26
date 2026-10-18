@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { coloreIntesa } from '../components/simboli'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -7,7 +6,7 @@ import {
   ruoloLabel, famigliaRuolo, tesseramentoInfo, statoAttivitaInfo,
   portaInfo, isAttivo,
   PIEDI, STATI_ATTIVITA, CALCI_FISSI, CRITERI_OSSERVAZIONE, TIPI_INTESA,
-  GESTIONE_ERRORE, CARATTERE, stileInfo, incaricoInfo,
+  GESTIONE_ERRORE, CARATTERE, incaricoInfo,
 } from '../db/constants'
 import { famigliaRuoloTattico } from '../tactics/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
@@ -21,6 +20,8 @@ import { DOMANDE_PER_SLOT } from '../lib/domandeRuolo'
 import Avatar from '../components/Avatar'
 import Modal from '../components/Modal'
 import { nomeBreve } from '../lib/nomi'
+import { Simbolo, Cartellino, badgeTono, coloreIntesa, TONO_STATO_ATTIVITA, TONO_TESSERAMENTO } from '../components/simboli'
+import { IconAlert, IconBandage, IconCheck, IconChevronLeft, IconClock, IconClose, IconGlove, IconStar } from '../components/icons'
 
 // Etichetta di ogni domanda di ruolo per id, per mostrare le risposte sì/no
 // nella card di un'osservazione senza dover risalire allo slot di quella
@@ -123,7 +124,7 @@ export default function PlayerDetailPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/rosa')}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/rosa')}><IconChevronLeft size={22} /></button>
         <h1>
           {player.nome}
           {player.soprannome ? <span className="muted"> “{player.soprannome}”</span> : null}
@@ -150,15 +151,15 @@ export default function PlayerDetailPage() {
             className={`star-toggle ${player.titolare ? 'on' : ''}`}
             onClick={() => db.players.update(playerId, { titolare: !player.titolare })}
           >
-            {player.titolare ? '★' : '☆'} Titolare
+            <IconStar size={14} fill={player.titolare ? 'currentColor' : 'none'} /> Titolare
           </button>
           {player.statoAttivita !== 'sicuro' && (
-            <span className={`badge ${stato.badge ? `badge-${stato.badge}` : ''}`}>{stato.label}</span>
+            <span className={`badge ${badgeTono(TONO_STATO_ATTIVITA[stato.value])}`}>{stato.label}</span>
           )}
-          {player.acciaccato && <span className="badge badge-danger">🩹 Acciaccato</span>}
-          <span className={`badge badge-${tess.badge}`}>{tess.label}</span>
+          {player.acciaccato && <span className="badge badge-danger"><IconBandage size={13} /> Acciaccato</span>}
+          <span className={`badge ${badgeTono(TONO_TESSERAMENTO[tess.value])}`}>{tess.label}</span>
           {player.porta !== 'no' && (
-            <span className="badge badge-warn">🧤 {portaInfo(player.porta).label}</span>
+            <span className="badge badge-warn"><IconGlove size={13} /> {portaInfo(player.porta).label}</span>
           )}
         </div>
         {(umore || badge) && (
@@ -166,10 +167,10 @@ export default function PlayerDetailPage() {
             {umore && <EmojiUmore umore={umore} size={30} onClick={() => setLegendaUmore(true)} />}
             {badge && (
               <span className={`badge badge-medaglia medaglia-${badge.value}`} title={`Presenze: ${badge.label}`}>
-                {badge.icona} {badge.label} · {Math.round(presenze.quota * 100)}%
+                <Simbolo gruppo="medaglia" valore={badge.value} size={13} /> {badge.label} · {Math.round(presenze.quota * 100)}%
               </span>
             )}
-            {minutaggioUmore && <span className="badge">⏱ {minutaggioUmore.valore} minuti</span>}
+            {minutaggioUmore && <span className="badge"><IconClock size={13} /> {minutaggioUmore.valore} minuti</span>}
           </div>
         )}
         </div>
@@ -233,7 +234,7 @@ export default function PlayerDetailPage() {
               style={{ marginLeft: 4, border: 0, font: 'inherit', cursor: 'pointer' }}
               onClick={() => setRivedi(true)}
             >
-              ⚠️ da rivedere
+              <IconAlert size={13} /> da rivedere
             </button>
           )}
         </InfoRow>
@@ -254,7 +255,7 @@ export default function PlayerDetailPage() {
           {player.stiliGioco?.length
             ? player.stiliGioco.map((s) => (
                 <span key={s} className="badge badge-accent" style={{ marginRight: 4, marginBottom: 4 }}>
-                  {stileInfo(s) ? `${stileInfo(s).icona} ` : ''}{s}
+                  {s}
                 </span>
               ))
             : '—'}
@@ -264,7 +265,7 @@ export default function PlayerDetailPage() {
             CARATTERE.find((c) => c.value === player.carattere)?.label,
             player.gestioneErrore &&
               `errore: gestione ${GESTIONE_ERRORE.find((g) => g.value === player.gestioneErrore)?.label.toLowerCase()}`,
-            player.chiamaMarcature && '📣 chiama le marcature',
+            player.chiamaMarcature && 'chiama le marcature',
           ].filter(Boolean).join(' · ') || '—'}
         </InfoRow>
         <InfoRow label="Fisico">
@@ -296,10 +297,10 @@ export default function PlayerDetailPage() {
         </InfoRow>
         {stagione && (stagione.gialli > 0 || stagione.rossi > 0) && (
           <InfoRow label="Cartellini">
-            {[
-              stagione.gialli > 0 ? `${stagione.gialli} 🟨` : '',
-              stagione.rossi > 0 ? `${stagione.rossi} 🟥` : '',
-            ].filter(Boolean).join(' · ')}
+            <span className="icona-testo" style={{ gap: 10 }}>
+              {stagione.gialli > 0 && <span className="icona-testo">{stagione.gialli} <Cartellino colore="giallo" /></span>}
+              {stagione.rossi > 0 && <span className="icona-testo">{stagione.rossi} <Cartellino colore="rosso" /></span>}
+            </span>
           </InfoRow>
         )}
         <InfoRow label="In porta">
@@ -317,10 +318,12 @@ export default function PlayerDetailPage() {
               const avv = opponents.find((o) => o.id === r.opponentId)?.nome
               return (
                 <InfoRow key={r.matchId} label={`${formatDataPartita(r.data)}${avv ? ` · ${avv}` : ''}`}>
-                  {a ? `${a.icona} ${a.label}` : 'Nessuno'}
-                  {' → '}
-                  {s ? `${s.icona} ${s.label}` : 'svolto da segnare'}
-                  {a && s && a.value === s.value ? ' ✓' : ''}
+                  <span className="icona-testo">
+                    {a ? <><Simbolo gruppo="incarico" valore={a.value} size={14} /> {a.label}</> : 'Nessuno'}
+                    {' → '}
+                    {s ? <><Simbolo gruppo="incarico" valore={s.value} size={14} /> {s.label}</> : 'svolto da segnare'}
+                    {a && s && a.value === s.value && <IconCheck size={14} aria-label="Come assegnato" />}
+                  </span>
                 </InfoRow>
               )
             })}
@@ -435,7 +438,7 @@ export default function PlayerDetailPage() {
             ))}
             {o.ruolo && (
               <p className="small" style={{ margin: '8px 0 0', color: o.ruolo.ok ? 'var(--ok)' : 'var(--danger)' }}>
-                {o.ruolo.ok ? '✓' : '✗'} Ruolo da {o.ruolo.nome}
+                {o.ruolo.ok ? <IconCheck size={13} /> : <IconClose size={13} />} Ruolo da {o.ruolo.nome}
                 {o.ruolo.motivo && <span className="muted">: {o.ruolo.motivo}</span>}
               </p>
             )}
@@ -473,7 +476,7 @@ export default function PlayerDetailPage() {
           <p className="small" style={{ marginTop: 0 }}>
             Un aggiornamento dell'app ha reso più precisi alcuni ruoli tattici: questo
             giocatore ne aveva uno da ricontrollare. Sono i ruoli tattici a decidere se in
-            Modulo è "nel suo ruolo" (niente triangolo ⚠️).
+            Modulo è "nel suo ruolo" (niente triangolo di avviso).
           </p>
           <p className="small muted">
             Ruoli attuali: {(player.ruoliTattici ?? []).length ? player.ruoliTattici.join(', ') : 'nessuno'}

@@ -8,6 +8,7 @@ import { durataSquadra } from '../lib/storico'
 import { resizeToDataUrl } from '../lib/image'
 import Modal from '../components/Modal'
 import SceltaTema from '../components/SceltaTema'
+import { IconChevronLeft, IconPencil } from '../components/icons'
 
 const DURATE_RAPIDE = [40, 50, 60, 70]
 
@@ -140,7 +141,7 @@ export default function ImpostazioniPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>Impostazioni</h1>
       </div>
 
@@ -163,7 +164,7 @@ export default function ImpostazioniPage() {
             disabled={team === undefined}
             onClick={apriModifica}
           >
-            ✎
+            <IconPencil size={16} />
           </button>
         </div>
         <div className="impostazioni-voci">

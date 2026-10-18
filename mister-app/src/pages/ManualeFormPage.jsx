@@ -3,6 +3,7 @@ import useModificheNonSalvate, { useSporco } from '../hooks/useModificheNonSalva
 import { useNavigate, useParams } from 'react-router-dom'
 import { db } from '../db/db'
 import { CATEGORIE_MANUALE } from '../db/constants'
+import { IconChevronLeft } from '../components/icons'
 
 const EMPTY = { categoria: 'tattica', titolo: '', testo: '' }
 
@@ -51,7 +52,7 @@ export default function ManualeFormPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>{editing ? 'Modifica voce' : 'Nuova voce'}</h1>
       </div>
 

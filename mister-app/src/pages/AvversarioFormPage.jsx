@@ -5,8 +5,10 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { RUOLI } from '../db/constants'
 import { MODULI_FORMATO, FORMATI } from '../lib/formazioni'
-import { partiteContro, bilancio, esitoPartita, ESITO_INFO, formatDataPartita } from '../lib/partite'
+import { partiteContro, bilancio, esitoPartita, formatDataPartita } from '../lib/partite'
 import { gare, conRisultato, marcatori, cartellini, nomeSquadra } from '../lib/girone'
+import { badgeTono, Cartellino, TONO_ESITO } from '../components/simboli'
+import { IconChevronLeft, IconClose } from '../components/icons'
 
 const EMPTY = {
   nome: '',
@@ -148,7 +150,7 @@ export default function AvversarioFormPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>{editing ? form.nome || 'Squadra' : 'Nuova squadra'}</h1>
       </div>
 
@@ -217,7 +219,7 @@ export default function AvversarioFormPage() {
               aria-label="Elimina giocatore"
               onClick={() => eliminaPericoloso(p.id)}
             >
-              ✕
+              <IconClose size={16} />
             </button>
           </div>
           <div className="chip-row" style={{ marginTop: 8 }}>
@@ -273,7 +275,7 @@ export default function AvversarioFormPage() {
                     <div className="muted small">{m.campo === 'trasferta' ? 'Trasferta' : 'Casa'}</div>
                   </div>
                   {esito ? (
-                    <span className={`badge ${ESITO_INFO[esito].badge}`}>
+                    <span className={`badge ${badgeTono(TONO_ESITO[esito])}`}>
                       {m.golFatti}-{m.golSubiti}
                     </span>
                   ) : (
@@ -292,7 +294,7 @@ export default function AvversarioFormPage() {
           <div className="obs-table-wrap">
             <table className="obs-table">
               <thead>
-                <tr><th>Giocatore</th><th title="Gol">G</th><th title="Gialli">🟨</th><th title="Rossi">🟥</th><th></th></tr>
+                <tr><th>Giocatore</th><th title="Gol">G</th><th title="Gialli"><Cartellino colore="giallo" size={12} /></th><th title="Rossi"><Cartellino colore="rosso" size={12} /></th><th></th></tr>
               </thead>
               <tbody>
                 {rosa.map((g) => (

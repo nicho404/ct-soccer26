@@ -2,10 +2,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import EmptyState from '../components/EmptyState'
-import { IconChart } from '../components/icons'
+import { IconAssist, IconBall, IconChart, IconClipboard } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
-import { partiteGiocate, esitoPartita, ESITO_INFO, formatDataPartita, bilancio } from '../lib/partite'
+import { partiteGiocate, esitoPartita, formatDataPartita, bilancio } from '../lib/partite'
 import { aggregaGiocatori, classificaMarcatori, refertoCompilato } from '../lib/storico'
+import { badgeTono, Cartellino, TONO_ESITO } from '../components/simboli'
 
 export default function StoricoPage() {
   const navigate = useNavigate()
@@ -61,7 +62,7 @@ export default function StoricoPage() {
 
           {conReferto.length === 0 && (
             <div className="alert-card">
-              <span>📋</span>
+              <span className="icona-testo"><IconClipboard size={18} /></span>
               <span>
                 Nessun referto compilato: minuti, marcatori e assist restano vuoti finché
                 non racconti almeno una partita.
@@ -77,8 +78,8 @@ export default function StoricoPage() {
                   <Link to={`/rosa/${r.playerId}`} className="evento-riga" key={r.playerId} style={{ color: 'inherit', textDecoration: 'none' }}>
                     <span className="evento-minuto">{i + 1}</span>
                     <strong className="evento-testo">{nomeDi(r.playerId)}</strong>
-                    {r.gol > 0 && <span className="badge badge-ok">⚽ {r.gol}</span>}
-                    {r.assist > 0 && <span className="badge badge-accent">🅰️ {r.assist}</span>}
+                    {r.gol > 0 && <span className="badge badge-ok"><IconBall size={12} /> {r.gol}</span>}
+                    {r.assist > 0 && <span className="badge badge-accent" title="Assist"><IconAssist size={12} /> {r.assist}</span>}
                   </Link>
                 ))}
               </div>
@@ -98,7 +99,7 @@ export default function StoricoPage() {
                       <th title="Minuti giocati">MIN</th>
                       <th title="Gol">G</th>
                       <th title="Assist">A</th>
-                      <th title="Ammonizioni ed espulsioni">🟨🟥</th>
+                      <th title="Ammonizioni ed espulsioni"><span className="icona-testo" style={{ gap: 2 }}><Cartellino colore="giallo" size={11} /><Cartellino colore="rosso" size={11} /></span></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -110,7 +111,10 @@ export default function StoricoPage() {
                         <td>{r.minuti}′</td>
                         <td>{r.gol || ''}</td>
                         <td>{r.assist || ''}</td>
-                        <td>{[r.gialli || '', r.rossi ? `+${r.rossi}🟥` : ''].join(' ').trim()}</td>
+                        <td>
+                    {r.gialli || ''}
+                    {r.rossi > 0 && <span className="icona-testo"> +{r.rossi}<Cartellino colore="rosso" size={11} /></span>}
+                  </td>
                       </tr>
                     ))}
                   </tbody>
@@ -127,7 +131,7 @@ export default function StoricoPage() {
               <Link to={`/partite/${m.id}/referto`} className="card tappable partita-riga" key={m.id}>
                 <span className="partita-riga-esito">
                   {esito
-                    ? <span className={`badge ${ESITO_INFO[esito].badge}`}>{m.golFatti}-{m.golSubiti}</span>
+                    ? <span className={`badge ${badgeTono(TONO_ESITO[esito])}`}>{m.golFatti}-{m.golSubiti}</span>
                     : <span className="badge badge-warn">?</span>}
                 </span>
                 <span className="partita-riga-testo">

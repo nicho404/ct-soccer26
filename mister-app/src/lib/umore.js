@@ -15,13 +15,13 @@ import { refertoCompilato, DURATA_DEFAULT } from './storico'
 
 // Dal più felice al più scontento: l'indice è il "gradino".
 export const LIVELLI_UMORE = [
-// `emoji` resta per i testi semplici; i colori della faccina disegnata
+// I colori della faccina disegnata
 // stanno in theme/faccine.js.
-  { value: 'sorridente', label: 'Sorridente', emoji: '😁' },
-  { value: 'contento', label: 'Contento', emoji: '🙂' },
-  { value: 'neutro', label: 'Neutro', emoji: '😐' },
-  { value: 'triste', label: 'Triste', emoji: '😢' },
-  { value: 'arrabbiato', label: 'Arrabbiato', emoji: '😠' },
+  { value: 'sorridente', label: 'Sorridente' },
+  { value: 'contento', label: 'Contento' },
+  { value: 'neutro', label: 'Neutro' },
+  { value: 'triste', label: 'Triste' },
+  { value: 'arrabbiato', label: 'Arrabbiato' },
 ]
 
 export const umoreInfo = (value) => LIVELLI_UMORE.find((l) => l.value === value) ?? null
@@ -46,13 +46,13 @@ const pct = (x) => `${Math.round(x * 100)}%`
 // Badge presenze per l'allenatore: solo presenze complessive (allenamenti +
 // partite), il minutaggio non c'entra. Dall'alto: la prima soglia raggiunta.
 export const BADGE_PRESENZE = [
-  { min: 0.9, value: 'diamante', label: 'Diamante', icona: '💎' },
-  { min: 0.8, value: 'oro', label: 'Oro', icona: '🥇' },
-  { min: 0.7, value: 'argento', label: 'Argento', icona: '🥈' },
-  { min: 0.6, value: 'bronzo', label: 'Bronzo', icona: '🥉' },
-  { min: 0.5, value: 'ferro', label: 'Ferro', icona: '🔩' },
-  { min: 0.4, value: 'legno', label: 'Legno', icona: '🪵' },
-  { min: 0, value: 'cartone', label: 'Cartone', icona: '📦' },
+  { min: 0.9, value: 'diamante', label: 'Diamante' },
+  { min: 0.8, value: 'oro', label: 'Oro' },
+  { min: 0.7, value: 'argento', label: 'Argento' },
+  { min: 0.6, value: 'bronzo', label: 'Bronzo' },
+  { min: 0.5, value: 'ferro', label: 'Ferro' },
+  { min: 0.4, value: 'legno', label: 'Legno' },
+  { min: 0, value: 'cartone', label: 'Cartone' },
 ]
 
 export const badgePresenze = (quota) =>

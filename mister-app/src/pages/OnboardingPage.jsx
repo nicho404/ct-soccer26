@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { db } from '../db/db'
 import { importBackup } from '../db/backup'
 import { FORMATI } from '../lib/formazioni'
-import { IconBall } from '../components/icons'
+import { IconBall, IconFolder, IconPlus } from '../components/icons'
 
 // Primo accesso: si sceglie se partire da zero (form squadra) o da un
 // backup esportato su un altro dispositivo. In entrambi i casi è setupDone
@@ -70,7 +70,7 @@ export default function OnboardingPage({ team }) {
         </div>
 
         <button type="button" className="card tappable onboarding-scelta" onClick={() => setPasso('nuova')}>
-          <span className="onboarding-scelta-icona">✨</span>
+          <span className="onboarding-scelta-icona"><IconPlus size={26} /></span>
           <span>
             <strong>Nuova squadra</strong>
             <span className="muted small">Parti da zero: due domande veloci e sei in campo.</span>
@@ -83,7 +83,7 @@ export default function OnboardingPage({ team }) {
           disabled={caricando}
           onClick={() => fileRef.current?.click()}
         >
-          <span className="onboarding-scelta-icona">📂</span>
+          <span className="onboarding-scelta-icona"><IconFolder size={26} /></span>
           <span>
             <strong>{caricando ? 'Caricamento…' : 'Carica un backup'}</strong>
             <span className="muted small">

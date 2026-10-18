@@ -11,6 +11,7 @@ import {
 } from '../db/constants'
 import { RUOLI as RUOLI_TATTICI, zonaSigla, famigliaRuoloTattico, ruoloPerNome } from '../tactics/constants'
 import Modal from '../components/Modal'
+import { IconAlert, IconBandage, IconCheck, IconChevronLeft, IconMegaphone } from '../components/icons'
 
 const EMPTY = {
   foto: '',
@@ -110,7 +111,7 @@ export default function PlayerFormPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>{editing ? 'Modifica giocatore' : 'Nuovo giocatore'}</h1>
       </div>
 
@@ -249,7 +250,7 @@ export default function PlayerFormPage() {
                       className={`chip chip-sm pos-${famigliaRuolo(pos)} ${form.ruoliTattici.includes(r.nome) ? 'selected' : ''}`}
                       onClick={() => toggleInList('ruoliTattici', r.nome)}
                     >
-                      {form.ruoliTattici.includes(r.nome) ? '✓ ' : ''}{r.nome}
+                      {form.ruoliTattici.includes(r.nome) && <IconCheck size={13} />}{r.nome}
                       <span
                         className="chip-info"
                         role="button"
@@ -278,7 +279,7 @@ export default function PlayerFormPage() {
                       className={`chip chip-sm pos-${famigliaRuoloTattico(v)} selected`}
                       onClick={() => toggleInList('ruoliTattici', v)}
                     >
-                      ✓ {v}
+                      <IconCheck size={13} /> {v}
                     </button>
                   ))}
                 </div>
@@ -290,7 +291,7 @@ export default function PlayerFormPage() {
 
       {form.ruoliTatticiDaRivedere && (
         <div className="card" style={{ borderColor: 'color-mix(in srgb, var(--warn) 50%, transparent)', marginBottom: 12 }}>
-          <strong>⚠️ Ruoli tattici da rivedere</strong>
+          <strong className="icona-testo"><IconAlert size={16} /> Ruoli tattici da rivedere</strong>
           <p className="muted small" style={{ margin: '6px 0' }}>
             Con l'aggiornamento del motore tattico alcuni ruoli osservati su questo giocatore
             non hanno un corrispondente diretto (o ne hanno uno più specifico). Nulla è stato
@@ -365,7 +366,7 @@ export default function PlayerFormPage() {
               className={`chip chip-sm ${form.porta === p.value ? 'selected' : ''}`}
               onClick={() => set('porta', p.value)}
             >
-              🧤 {p.label}
+              {p.label}
             </button>
           ))}
         </div>
@@ -380,7 +381,7 @@ export default function PlayerFormPage() {
               className={`chip chip-sm ${form.stiliGioco.includes(s.value) ? 'selected' : ''}`}
               onClick={() => toggleInList('stiliGioco', s.value)}
             >
-              {s.icona} {s.value}
+              {s.value}
               <span
                 className="chip-info"
                 role="button"
@@ -396,7 +397,7 @@ export default function PlayerFormPage() {
           ))}
         </div>
         {infoStile && stileInfo(infoStile) && (
-          <Modal titolo={`${stileInfo(infoStile).icona} ${infoStile}`} onClose={() => setInfoStile(null)}>
+          <Modal titolo={infoStile} onClose={() => setInfoStile(null)}>
             <p style={{ margin: 0 }}>{stileInfo(infoStile).descrizione}</p>
           </Modal>
         )}
@@ -446,7 +447,7 @@ export default function PlayerFormPage() {
 
       <div className="field">
         <div className="switch-row">
-          <span className="label">📣 Chiama le marcature</span>
+          <span className="label icona-testo"><IconMegaphone size={16} /> Chiama le marcature</span>
           <button
             className={`toggle ${form.chiamaMarcature ? 'on' : ''}`}
             aria-label="Chiama le marcature"
@@ -487,7 +488,7 @@ export default function PlayerFormPage() {
 
       <div className="field">
         <div className="switch-row">
-          <span className="label">🩹 Acciaccato</span>
+          <span className="label icona-testo"><IconBandage size={16} /> Acciaccato</span>
           <button
             className={`toggle ${form.acciaccato ? 'on' : ''}`}
             aria-label="Acciaccato"

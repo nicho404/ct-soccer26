@@ -12,6 +12,7 @@ import { presentiIds } from '../lib/presenze'
 import { classifica, competizioneDefault } from '../lib/girone'
 import { refertoCompilato } from '../lib/storico'
 import { FASCE } from '../lib/fascia'
+import { badgeTono, TONO_ESITO } from '../components/simboli'
 
 // Home: solo dati, niente consigli. In ordine di urgenza: la prossima
 // partita, l'ultima giocata, poi la stagione in quattro numeri e la forma.
@@ -136,7 +137,7 @@ export default function HomePage() {
               <div className="section-title">Ultima partita</div>
               <Link to={`/partite/${ultima.id}`} className="card tappable">
                 <div className="row">
-                  <span className={`badge risultato-grande ${ESITO_INFO[esitoPartita(ultima)].badge}`}>
+                  <span className={`badge risultato-grande ${badgeTono(TONO_ESITO[esitoPartita(ultima)])}`}>
                     {ultima.golFatti}-{ultima.golSubiti}
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -192,7 +193,7 @@ export default function HomePage() {
                       <Link
                         key={m.id}
                         to={`/partite/${m.id}`}
-                        className={`badge ${ESITO_INFO[e].badge}`}
+                        className={`badge ${badgeTono(TONO_ESITO[e])}`}
                         title={`${nomeAvversario(m) ?? ''} ${m.golFatti}-${m.golSubiti}`}
                       >
                         {e}

@@ -3,6 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { PuntiChiave, Obiettivi } from '../components/Analisi'
 import { normalizzaAnalisi, avanzamentoObiettivi, TIPI_PUNTO, intestazioneAnalisi } from '../lib/analisi'
+import { Simbolo } from '../components/simboli'
+import { IconChevronLeft } from '../components/icons'
 
 export default function AnalisiDettaglioPage() {
   const navigate = useNavigate()
@@ -13,7 +15,7 @@ export default function AnalisiDettaglioPage() {
 
   const header = (titolo) => (
     <div className="page-header">
-      <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
+      <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}><IconChevronLeft size={22} /></button>
       <h1>{titolo}</h1>
     </div>
   )
@@ -50,7 +52,7 @@ export default function AnalisiDettaglioPage() {
         if (punti.length === 0) return null
         return (
           <div key={t.value}>
-            <div className="section-title">{t.icona} {t.label}</div>
+            <div className="section-title icona-testo"><Simbolo gruppo="analisi" valore={t.value} size={14} /> {t.label}</div>
             <PuntiChiave punti={punti} />
           </div>
         )

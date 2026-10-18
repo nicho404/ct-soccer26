@@ -7,7 +7,7 @@ import { TIPI_EVENTO, tipoEventoInfo, famigliaRuolo, incaricoInfo } from '../db/
 import { MODULI_FORMATO, FORMATI, MODULO_DEFAULT } from '../lib/formazioni'
 import { risolviRuoli } from '../tactics/engine'
 import { nomeBreve } from '../lib/nomi'
-import { formatDataPartita, esitoPartita, ESITO_INFO } from '../lib/partite'
+import { formatDataPartita, esitoPartita } from '../lib/partite'
 import {
   DURATA_DEFAULT, durataSquadra, calcolaMinuti, portiereIniziale, golDaEventi, disallineamentoRisultato,
   occupantiPerSlot, campoAlMinuto, espulsiAlMinuto, eventiIncoerenti,
@@ -19,6 +19,8 @@ import Scelta from '../components/Scelta'
 import Modal from '../components/Modal'
 import VistaCampo from '../components/VistaCampo'
 import { vistaCompleta } from '../lib/vistaCampo'
+import { badgeTono, Simbolo, TONO_ESITO } from '../components/simboli'
+import { IconAlert, IconChevronLeft, IconClock, IconClose, IconEye, IconPencil, IconScale } from '../components/icons'
 
 const VUOTO = (n) => Array(n).fill(null)
 
@@ -99,7 +101,7 @@ export default function PartitaRefertoPage() {
     return (
       <div className="page">
         <div className="page-header">
-          <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/partite')}>‹</button>
+          <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/partite')}><IconChevronLeft size={22} /></button>
           <h1>Referto</h1>
         </div>
         <div className="card muted small">Questa partita non esiste più.</div>
@@ -323,7 +325,7 @@ export default function PartitaRefertoPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>Referto</h1>
       </div>
 
@@ -332,7 +334,7 @@ export default function PartitaRefertoPage() {
       <div className="card">
         <div className="row" style={{ gap: 10 }}>
           {esitoUfficiale ? (
-            <span className={`badge risultato-grande ${ESITO_INFO[esitoUfficiale].badge}`}>
+            <span className={`badge risultato-grande ${badgeTono(TONO_ESITO[esitoUfficiale])}`}>
               {partita.golFatti}-{partita.golSubiti}
             </span>
           ) : (
@@ -343,12 +345,12 @@ export default function PartitaRefertoPage() {
             <div className="muted small">{formatDataPartita(partita.data)}</div>
           </div>
           <button className="btn btn-sm" aria-label="Durata della partita" onClick={() => setFinestra('durata')}>
-            ⏱ {durata}′
+            <IconClock size={16} /> {durata}′
           </button>
         </div>
         {disallineato && (
           <div className="referto-nota">
-            ⚖️ Gol negli eventi: {disallineato.eventi.fatti}-{disallineato.eventi.subiti}
+            <IconScale size={15} /> Gol negli eventi: {disallineato.eventi.fatti}-{disallineato.eventi.subiti}
             {golEventi === 0 ? ' — marcatori ancora da inserire.' : ' — non tornano con il risultato.'}
             {/* allineare ha senso solo se gli eventi hanno dei gol: con zero
                 porterebbe il risultato a 0-0 */}
@@ -363,7 +365,7 @@ export default function PartitaRefertoPage() {
 
       {presenti.length === 0 && (
         <div className="alert-card">
-          <span>⚠️</span>
+          <span className="icona-testo"><IconAlert size={18} /></span>
           <span>
             Nessun giocatore segnato presente per questa partita: qui non compare nessun candidato.
             <button className="btn btn-sm" style={{ marginTop: 8 }} onClick={() => puoiUscire() && navigate(`/partite/${partitaId}`)}>
@@ -398,7 +400,9 @@ export default function PartitaRefertoPage() {
           style={modoLive ? { flex: 1 } : undefined}
           onClick={() => { setModoLive((v) => !v); setSel(null) }}
         >
-          {modoLive ? '✏️ Torna a modificare' : '👁️ Osserva'}
+          {modoLive
+            ? <span className="icona-testo"><IconPencil size={15} /> Torna a modificare</span>
+            : <span className="icona-testo"><IconEye size={15} /> Osserva</span>}
         </button>
       </div>
 
@@ -451,7 +455,7 @@ export default function PartitaRefertoPage() {
 
       {incoerenti.size > 0 && (
         <div className="alert-card danger">
-          <span>⚠️</span>
+          <span className="icona-testo"><IconAlert size={18} /></span>
           <span>
             {incoerenti.size === 1 ? 'Un evento non torna' : `${incoerenti.size} eventi non tornano`} con
             la formazione: non hanno effetto su posizioni e minuti. Correggili o eliminali e reinseriscili.
@@ -467,12 +471,12 @@ export default function PartitaRefertoPage() {
             return (
               <div className="evento-riga" key={ev.id}>
                 <span className="evento-minuto">{ev.minuto ?? 0}′</span>
-                <span className="evento-icona" title={info.label}>{info.icona}</span>
+                <span className="evento-icona" title={info.label}><Simbolo gruppo="evento" valore={ev.tipo} /></span>
                 <span className="evento-testo">
                   {descriviEvento(ev)}
                   {incoerenti.has(ev.id) && (
                     <span className="small" style={{ color: 'var(--danger)', display: 'block' }}>
-                      ⚠️ {incoerenti.get(ev.id)}
+                      <IconAlert size={13} /> {incoerenti.get(ev.id)}
                     </span>
                   )}
                 </span>
@@ -481,7 +485,7 @@ export default function PartitaRefertoPage() {
                   aria-label="Elimina evento"
                   onClick={() => eliminaEvento(ev.id)}
                 >
-                  ✕
+                  <IconClose size={15} />
                 </button>
               </div>
             )
@@ -512,7 +516,7 @@ export default function PartitaRefertoPage() {
                     slotIndex: null, incarico: undefined,
                   }))}
                 >
-                  {t.icona} {t.label}
+                  <span className="icona-testo"><Simbolo gruppo="evento" valore={t.value} size={14} /> {t.label}</span>
                 </button>
               ))}
             </div>
@@ -687,9 +691,9 @@ export default function PartitaRefertoPage() {
                 >
                   <strong className="incarico-nome">{nomeDi(pid)}</strong>
                   <span className="incarico-coppia">
-                    <span title={a ? `Assegnato: ${a.label}` : 'Assegnato: —'}>{a ? a.icona : '—'}</span>
+                    <span className="icona-testo" title={a ? `Assegnato: ${a.label}` : 'Assegnato: —'}>{a ? <Simbolo gruppo="incarico" valore={a.value} /> : '—'}</span>
                     <span className="muted">→</span>
-                    <span title={sv ? `Svolto: ${sv.label}` : 'Svolto: —'}>{sv ? sv.icona : '—'}</span>
+                    <span className="icona-testo" title={sv ? `Svolto: ${sv.label}` : 'Svolto: —'}>{sv ? <Simbolo gruppo="incarico" valore={sv.value} /> : '—'}</span>
                   </span>
                   {a && sv ? (
                     <span className={`badge ${a.value === sv.value ? 'badge-ok' : 'badge-warn'}`}>

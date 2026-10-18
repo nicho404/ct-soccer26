@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { IconClose } from './icons'
 
 // Finestra a schermo: sfondo scuro, titolo e ✕. Si chiude anche toccando
 // fuori o con Esc. Montata su <body> con un portal, così non eredita il
@@ -22,7 +23,7 @@ export default function Modal({ titolo, onClose, children }) {
       >
         <div className="popup-header">
           <strong>{titolo}</strong>
-          <button type="button" className="popup-chiudi" aria-label="Chiudi" onClick={onClose}>✕</button>
+          <button type="button" className="popup-chiudi" aria-label="Chiudi" onClick={onClose}><IconClose size={18} /></button>
         </div>
         {children}
       </div>

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import EmptyState from '../components/EmptyState'
-import { IconClipboardCheck } from '../components/icons'
+import { IconBall, IconClipboardCheck } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
 import { formatDataPartita } from '../lib/partite'
 import { contaSeduta, pctSeduta } from '../lib/presenze'
@@ -84,7 +84,7 @@ export default function PresenzePage() {
               >
                 <div className="row">
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <strong>{isPartita ? '⚽ ' : ''}{ev.titolo}</strong>
+                    <strong className="icona-testo">{isPartita && <IconBall size={14} aria-label="Partita" />}{ev.titolo}</strong>
                     <div className="muted small">
                       {[formatDataPartita(ev.data), ev.ora].filter(Boolean).join(' · ')}
                     </div>

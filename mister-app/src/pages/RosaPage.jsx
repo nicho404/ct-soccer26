@@ -11,7 +11,8 @@ import { FASCE, fasciaDi } from '../lib/fascia'
 import { nomeBreve } from '../lib/nomi'
 import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
-import { IconUsers } from '../components/icons'
+import { IconBandage, IconGlove, IconStar, IconUsers } from '../components/icons'
+import { badgeTono, TONO_STATO_ATTIVITA, TONO_TESSERAMENTO } from '../components/simboli'
 
 // Umori che meritano di essere contati in cima: sono il segnale da gestire.
 const SCONTENTI = ['triste', 'arrabbiato']
@@ -21,10 +22,10 @@ const SCONTENTI = ['triste', 'arrabbiato']
 function avvisiDi(player) {
   const avvisi = []
   const stato = statoAttivitaInfo(player.statoAttivita)
-  if (player.statoAttivita !== 'sicuro') avvisi.push({ testo: stato.label, badge: stato.badge })
-  if (player.acciaccato) avvisi.push({ testo: '🩹 Acciaccato', badge: 'danger' })
+  if (player.statoAttivita !== 'sicuro') avvisi.push({ testo: stato.label, tono: TONO_STATO_ATTIVITA[stato.value] })
+  if (player.acciaccato) avvisi.push({ testo: 'Acciaccato', tono: 'danger', Icona: IconBandage })
   const tess = tesseramentoInfo(player.tesseramento)
-  if (tess.value !== 'ok') avvisi.push({ testo: tess.label, badge: tess.badge })
+  if (tess.value !== 'ok') avvisi.push({ testo: tess.label, tono: TONO_TESSERAMENTO[tess.value] })
   return avvisi
 }
 
@@ -49,17 +50,17 @@ function RigaGiocatore({ player, umore, imp, fascia, onUmore }) {
       <span className="rosa-nome">
         <span className="rosa-nome-riga">
           <strong>{titolo}</strong>
-          {player.titolare && <span className="star-on" title="Titolare"> ★</span>}
+          {player.titolare && <span className="star-on" title="Titolare"> <IconStar size={13} fill="currentColor" /></span>}
           {f && <span className={`rosa-fascia ${f.className}`} title={f.label}>{f.sigla}</span>}
           {player.porta === 'si' && famigliaRuolo(player.ruoloNaturale) !== 'por' && (
-            <span title="Copre la porta"> 🧤</span>
+            <span className="rosa-porta" title="Copre la porta"><IconGlove size={14} aria-label="Copre la porta" /></span>
           )}
         </span>
         {player.soprannome && <span className="rosa-nome-completo">{nomeCompleto}</span>}
         {avvisi.length > 0 && (
           <span className="rosa-avvisi">
             {avvisi.map((a) => (
-              <span key={a.testo} className={`badge badge-${a.badge || ''}`}>{a.testo}</span>
+              <span key={a.testo} className={`badge ${badgeTono(a.tono)}`}>{a.Icona && <a.Icona size={11} />}{a.testo}</span>
             ))}
           </span>
         )}
@@ -144,7 +145,7 @@ export default function RosaPage() {
             </div>
             <div className={`stat-tile ${inPorta.length === 0 ? 'stat-tile-allarme' : ''}`}>
               <div className="value">{inPorta.length}</div>
-              <div className="label">🧤 In porta</div>
+              <div className="label">In porta</div>
             </div>
             <div className={`stat-tile ${scontenti.length > 0 ? 'stat-tile-allarme' : ''}`}>
               <div className="value">{scontenti.length}</div>
@@ -163,7 +164,7 @@ export default function RosaPage() {
               className={`chip chip-sm ${filtro === 'titolari' ? 'selected' : ''}`}
               onClick={() => setFiltro('titolari')}
             >
-              ★ Titolari ({titolari.length})
+              <span className="icona-testo"><IconStar size={13} fill="currentColor" /> Titolari ({titolari.length})</span>
             </button>
             <button
               className={`chip chip-sm ${filtro === 'tutti' ? 'selected' : ''}`}

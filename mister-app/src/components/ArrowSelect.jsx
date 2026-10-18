@@ -16,7 +16,7 @@ export default function ArrowSelect({ label, value, options, onChange, warning, 
       </button>
       <span className="arrow-select-value">
         {warning && <span className="chain-broken" title={warning}><IconLinkBroken size={14} /></span>}
-        {cur?.icona ? `${cur.icona} ` : ''}{cur?.label ?? '—'}
+        {cur?.label ?? '—'}
       </span>
       <button className="arrow-btn" aria-label={`${label}: opzione successiva`} onClick={() => move(1)}>
         ›

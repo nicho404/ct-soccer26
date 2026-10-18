@@ -68,7 +68,7 @@ describe('umore: fattori e casi limite', () => {
 
   it('spiega i fattori', () => {
     const u = calcolaUmore({ trainings: sedute(9), matches: [partita(5)] }, 1)
-    expect(u.emoji).toBe('😠')
+    expect(u.label).toBe('Arrabbiato')
     expect(u.fattori).toEqual([
       { nome: 'Presenze', valore: '100%', dettaglio: '10 su 10 tra allenamenti e partite' },
       { nome: 'Minutaggio', valore: '10%', dettaglio: '5′ su 50′ nella partita in cui era presente' },
@@ -101,7 +101,7 @@ describe('legenda umore', () => {
       const [aperta, setAperta] = useState(false)
       return (
         <>
-          <EmojiUmore umore={{ value: 'neutro', emoji: '😐', label: 'Neutro' }} onClick={() => setAperta(true)} />
+          <EmojiUmore umore={{ value: 'neutro', label: 'Neutro' }} onClick={() => setAperta(true)} />
           {aperta && <LegendaPopup onClose={() => setAperta(false)} />}
         </>
       )
