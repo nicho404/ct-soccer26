@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import useModificheNonSalvate from '../hooks/useModificheNonSalvate'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -44,6 +45,9 @@ const toGiornata = (raw) => {
   return raw !== '' && raw != null && Number.isInteger(n) && n > 0 ? n : null
 }
 
+// Tutto quello che la pagina salva, in una stringa confrontabile
+const fotografa = (f, nome, eventi, comp) => JSON.stringify({ f, nome, eventi, comp })
+
 export default function PartitaFormPage() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -60,6 +64,11 @@ export default function PartitaFormPage() {
   const [eventiAvv, setEventiAvv] = useState([])
   // finestra aperta: 'dati' | 'appello' | 'avversari' | null
   const [finestra, setFinestra] = useState(null)
+  // fotografia dei dati come caricati: se quelli in pagina sono diversi,
+  // uscire senza salvare chiede conferma
+  const [iniziale, setIniziale] = useState(() =>
+    editing ? null : fotografa({ ...EMPTY, data: oggiISO() }, '', [], null)
+  )
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const opponents = useLiveQuery(() => db.opponents.toArray(), [])
@@ -74,13 +83,20 @@ export default function PartitaFormPage() {
       db.matches.get(Number(id)), db.opponents.toArray(), db.giocatoriAvversari.toArray(),
     ]).then(([m, opps, gioc]) => {
       if (m) {
-        setForm({ ...EMPTY, ...m, giornata: m.giornata ?? '' })
-        setNomeAvversario(opps.find((o) => o.id === m.opponentId)?.nome ?? '')
-        setEventiAvv(eventiPerForm(m.eventiAvversari, () => 'avversario', gioc))
+        const f = { ...EMPTY, ...m, giornata: m.giornata ?? '' }
+        const nome = opps.find((o) => o.id === m.opponentId)?.nome ?? ''
+        const eventi = eventiPerForm(m.eventiAvversari, () => 'avversario', gioc)
+        setForm(f)
+        setNomeAvversario(nome)
+        setEventiAvv(eventi)
+        setIniziale(fotografa(f, nome, eventi, null))
       }
       setLoaded(true)
     })
   }, [id, editing])
+
+  const sporco = iniziale !== null && fotografa(form, nomeAvversario, eventiAvv, nuovaComp) !== iniziale
+  const puoiUscire = useModificheNonSalvate(sporco, 'Uscire senza salvare le modifiche alla partita?')
 
   if (
     !players || !opponents || !competitions || !giocatoriAvversari || !partiteGirone || !matches || !loaded
@@ -328,7 +344,7 @@ export default function PartitaFormPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
         <h1>{editing ? 'Partita' : 'Nuova partita'}</h1>
       </div>
 
@@ -433,7 +449,7 @@ export default function PartitaFormPage() {
         <button
           type="button"
           className="card tappable partita-voce"
-          onClick={() => navigate(`/partite/${id}/referto`, { state: location.state })}
+          onClick={() => puoiUscire() && navigate(`/partite/${id}/referto`, { state: location.state })}
         >
           <span className="partita-voce-icona">📋</span>
           <span className="partita-voce-testo">
