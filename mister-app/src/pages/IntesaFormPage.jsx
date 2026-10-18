@@ -5,6 +5,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { TIPI_INTESA, famigliaRuolo, isAttivo } from '../db/constants'
+import { IconChevronLeft } from '../components/icons'
 
 const EMPTY = {
   playerIds: [],
@@ -80,7 +81,7 @@ export default function IntesaFormPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>{editing ? 'Modifica intesa' : 'Nuova intesa'}</h1>
       </div>
 

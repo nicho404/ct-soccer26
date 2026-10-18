@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import EmptyState from '../components/EmptyState'
-import { IconClipboardCheck } from '../components/icons'
+import { IconChevronLeft, IconClipboardCheck, IconClose } from '../components/icons'
 import { durataPiano } from '../lib/presenze'
 
 export default function PianiPage() {
@@ -21,7 +21,7 @@ export default function PianiPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/presenze')}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/presenze')}><IconChevronLeft size={22} /></button>
         <h1>Modelli di seduta</h1>
         <span className="muted small">{modelli.length}</span>
       </div>
@@ -48,7 +48,7 @@ export default function PianiPage() {
                 </div>
               </div>
               <button className="btn btn-sm" aria-label="Elimina modello" onClick={() => elimina(m)}>
-                ✕
+                <IconClose size={16} />
               </button>
             </div>
             {m.obiettivo && (

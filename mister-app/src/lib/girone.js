@@ -11,9 +11,9 @@ import { partitaGiocata } from './partite'
 export const NOI = 0
 
 export const TIPI_EVENTO_AVVERSARI = [
-  { value: 'gol', label: 'Gol', icona: '⚽' },
-  { value: 'giallo', label: 'Giallo', icona: '🟨' },
-  { value: 'rosso', label: 'Rosso', icona: '🟥' },
+  { value: 'gol', label: 'Gol' },
+  { value: 'giallo', label: 'Giallo' },
+  { value: 'rosso', label: 'Rosso' },
 ]
 
 export const conRisultato = (g) => Number.isFinite(g?.golCasa) && Number.isFinite(g?.golOspite)

@@ -7,6 +7,7 @@ import { isAttivo, ruoloOrdine } from '../db/constants'
 import { oggiISO } from '../lib/partite'
 import { contaSeduta, durataPiano } from '../lib/presenze'
 import AppelloPresenze from '../components/AppelloPresenze'
+import { IconChevronLeft, IconClose } from '../components/icons'
 
 const EMPTY = {
   data: '',
@@ -159,7 +160,7 @@ export default function SedutaFormPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>{editing ? 'Modifica seduta' : 'Nuova seduta'}</h1>
       </div>
 
@@ -272,7 +273,7 @@ export default function SedutaFormPage() {
               onChange={(e) => modificaBlocco(b.id, { minuti: Number(e.target.value) || 0 })}
             />
             <button className="btn btn-sm" aria-label="Elimina blocco" onClick={() => eliminaBlocco(b.id)}>
-              ✕
+              <IconClose size={16} />
             </button>
           </div>
           <textarea

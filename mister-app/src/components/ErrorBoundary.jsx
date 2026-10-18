@@ -1,4 +1,5 @@
 import { Component } from 'react'
+import { IconAlert } from './icons'
 
 // Senza questo, un errore dentro una pagina smonta tutto l'albero React e
 // lascia lo schermo nero: nessun messaggio, niente da riferire. Qui l'errore
@@ -30,7 +31,7 @@ export default class ErrorBoundary extends Component {
           <h1>Qualcosa si è rotto</h1>
         </div>
         <div className="alert-card danger">
-          <span>⚠️</span>
+          <span className="icona-testo"><IconAlert size={18} /></span>
           <span>
             Questa schermata non è riuscita ad aprirsi. I tuoi dati sono al sicuro:
             l'errore è solo nella visualizzazione.

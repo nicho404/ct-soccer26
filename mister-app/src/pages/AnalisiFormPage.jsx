@@ -4,6 +4,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { db } from '../db/db'
 import { oggiISO } from '../lib/partite'
 import { TIPI_PUNTO, normalizzaAnalisi, puntiDaTesto, testoDaPunti } from '../lib/analisi'
+import { Simbolo } from '../components/simboli'
+import { IconChevronLeft, IconClose } from '../components/icons'
 
 const EMPTY = {
   titolo: '',
@@ -77,7 +79,7 @@ export default function AnalisiFormPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>{editing ? 'Modifica analisi' : 'Nuova analisi'}</h1>
       </div>
 
@@ -128,7 +130,7 @@ export default function AnalisiFormPage() {
                 className={`chip chip-sm ${p.tipo === t.value ? 'selected' : ''}`}
                 onClick={() => modifica('puntiChiave', i, { tipo: t.value })}
               >
-                {t.icona} {t.label}
+                <span className="icona-testo"><Simbolo gruppo="analisi" valore={t.value} size={14} /> {t.label}</span>
               </button>
             ))}
           </div>
@@ -139,7 +141,7 @@ export default function AnalisiFormPage() {
               value={p.testo}
               onChange={(e) => modifica('puntiChiave', i, { testo: e.target.value })}
             />
-            <button className="btn btn-sm" aria-label="Togli punto" onClick={() => togli('puntiChiave', i)}>✕</button>
+            <button className="btn btn-sm" aria-label="Togli punto" onClick={() => togli('puntiChiave', i)}><IconClose size={16} /></button>
           </div>
         </div>
       ))}
@@ -157,7 +159,7 @@ export default function AnalisiFormPage() {
             onChange={(e) => modifica('obiettivi', i, { testo: e.target.value })}
             placeholder="Cosa fare, in concreto"
           />
-          <button className="btn btn-sm" aria-label="Togli obiettivo" onClick={() => togli('obiettivi', i)}>✕</button>
+          <button className="btn btn-sm" aria-label="Togli obiettivo" onClick={() => togli('obiettivi', i)}><IconClose size={16} /></button>
         </div>
       ))}
       <button className="btn btn-block" onClick={() => aggiungi('obiettivi', { testo: '', fatto: false })}>
@@ -176,7 +178,7 @@ export default function AnalisiFormPage() {
               onChange={(e) => modifica('sezioni', i, { titolo: e.target.value })}
               placeholder="Titolo della sezione"
             />
-            <button className="btn btn-sm" aria-label="Togli sezione" onClick={() => togli('sezioni', i)}>✕</button>
+            <button className="btn btn-sm" aria-label="Togli sezione" onClick={() => togli('sezioni', i)}><IconClose size={16} /></button>
           </div>
           <textarea
             className="textarea"

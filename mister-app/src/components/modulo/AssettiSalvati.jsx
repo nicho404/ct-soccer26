@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { db } from '../../db/db'
 import Modal from '../Modal'
-import { IconSwap } from '../icons'
+import { IconChevronRight, IconSwap } from '../icons'
 import { nomeBreve } from '../../lib/nomi'
 import { IMPOSTAZIONI, costruzioneInfo, lineaDifesaInfo } from '../../lib/formazioni'
 import { incaricoInfo } from '../../db/constants'
 import { TRIGGER_CAMBIO } from './stato'
+import { Simbolo } from '../simboli'
 
 // Assetti salvati come righe (nome, modulo, cambi previsti); il dettaglio si
 // apre in finestra con "Carica in campo" ed "Elimina".
@@ -50,7 +51,7 @@ export default function AssettiSalvati({ assetti, tutti, moduli, players, onNuov
                   <IconSwap size={13} /> {a.cambiPrevisti.length}
                 </span>
               )}
-              <span className="muted">›</span>
+              <span className="muted icona-testo"><IconChevronRight size={16} /></span>
             </button>
           ))}
         </div>
@@ -73,12 +74,13 @@ export default function AssettiSalvati({ assetti, tutti, moduli, players, onNuov
             <p className="small muted" style={{ margin: '0 0 10px' }}>
               {Object.entries(aperto.incarichi)
                 .map(([pid, v]) => {
-                  const info = incaricoInfo(v)
                   const pl = players.find((p) => p.id === Number(pid))
-                  return pl && info ? `${info.icona} ${nomeBreve(pl)}` : null
-                })
-                .filter(Boolean)
-                .join(' · ')}
+                  return pl && incaricoInfo(v) ? (
+                    <span key={pid} className="icona-testo" style={{ marginRight: 10 }}>
+                      <Simbolo gruppo="incarico" valore={v} size={13} /> {nomeBreve(pl)}
+                    </span>
+                  ) : null
+                })}
             </p>
           )}
           {(aperto.cambiPrevisti ?? []).length > 0 && (

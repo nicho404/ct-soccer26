@@ -184,7 +184,7 @@ describe('girone con dati', () => {
     fireEvent.change(golCasa, { target: { value: '1' } })
     fireEvent.change(screen.getByPlaceholderText('Cognome Nome'), { target: { value: '  testa ' } })
     fireEvent.click(screen.getByText('Aggiungi'))
-    fireEvent.click(screen.getByText('🟨 Giallo'))
+    fireEvent.click(screen.getByText('Giallo'))
     fireEvent.click(screen.getByRole('button', { name: 'Real Falchi' }))
     fireEvent.change(screen.getByPlaceholderText('Cognome Nome'), { target: { value: 'Serra Marco' } })
     fireEvent.click(screen.getByText('Aggiungi'))
@@ -291,7 +291,7 @@ describe('analisi', () => {
       </MemoryRouter>
     )
     expect(await screen.findByText('Quinto punto, solo nel dettaglio')).toBeTruthy()
-    expect(screen.getByText('⚠️ Da risolvere')).toBeTruthy()
+    expect(screen.getByText('Da risolvere')).toBeTruthy()
     expect(screen.getByText('Sezione di prova')).toBeTruthy()
   })
 })
@@ -323,7 +323,7 @@ describe('referto: cambi volanti, posizioni e incarichi', () => {
       </MemoryRouter>
     )
     fireEvent.click(await screen.findByText('+ Aggiungi evento'))
-    fireEvent.click(screen.getByRole('button', { name: '🔁 Cambio' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cambio' }))
     const minuto = screen.getByText('Minuto').parentElement.querySelector('input')
     fireEvent.change(minuto, { target: { value: '30' } })
 
@@ -419,11 +419,12 @@ describe('presenze e sedute', () => {
     const elenco = screen.getByText('Sedute e partite')
     expect(elenco.compareDocumentPosition(titolo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     // Rossi 3/3 = 100% diamante; Bianchi 1 presente su 2 (giustificato escluso) = 50% ferro
-    const riga = (nome) => screen.getByRole('link', { name: nome }).closest('tr').textContent
+    const tr = (nome) => screen.getByRole('link', { name: nome }).closest('tr')
+    const riga = (nome) => tr(nome).textContent
     expect(riga('Rossi')).toContain('100%')
-    expect(riga('Rossi')).toContain('💎')
+    expect(tr('Rossi').querySelector('.medaglia-diamante')).toBeTruthy()
     expect(riga('Bianchi')).toContain('50%')
-    expect(riga('Bianchi')).toContain('🔩')
+    expect(tr('Bianchi').querySelector('.medaglia-ferro')).toBeTruthy()
     expect(screen.queryByText('Campo e allenamento')).toBeNull()
   })
 
@@ -537,12 +538,12 @@ describe('durata partita da Impostazioni', () => {
 
   it('un referto nuovo parte dalla durata della squadra', async () => {
     apri(1)
-    expect(await screen.findByRole('button', { name: 'Durata della partita' })).toHaveProperty('textContent', '⏱ 50′')
+    expect(await screen.findByRole('button', { name: 'Durata della partita' })).toHaveProperty('textContent', ' 50′')
   })
 
   it('un referto già salvato tiene la sua durata', async () => {
     apri(2)
-    expect(await screen.findByRole('button', { name: 'Durata della partita' })).toHaveProperty('textContent', '⏱ 60′')
+    expect(await screen.findByRole('button', { name: 'Durata della partita' })).toHaveProperty('textContent', ' 60′')
   })
 })
 
@@ -679,7 +680,8 @@ describe('osservazione da bordo campo', () => {
     expect(o.voti).toEqual({ lettura: 4, intensita: 2 })
     expect(screen.queryByRole('dialog')).toBeNull()
     // la tessera ora è segnata come osservata
-    expect(screen.getByRole('button', { name: /Bianchi/ }).textContent).toContain('✓')
+    // il segno di "già osservato" sulla tessera
+    expect(screen.getByRole('button', { name: /Bianchi/ }).querySelector('.oss-conta')).toBeTruthy()
   })
 
   it('in partita mostra solo chi ha giocato, senza domande sì/no del ruolo', async () => {

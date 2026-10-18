@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { testoIntesa } from '../components/simboli'
+import { coloreIntesa, testoIntesa } from '../components/simboli'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { TIPI_INTESA } from '../db/constants'
@@ -43,7 +43,8 @@ export default function IntesePage() {
           return (
             <Link to={`/intese/${i.id}`} className="card tappable voce-lista" key={i.id}>
               <span className="voce-categoria" style={{ color: testoIntesa(i.tipo) }}>
-                ● {tipo?.label ?? i.tipo}
+                <span className="role-dot" style={{ background: coloreIntesa(i.tipo), marginRight: 6 }} />
+                {tipo?.label ?? i.tipo}
               </span>
               <strong>{(i.playerIds ?? []).map(nomeDi).join(' + ')}</strong>
               {i.descrizione && <span className="voce-anteprima">{i.descrizione}</span>}

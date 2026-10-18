@@ -1,5 +1,6 @@
 // Icone SVG a tratto (stile outline, 24x24, colore da currentColor).
 // Sostituiscono le emoji per un look da app sportiva (Tuttocampo & simili).
+import { TRACCIATI } from './tracciati'
 
 function Icon({ children, size = 22, ...rest }) {
   return (
@@ -19,6 +20,12 @@ function Icon({ children, size = 22, ...rest }) {
     </svg>
   )
 }
+
+const Tracciato = ({ nome, ...p }) => (
+  <Icon {...p}>
+    {TRACCIATI[nome].map((d) => <path key={d} d={d} />)}
+  </Icon>
+)
 
 export const IconHome = (p) => (
   <Icon {...p}>
@@ -161,18 +168,9 @@ export const IconCamera = (p) => (
   </Icon>
 )
 
-export const IconShield = (p) => (
-  <Icon {...p}>
-    <path d="M12 2.5 4.5 5.5v6c0 4.6 3.1 8.4 7.5 10 4.4-1.6 7.5-5.4 7.5-10v-6Z" />
-  </Icon>
-)
+export const IconShield = (p) => <Tracciato nome="scudo" {...p} />
 
-export const IconSwap = (p) => (
-  <Icon {...p}>
-    <path d="M4 8h14M14.5 4.5 18 8l-3.5 3.5" />
-    <path d="M20 16H6M9.5 12.5 6 16l3.5 3.5" />
-  </Icon>
-)
+export const IconSwap = (p) => <Tracciato nome="scambio" {...p} />
 
 export const IconPencil = (p) => (
   <Icon {...p}>
@@ -181,9 +179,151 @@ export const IconPencil = (p) => (
   </Icon>
 )
 
-export const IconAlert = (p) => (
+export const IconAlert = (p) => <Tracciato nome="avviso" {...p} />
+
+export const IconSword = (p) => <Tracciato nome="spada" {...p} />
+export const IconCycle = (p) => <Tracciato nome="ciclo" {...p} />
+
+export const IconCheck = (p) => (
   <Icon {...p}>
-    <path d="M10.3 3.9 2.4 17.6A2 2 0 0 0 4.1 20.6h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-    <path d="M12 9.5v4.5M12 17.2h.01" />
+    <path d="m5 12.5 4.5 4.5L19 7.5" />
+  </Icon>
+)
+
+export const IconClose = (p) => (
+  <Icon {...p}>
+    <path d="M6 6l12 12M18 6 6 18" />
+  </Icon>
+)
+
+export const IconChevronDown = (p) => (
+  <Icon {...p}>
+    <path d="m6 9.5 6 6 6-6" />
+  </Icon>
+)
+
+export const IconGlove = (p) => (
+  <Icon {...p}>
+    <path d="M8 21v-3.5L5.2 13a2 2 0 0 1 .6-2.7l.4-.2V5.5a1.5 1.5 0 0 1 3 0V10" />
+    <path d="M9.2 9.5v-6a1.5 1.5 0 0 1 3 0v6M12.2 9.5V4.5a1.5 1.5 0 0 1 3 0v5M15.2 10V6.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-2.2 4.6V21" />
+    <path d="M8 18h8" />
+  </Icon>
+)
+
+export const IconBandage = (p) => (
+  <Icon {...p}>
+    <rect x="2.6" y="8.2" width="18.8" height="7.6" rx="3.8" transform="rotate(-45 12 12)" />
+    <path d="M10 10h.01M14 14h.01M10 14h.01M14 10h.01" />
+  </Icon>
+)
+
+export const IconClock = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="13" r="8" />
+    <path d="M12 9v4l2.5 2.5M10 2.5h4" />
+  </Icon>
+)
+
+export const IconClipboard = (p) => (
+  <Icon {...p}>
+    <rect x="8" y="2" width="8" height="4" rx="1" />
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    <path d="M8.5 11h7M8.5 15h5" />
+  </Icon>
+)
+
+export const IconMegaphone = (p) => (
+  <Icon {...p}>
+    <path d="M3.5 10v4a1 1 0 0 0 1 1H7l7 4.5v-15L7 9H4.5a1 1 0 0 0-1 1Z" />
+    <path d="M7 15l1.2 5h2.3L10 16.5M18 9a4 4 0 0 1 0 6" />
+  </Icon>
+)
+
+export const IconBulb = (p) => (
+  <Icon {...p}>
+    <path d="M9 18h6M10 21.5h4" />
+    <path d="M12 2.5a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.7V16h6v-.1c0-.6.3-1.2.8-1.6A6.5 6.5 0 0 0 12 2.5Z" />
+  </Icon>
+)
+
+export const IconGoal = (p) => (
+  <Icon {...p}>
+    <path d="M2.5 19.5V6h19v13.5" />
+    <path d="M6 6v13.5M10 6v13.5M14 6v13.5M18 6v13.5M2.5 10h19M2.5 14.5h19" opacity="0.5" />
+  </Icon>
+)
+
+export const IconMove = (p) => (
+  <Icon {...p}>
+    <path d="M12 3v18M3 12h18" />
+    <path d="m9 5.5 3-3 3 3M9 18.5l3 3 3-3M5.5 9l-3 3 3 3M18.5 9l3 3-3 3" />
+  </Icon>
+)
+
+export const IconAssist = (p) => (
+  <Icon {...p}>
+    <circle cx="18" cy="6" r="2.6" />
+    <path d="M3 19c3-7 7-10.5 12-11.6" />
+    <path d="m12 5.5 3.2 1.9-1.9 3.2" />
+  </Icon>
+)
+
+export const IconWing = (p) => (
+  <Icon {...p}>
+    <path d="M21 4.5C14 4.5 7 7 3.5 14.5c3-1 5.5-1.5 8-1.5-2.5 1.5-4 3.5-5 6.5 5-1.5 9.5-5 11.5-9.5" />
+    <path d="M21 4.5c-.5 3-1.5 5-3 6.5" />
+  </Icon>
+)
+
+export const IconLongBall = (p) => (
+  <Icon {...p}>
+    <circle cx="5.5" cy="18" r="2.5" />
+    <path d="M8 16C10 8 15.5 5 21 5.5" strokeDasharray="2 2.5" />
+    <path d="m17.5 3 3.5 2.5-3 3" />
+  </Icon>
+)
+
+export const IconThumb = (p) => (
+  <Icon {...p}>
+    <path d="M7 10.5v10H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h3Z" />
+    <path d="M7 10.5 11 3a2.3 2.3 0 0 1 3 2.5L13.4 9h5.4a2 2 0 0 1 2 2.4l-1.4 7.2a2.3 2.3 0 0 1-2.3 1.9H7" />
+  </Icon>
+)
+
+export const IconScale = (p) => (
+  <Icon {...p}>
+    <path d="M12 3.5v17M7 20.5h10M4.5 7.5h15M12 5.5l-7.5 2M12 5.5l7.5 2" />
+    <path d="M4.5 7.5 2 13.5a3 3 0 0 0 5 0ZM19.5 7.5 17 13.5a3 3 0 0 0 5 0Z" />
+  </Icon>
+)
+
+export const IconFolder = (p) => (
+  <Icon {...p}>
+    <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.2l2 2.5h8.8A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5Z" />
+  </Icon>
+)
+
+export const IconPlus = (p) => (
+  <Icon {...p}>
+    <path d="M12 5v14M5 12h14" />
+  </Icon>
+)
+
+export const IconMedal = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="15" r="5.5" />
+    <path d="M8.5 10.5 6 3h4l2 4.5L14 3h4l-2.5 7.5" />
+  </Icon>
+)
+
+export const IconChevronLeft = (p) => (
+  <Icon {...p}>
+    <path d="m14.5 6-6 6 6 6" />
+  </Icon>
+)
+
+export const IconChevronRight = (p) => (
+  <Icon {...p}>
+    <path d="m9.5 6 6 6-6 6" />
   </Icon>
 )

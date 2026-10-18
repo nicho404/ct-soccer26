@@ -2,13 +2,14 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import EmptyState from '../components/EmptyState'
-import { IconGrid } from '../components/icons'
+import { IconChevronLeft, IconGrid } from '../components/icons'
 import {
   NOI, gare, conRisultato, classifica, statoGiornate, marcatori, cartellini, nomeSquadra,
   competizioneDefault,
 } from '../lib/girone'
 import { formatDataPartita, perDataCrescente } from '../lib/partite'
 import Scelta from '../components/Scelta'
+import { Cartellino } from '../components/simboli'
 
 const TABS = [
   { value: 'classifica', label: 'Classifica' },
@@ -238,7 +239,7 @@ function TabCartellini({ compId, dati }) {
       <div className="obs-table-wrap">
         <table className="obs-table">
           <thead>
-            <tr><th>Giocatore</th><th>Squadra</th><th title="Gialli">🟨</th><th title="Rossi">🟥</th></tr>
+            <tr><th>Giocatore</th><th>Squadra</th><th title="Gialli"><Cartellino colore="giallo" size={12} /></th><th title="Rossi"><Cartellino colore="rosso" size={12} /></th></tr>
           </thead>
           <tbody>
             {lista.map((r) => (
@@ -276,7 +277,7 @@ export default function GironePage() {
 
   const header = (
     <div className="page-header">
-      <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
+      <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}><IconChevronLeft size={22} /></button>
       <h1>Girone</h1>
     </div>
   )

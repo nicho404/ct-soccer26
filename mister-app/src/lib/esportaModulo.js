@@ -10,6 +10,8 @@ import { famigliaRuolo, incaricoInfo } from '../db/constants'
 import { ESPORTAZIONE as E } from '../theme/esportazione'
 import { compatibilitaGiocatore } from '../tactics/engine'
 import { fuoriRuolo } from './formazioni'
+import { svgIcona } from '../components/tracciati'
+import { TRACCIATO_INCARICO } from '../components/simboli'
 
 const HEADER_H = 64
 const FOOTER_H = 22
@@ -40,10 +42,10 @@ const nomeCorto = (p) => {
   return n.length > 14 ? `${n.slice(0, 13)}…` : n
 }
 
-// Stessi segni di PitchView: + ruolo suo, ~ adattabile, ⚠️ fuori ruolo
+// Stessi segni di PitchView: + ruolo suo, ~ adattabile, triangolo fuori ruolo
 function segnoCompatibilita({ slot, player, ruolo }) {
   if (fuoriRuolo({ player, slot, ruoloNome: ruolo?.nome })) {
-    return `<text x="14" y="-14" font-size="12">⚠️</text>`
+    return svgIcona('avviso', { x: 7, y: -27, size: 14, colore: E.adattabile.fondo })
   }
   const livello = ruolo ? compatibilitaGiocatore({ slotRuolo: ruolo.ruoloSuggerito, player }).livello : null
   const stile = {
@@ -73,16 +75,16 @@ function figura(slot, player, [x, y], { vedi = {}, ruolo = null, incarico = null
     ? `<clipPath id="foto-slot-${indice}"><circle cx="0" cy="-4" r="14.8"/></clipPath>
     <image href="${esc(player.foto)}" x="-15" y="-19" width="30" height="30" clip-path="url(#foto-slot-${indice})" preserveAspectRatio="xMidYMid slice"/>`
     : `<text x="0" y="1" text-anchor="middle" fill="${E.testo}" font-size="13" font-weight="800">${esc(numero ?? slot.sigla)}</text>`
-  const icona = vedi.incarichi ? incaricoInfo(incarico)?.icona : null
+  const icona = vedi.incarichi && incaricoInfo(incarico) ? TRACCIATO_INCARICO[incarico] : null
   return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)})">
     <circle cx="0" cy="-4" r="16" fill="${E.pedina}" stroke="${colore}" stroke-width="2.5"/>
     ${volto}
     ${vedi.compatibilita ? segnoCompatibilita({ slot, player, ruolo }) : ''}
-    ${icona ? `<text x="-22" y="-12" font-size="11">${icona}</text>` : ''}
+    ${icona ? svgIcona(icona, { x: -30, y: -24, size: 13, colore: E.testo }) : ''}
     <text x="0" y="26" text-anchor="middle" fill="${E.nome}" font-size="11" font-weight="700">${esc(nomeCorto(player))}</text>
     <text x="0" y="37" text-anchor="middle" fill="${colore}" font-size="10" font-weight="800">${esc(slot.sigla)}</text>
     ${nomeRuolo ? `<text x="0" y="46" text-anchor="middle" fill="${E.linee(0.78)}" font-size="7.5">${esc(nomeRuolo)}</text>` : ''}
-    ${vedi.cambi && entrante ? `<text x="0" y="${nomeRuolo ? 58 : 48}" text-anchor="middle" fill="${E.cambio}" font-size="8.5" font-weight="800">🔁 ${esc(nomeCorto(entrante))}</text>` : ''}
+    ${vedi.cambi && entrante ? `${svgIcona('scambio', { x: -nomeCorto(entrante).length * 2.45 - 12, y: nomeRuolo ? 51 : 41, size: 9, colore: E.cambio })}<text x="2" y="${nomeRuolo ? 58 : 48}" text-anchor="middle" fill="${E.cambio}" font-size="8.5" font-weight="800">${esc(nomeCorto(entrante))}</text>` : ''}
   </g>`
 }
 

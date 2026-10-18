@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import EmptyState from '../components/EmptyState'
-import { IconChart } from '../components/icons'
+import { IconChart, IconChevronLeft } from '../components/icons'
 import { normalizzaAnalisi, avanzamentoObiettivi, intestazioneAnalisi } from '../lib/analisi'
 
 export default function AnalisiPage({ incorporata = false }) {
@@ -55,7 +55,7 @@ export default function AnalisiPage({ incorporata = false }) {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>Analisi</h1>
       </div>
 

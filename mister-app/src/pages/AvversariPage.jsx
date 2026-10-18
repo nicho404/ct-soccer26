@@ -3,7 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import EmptyState from '../components/EmptyState'
 import { IconTarget } from '../components/icons'
-import { partiteContro, bilancio, esitoPartita, ESITO_INFO, formatDataPartita } from '../lib/partite'
+import { partiteContro, bilancio, esitoPartita, formatDataPartita } from '../lib/partite'
+import { badgeTono, TONO_ESITO } from '../components/simboli'
 
 export default function AvversariPage() {
   const navigate = useNavigate()
@@ -52,7 +53,7 @@ export default function AvversariPage() {
                     </div>
                   </div>
                   {esito && (
-                    <span className={`badge ${ESITO_INFO[esito].badge}`}>
+                    <span className={`badge ${badgeTono(TONO_ESITO[esito])}`}>
                       {ultima.golFatti}-{ultima.golSubiti}
                     </span>
                   )}

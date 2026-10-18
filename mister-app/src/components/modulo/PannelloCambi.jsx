@@ -1,6 +1,7 @@
 import IncaricoPicker from '../IncaricoPicker'
 import { nomeBreve } from '../../lib/nomi'
 import { famigliaRuolo } from '../../db/constants'
+import { IconStar, IconClose } from '../icons'
 
 // Scheda "Cambi": con una posizione selezionata si sceglie chi entra dalla
 // panchina; senza, l'elenco dei cambi pianificati.
@@ -51,7 +52,7 @@ export default function PannelloCambi({
                     onClick={() => onAssegnaCambio(p.id)}
                   >
                     <span className={`role-dot ${famigliaRuolo(p.ruoloNaturale)}`} style={{ marginRight: 6 }} />
-                    {p.titolare && <span className="star-on">★ </span>}
+                    {p.titolare && <span className="star-on" title="Titolare"><IconStar size={12} fill="currentColor" /> </span>}
                     {nomeBreve(p)}
                   </button>
                 ))
@@ -86,7 +87,7 @@ export default function PannelloCambi({
                 aria-label={`Annulla cambio ${nomeBreve(entrante)}`}
                 onClick={() => onAnnullaCambio(slotIndex, entrante)}
               >
-                ✕
+                <IconClose size={16} />
               </button>
             </div>
           )

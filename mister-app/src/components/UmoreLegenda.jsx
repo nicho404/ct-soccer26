@@ -3,6 +3,7 @@ import FacciaUmore from './FacciaUmore'
 import {
   SOGLIE_MINUTAGGIO, IMPEGNO_PIENO, IMPEGNO_MINIMO, BADGE_PRESENZE, umoreInfo, umoreDa,
 } from '../lib/umore'
+import { Simbolo } from './simboli'
 
 const pct = (x) => `${Math.round(x * 100)}%`
 
@@ -19,7 +20,7 @@ export function BadgePresenze({ badge, quota }) {
   const descrizione = `Presenze: ${badge.label}${quota != null ? ` · ${pct(quota)}` : ''}`
   return (
     <span className={`badge badge-medaglia badge-icona medaglia-${badge.value}`} title={descrizione} aria-label={descrizione}>
-      {badge.icona}
+      <Simbolo gruppo="medaglia" valore={badge.value} size={13} />
     </span>
   )
 }
@@ -77,7 +78,7 @@ export function UmoreLegenda() {
       <div className="chip-row" style={{ gap: 6 }}>
         {fasce(BADGE_PRESENZE).map((b) => (
           <span key={b.value} className={`badge badge-medaglia medaglia-${b.value}`}>
-            {b.icona} {b.label} {etichetta(b)}
+            <Simbolo gruppo="medaglia" valore={b.value} size={12} /> {b.label} {etichetta(b)}
           </span>
         ))}
       </div>

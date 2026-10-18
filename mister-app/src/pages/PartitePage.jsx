@@ -5,13 +5,14 @@ import { db } from '../db/db'
 import { campoPartitaInfo } from '../db/constants'
 import EmptyState from '../components/EmptyState'
 import Modal from '../components/Modal'
-import { IconCalendar } from '../components/icons'
+import { IconCalendar, IconPencil } from '../components/icons'
 import {
-  partiteInProgramma, partiteGiocate, esitoPartita, ESITO_INFO,
+  partiteInProgramma, partiteGiocate, esitoPartita,
   formatDataPartita, quandoBreve, bilancio, campionatoDiRiferimento, fasePartita, oggiISO,
 } from '../lib/partite'
 import { presentiIds } from '../lib/presenze'
 import { refertoCompilato } from '../lib/storico'
+import { badgeTono, TONO_ESITO } from '../components/simboli'
 
 const FASI = [
   { value: 'precampionato', label: 'Precampionato' },
@@ -31,7 +32,7 @@ function RigaPartita({ partita, nomeAvversario, nomeCompetizione, futura }) {
     <NavLink to={`/partite/${partita.id}`} className="card tappable partita-riga">
       <span className="partita-riga-esito">
         {esito ? (
-          <span className={`badge ${ESITO_INFO[esito].badge}`}>{partita.golFatti}-{partita.golSubiti}</span>
+          <span className={`badge ${badgeTono(TONO_ESITO[esito])}`}>{partita.golFatti}-{partita.golSubiti}</span>
         ) : futura ? (
           <span className="badge badge-accent">{quandoBreve(partita.data)}</span>
         ) : (
@@ -136,7 +137,7 @@ export default function PartitePage() {
 
       {campionato && (
         <button type="button" className="partite-inizio muted small" onClick={() => setNuovoInizio(inizio)}>
-          Campionato dal {formatDataPartita(inizio)} ✎
+          <span className="icona-testo">Campionato dal {formatDataPartita(inizio)} <IconPencil size={13} /></span>
         </button>
       )}
 

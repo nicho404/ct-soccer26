@@ -47,9 +47,9 @@ describe('immagine del modulo', () => {
       expect(svg).not.toContain('Opportunista')
       expect(svg).not.toContain('<image')
       expect(svg).not.toContain('stroke-dasharray="6 4"')
-      expect(svg).not.toContain('⚔️')
+      expect(svg).not.toContain('data-icona="spada"')
       expect(svg).not.toContain('#34d399')
-      expect(svg).not.toContain('🔁')
+      expect(svg).not.toContain('data-icona="scambio"')
       expect(svg).toContain('Rossi')
     })
 
@@ -58,17 +58,18 @@ describe('immagine del modulo', () => {
       expect(svg).toContain('Opportunista')
       expect(svg).toContain('<image href="data:image/png;base64,AAAA"')
       expect(svg).toContain('stroke-dasharray="6 4"')
-      expect(svg).toContain('⚔️')
+      expect(svg).toContain('data-icona="spada"')
       expect(svg).toContain('#34d399') // "+" ruolo suo
-      expect(svg).toContain('🔁 Bianchi')
-      expect(svg).toContain('⚠️') // il DC schierato da terzino è fuori ruolo
+      expect(svg).toContain('data-icona="scambio"')
+      expect(svg).toContain('>Bianchi</text>')
+      expect(svg).toContain('data-icona="avviso"') // il DC schierato da terzino è fuori ruolo
     })
 
     it('solo alcuni accesi: si vedono quelli e non gli altri', () => {
       const svg = svgModulo({ ...dati, mostra: { ...nessuno, ruoli: true } })
       expect(svg).toContain('Opportunista')
       expect(svg).not.toContain('<image')
-      expect(svg).not.toContain('⚔️')
+      expect(svg).not.toContain('data-icona="spada"')
     })
   })
 })

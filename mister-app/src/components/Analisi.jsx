@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { db } from '../db/db'
 import { tipoPuntoInfo, alternaObiettivo, avanzamentoObiettivi, intestazioneAnalisi } from '../lib/analisi'
+import { Simbolo } from './simboli'
+import { IconCheck } from './icons'
 
 export function PuntiChiave({ punti }) {
   return (
@@ -9,7 +11,7 @@ export function PuntiChiave({ punti }) {
         const info = tipoPuntoInfo(p.tipo)
         return (
           <li key={i} className={`analisi-punto analisi-${info.value}`}>
-            <span aria-label={info.label} title={info.label}>{info.icona}</span>
+            <span className="icona-testo" role="img" aria-label={info.label} title={info.label}><Simbolo gruppo="analisi" valore={info.value} /></span>
             <span>{p.testo}</span>
           </li>
         )
@@ -39,7 +41,7 @@ export function Obiettivi({ analisi, limite }) {
           aria-checked={o.fatto}
           onClick={() => alterna(o.indice)}
         >
-          <span className="analisi-check" aria-hidden="true">{o.fatto ? '✓' : ''}</span>
+          <span className="analisi-check" aria-hidden="true">{o.fatto ? <IconCheck size={14} /> : null}</span>
           <span>{o.testo}</span>
         </button>
       ))}

@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { db } from '../db/db'
 import { VOCI_VISTA } from '../lib/vistaCampo'
 import Modal from './Modal'
+import { IconEye } from './icons'
 
-// Pulsante "👁️ Vista" sopra il campo e la sua finestra di interruttori.
+// Pulsante "Vista" sopra il campo e la sua finestra di interruttori.
 // Una sola scelta per Modulo e referto: è salvata in meta 'vistaCampo'.
 // `vista` è già completa (lib/vistaCampo.vistaCompleta): la legge il
 // chiamante, che la passa anche a PitchView.
@@ -20,7 +21,7 @@ export default function VistaCampo({ vista }) {
         aria-label="Indicatori sul campo"
         onClick={() => setAperta(true)}
       >
-        👁️ Vista{nascosti > 0 ? ` · ${nascosti} off` : ''}
+        <IconEye size={16} /> Vista{nascosti > 0 ? ` · ${nascosti} off` : ''}
       </button>
       {aperta && (
         <Modal titolo="Indicatori sul campo" onClose={() => setAperta(false)}>

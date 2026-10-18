@@ -7,6 +7,7 @@ import { risolviAvversario, eventiPerForm, eventiPerDb } from '../db/girone'
 import { disallineamentoGirone, pulisciNome } from '../lib/girone'
 import EventiAvversari from '../components/EventiAvversari'
 import Scelta from '../components/Scelta'
+import { IconChevronLeft } from '../components/icons'
 
 const EMPTY = {
   competitionId: null,
@@ -150,7 +151,7 @@ export default function GironePartitaFormPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>{editing ? 'Partita del girone' : 'Nuovo risultato'}</h1>
       </div>
 

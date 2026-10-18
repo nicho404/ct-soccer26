@@ -1,5 +1,6 @@
 import { Children, isValidElement, useState } from 'react'
 import Modal from './Modal'
+import { IconChevronDown } from './icons'
 
 // Testo semplice dai figli di un <option>: stringhe e numeri, anche spezzati.
 const testo = (children) =>
@@ -26,7 +27,7 @@ export default function Scelta({ value, onChange, children, titolo, className = 
         onClick={() => setAperta(true)}
       >
         <span className="scelta-testo">{corrente?.label ?? ''}</span>
-        <span className="scelta-freccia" aria-hidden="true">▾</span>
+        <span className="scelta-freccia" aria-hidden="true"><IconChevronDown size={16} /></span>
       </button>
       {aperta && (
         <Modal titolo={titolo ?? 'Scegli'} onClose={() => setAperta(false)}>

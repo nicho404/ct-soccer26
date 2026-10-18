@@ -17,6 +17,8 @@ import { contaSeduta } from '../lib/presenze'
 import AppelloPresenze from '../components/AppelloPresenze'
 import Scelta from '../components/Scelta'
 import Modal from '../components/Modal'
+import { badgeTono, Cartellino, TONO_ESITO } from '../components/simboli'
+import { IconBall, IconChevronLeft, IconClipboard, IconClipboardCheck, IconPencil } from '../components/icons'
 
 const EMPTY = {
   data: '',
@@ -336,7 +338,7 @@ export default function PartitaFormPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>{editing ? 'Partita' : 'Nuova partita'}</h1>
       </div>
 
@@ -346,7 +348,7 @@ export default function PartitaFormPage() {
         <div className="card partita-riepilogo">
           <div className="row" style={{ gap: 10 }}>
             {esito ? (
-              <span className={`badge risultato-grande ${ESITO_INFO[esito].badge}`}>
+              <span className={`badge risultato-grande ${badgeTono(TONO_ESITO[esito])}`}>
                 {form.golFatti}-{form.golSubiti}
               </span>
             ) : (
@@ -363,7 +365,7 @@ export default function PartitaFormPage() {
                 </div>
               )}
             </div>
-            <button className="btn btn-sm" aria-label="Modifica dati partita" onClick={() => setFinestra('dati')}>✎</button>
+            <button className="btn btn-sm" aria-label="Modifica dati partita" onClick={() => setFinestra('dati')}><IconPencil size={16} /></button>
           </div>
         </div>
       ) : (
@@ -375,7 +377,7 @@ export default function PartitaFormPage() {
           <strong className="small">Dal girone</strong>
           {scheda.bomber.length > 0 && (
             <div className="small" style={{ marginTop: 6 }}>
-              ⚽ {scheda.bomber.map((r) => `${r.nome} ${r.gol}`).join(' · ')}
+              <span className="icona-testo"><IconBall size={13} /> {scheda.bomber.map((r) => `${r.nome} ${r.gol}`).join(' · ')}</span>
             </div>
           )}
           {squalificati.length > 0 && (
@@ -423,7 +425,7 @@ export default function PartitaFormPage() {
           dettaglio si apre in finestra (o nel referto) solo quando serve */}
       <div className="section-title">Compilazione</div>
       <button type="button" className="card tappable partita-voce" onClick={() => setFinestra('appello')}>
-        <span className="partita-voce-icona">✅</span>
+        <span className="partita-voce-icona"><IconClipboardCheck size={20} /></span>
         <span className="partita-voce-testo">
           <strong>Presenze</strong>
           <span className="muted small">
@@ -443,7 +445,7 @@ export default function PartitaFormPage() {
           className="card tappable partita-voce"
           onClick={() => puoiUscire() && navigate(`/partite/${id}/referto`, { state: location.state })}
         >
-          <span className="partita-voce-icona">📋</span>
+          <span className="partita-voce-icona"><IconClipboard size={20} /></span>
           <span className="partita-voce-testo">
             <strong>Referto</strong>
             <span className="muted small">
@@ -459,7 +461,7 @@ export default function PartitaFormPage() {
       )}
 
       <button type="button" className="card tappable partita-voce" onClick={() => setFinestra('avversari')}>
-        <span className="partita-voce-icona">🟨</span>
+        <span className="partita-voce-icona"><Cartellino colore="giallo" size={18} /></span>
         <span className="partita-voce-testo">
           <strong>Marcatori e cartellini avversari</strong>
           <span className="muted small">

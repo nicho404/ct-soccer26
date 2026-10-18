@@ -4,6 +4,7 @@ import Scelta from '../Scelta'
 import IncaricoPicker from '../IncaricoPicker'
 import { nomeBreve } from '../../lib/nomi'
 import { TRIGGER_CAMBIO, nuovoIdRiga } from './stato'
+import { IconClose } from '../icons'
 
 // "Salva assetto": nome e cambi previsti (chi esce, chi entra, quando o
 // perché). Le righe partono dai cambi già pianificati sul campo.
@@ -93,7 +94,7 @@ export default function FinestraSalvaAssetto({
                 ))}
               </Scelta>
               <button className="btn btn-sm" aria-label="Rimuovi cambio" onClick={() => rimuovi(r.id)}>
-                ✕
+                <IconClose size={16} />
               </button>
             </div>
             <div className="chip-row" style={{ marginTop: 8 }}>

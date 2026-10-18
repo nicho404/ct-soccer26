@@ -1,4 +1,6 @@
 import { INCARICHI_FASE } from '../db/constants'
+import { Simbolo } from './simboli'
+import { IconCheck } from './icons'
 
 // Incarico per fase di un giocatore: ritoccare la scelta attiva la toglie,
 // così "nessun incarico" non ha bisogno di un quarto bottone.
@@ -16,12 +18,12 @@ export default function IncaricoPicker({ value, onChange, label = 'Incarico in c
             className={`chip chip-sm ${value === i.value ? 'selected' : ''}`}
             onClick={() => onChange(value === i.value ? null : i.value)}
           >
-            {i.icona} {i.label}
+            <span className="icona-testo"><Simbolo gruppo="incarico" valore={i.value} size={14} /> {i.label}</span>
           </button>
         ))}
         {comeAssegnato && value !== comeAssegnato && (
           <button type="button" className="chip chip-sm" onClick={() => onChange(comeAssegnato)}>
-            ✓ Come assegnato
+            <span className="icona-testo"><IconCheck size={14} /> Come assegnato</span>
           </button>
         )}
       </div>
