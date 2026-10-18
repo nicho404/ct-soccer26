@@ -7,6 +7,7 @@ import { exportBackup, importBackup } from '../db/backup'
 import { durataSquadra } from '../lib/storico'
 import { resizeToDataUrl } from '../lib/image'
 import Modal from '../components/Modal'
+import SceltaTema from '../components/SceltaTema'
 
 const DURATE_RAPIDE = [40, 50, 60, 70]
 
@@ -286,6 +287,11 @@ export default function ImpostazioniPage() {
           </div>
         </Modal>
       )}
+
+      <div className="section-title">Aspetto</div>
+      <div className="card">
+        <SceltaTema />
+      </div>
 
       <div className="section-title">Dati di prova</div>
       <div className="card">

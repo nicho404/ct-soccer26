@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { coloreIntesa } from '../components/simboli'
+import { testoIntesa } from '../components/simboli'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { TIPI_INTESA } from '../db/constants'
@@ -42,7 +42,7 @@ export default function IntesePage() {
           const tipo = TIPI_INTESA.find((t) => t.value === i.tipo)
           return (
             <Link to={`/intese/${i.id}`} className="card tappable voce-lista" key={i.id}>
-              <span className="voce-categoria" style={{ color: coloreIntesa(i.tipo) }}>
+              <span className="voce-categoria" style={{ color: testoIntesa(i.tipo) }}>
                 ● {tipo?.label ?? i.tipo}
               </span>
               <strong>{(i.playerIds ?? []).map(nomeDi).join(' + ')}</strong>

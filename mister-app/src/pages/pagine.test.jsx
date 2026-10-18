@@ -1164,3 +1164,36 @@ describe('moduli: conferma prima di uscire con modifiche non salvate', () => {
     })
   }
 })
+
+describe('tema: palette e modo da Impostazioni', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+  })
+
+  afterEach(cleanup)
+
+  it('la scelta si salva in db.meta, si applica a <html> e resta in locale', async () => {
+    const { default: useTema } = await import('../hooks/useTema')
+    const { PALETTE } = await import('../theme/palette')
+    const meta = document.createElement('meta')
+    meta.name = 'theme-color'
+    document.head.appendChild(meta)
+    const ConTema = () => { useTema(); return <ImpostazioniPage /> }
+    render(<MemoryRouter><ConTema /></MemoryRouter>)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Blu' }))
+    await waitFor(async () => expect((await db.meta.get('tema'))?.value).toEqual({ palette: 'blu', modo: 'scuro' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Scuro' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Chiaro' }))
+    await waitFor(async () => expect((await db.meta.get('tema')).value.modo).toBe('chiaro'))
+
+    const blu = PALETTE.find((p) => p.id === 'blu').light
+    await waitFor(() => expect(document.documentElement.style.getPropertyValue('--bg')).toBe(blu.bg))
+    expect(document.documentElement.style.getPropertyValue('--campo')).toBeTruthy()
+    expect(meta.getAttribute('content')).toBe(blu.bg)
+    expect(JSON.parse(localStorage.getItem('mister-tema'))).toEqual({ palette: 'blu', modo: 'chiaro' })
+    expect(screen.getByRole('button', { name: 'Blu' }).getAttribute('aria-pressed')).toBe('true')
+  })
+})
