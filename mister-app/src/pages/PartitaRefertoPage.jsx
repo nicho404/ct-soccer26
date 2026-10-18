@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import useModificheNonSalvate, { useSporco } from '../hooks/useModificheNonSalvate'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -88,6 +89,9 @@ export default function PartitaRefertoPage() {
     setLoaded(true)
   }, [partita, team, loaded])
 
+  // uscire con modifiche non salvate chiede conferma (Salva ed Elimina no)
+  const puoiUscire = useModificheNonSalvate(useSporco({ moduloKey, slots, tattica, durata, eventi, incarichi, svolti }, loaded))
+
   if (!players || !opponents || partita === undefined || team === undefined ||
       salvati === undefined || moduloCorrente === undefined || vistaRiga === undefined || !loaded) return null
 
@@ -146,7 +150,7 @@ export default function PartitaRefertoPage() {
       .find((s) => s.slotIndex === i)
     const playerId = occ?.playerIds.at(-1)
     if (playerId == null) return
-    navigate(`/osservazione?matchId=${partitaId}&playerId=${playerId}`)
+    if (puoiUscire()) navigate(`/osservazione?matchId=${partitaId}&playerId=${playerId}`)
   }
 
   const caricaAssetto = (a) => {
@@ -319,7 +323,7 @@ export default function PartitaRefertoPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
         <h1>Referto</h1>
       </div>
 
@@ -362,7 +366,7 @@ export default function PartitaRefertoPage() {
           <span>⚠️</span>
           <span>
             Nessun giocatore segnato presente per questa partita: qui non compare nessun candidato.
-            <button className="btn btn-sm" style={{ marginTop: 8 }} onClick={() => navigate(`/partite/${partitaId}`)}>
+            <button className="btn btn-sm" style={{ marginTop: 8 }} onClick={() => puoiUscire() && navigate(`/partite/${partitaId}`)}>
               Segna le presenze
             </button>
           </span>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import useModificheNonSalvate, { useSporco } from '../hooks/useModificheNonSalvate'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -16,24 +17,25 @@ export default function IntesaFormPage() {
   const { id } = useParams()
   const [searchParams] = useSearchParams()
   const editing = Boolean(id)
-  const [form, setForm] = useState(EMPTY)
+  // un'intesa nuova aperta dalla scheda di un giocatore parte con lui già scelto
+  const [form, setForm] = useState(() => {
+    const pre = Number(searchParams.get('player'))
+    return !editing && pre ? { ...EMPTY, playerIds: [pre] } : EMPTY
+  })
   const [loaded, setLoaded] = useState(!editing)
 
   const players = useLiveQuery(() => db.players.toArray(), [])
 
   useEffect(() => {
-    if (!editing) {
-      const pre = Number(searchParams.get('player'))
-      if (pre) setForm((f) => ({ ...f, playerIds: [pre] }))
-      return
-    }
+    if (!editing) return
     db.intese.get(Number(id)).then((i) => {
       if (i) setForm({ ...EMPTY, ...i })
       setLoaded(true)
     })
-    // searchParams intenzionalmente fuori dalle dipendenze: serve solo al primo render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, editing])
+
+  // uscire con modifiche non salvate chiede conferma (Salva ed Elimina no)
+  const puoiUscire = useModificheNonSalvate(useSporco(form, loaded))
 
   if (!players || !loaded) return null
 
@@ -77,7 +79,7 @@ export default function IntesaFormPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
         <h1>{editing ? 'Modifica intesa' : 'Nuova intesa'}</h1>
       </div>
 

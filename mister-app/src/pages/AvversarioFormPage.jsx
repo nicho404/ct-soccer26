@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import useModificheNonSalvate, { useSporco } from '../hooks/useModificheNonSalvate'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -47,6 +48,9 @@ export default function AvversarioFormPage() {
       setLoaded(true)
     })
   }, [opponentId, editing])
+
+  // uscire con modifiche non salvate chiede conferma (Salva ed Elimina no)
+  const puoiUscire = useModificheNonSalvate(useSporco(form, loaded))
 
   if (
     !partite || team === undefined || !opponents || !partiteGirone || !giocatoriAvversari ||
@@ -144,7 +148,7 @@ export default function AvversarioFormPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
         <h1>{editing ? form.nome || 'Squadra' : 'Nuova squadra'}</h1>
       </div>
 

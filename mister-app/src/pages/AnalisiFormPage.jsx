@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import useModificheNonSalvate, { useSporco } from '../hooks/useModificheNonSalvate'
 import { useNavigate, useParams } from 'react-router-dom'
 import { db } from '../db/db'
 import { oggiISO } from '../lib/partite'
@@ -33,6 +34,9 @@ export default function AnalisiFormPage() {
       setLoaded(true)
     })
   }, [id, editing])
+
+  // uscire con modifiche non salvate chiede conferma (Salva ed Elimina no)
+  const puoiUscire = useModificheNonSalvate(useSporco(form, loaded))
 
   if (!loaded) return null
 
@@ -73,7 +77,7 @@ export default function AnalisiFormPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
         <h1>{editing ? 'Modifica analisi' : 'Nuova analisi'}</h1>
       </div>
 
