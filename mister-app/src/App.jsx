@@ -7,7 +7,6 @@ import HomePage from './pages/HomePage'
 import RosaPage from './pages/RosaPage'
 import PlayerFormPage from './pages/PlayerFormPage'
 import PlayerDetailPage from './pages/PlayerDetailPage'
-import AltroPage from './pages/AltroPage'
 import ImpostazioniPage from './pages/ImpostazioniPage'
 import ObservationPage from './pages/ObservationPage'
 import ModuloPage from './pages/ModuloPage'
@@ -76,7 +75,6 @@ export default function App() {
           <Route path="/analisi/nuova" element={<AnalisiFormPage />} />
           <Route path="/analisi/:id" element={<AnalisiDettaglioPage />} />
           <Route path="/analisi/:id/modifica" element={<AnalisiFormPage />} />
-          <Route path="/altro" element={<AltroPage />} />
           <Route path="/impostazioni" element={<ImpostazioniPage />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Route>

@@ -52,7 +52,6 @@ export default function PresenzePage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/altro')}>‹</button>
         <h1>Presenze e sedute</h1>
         <span className="muted small">{eventi.length}</span>
       </div>

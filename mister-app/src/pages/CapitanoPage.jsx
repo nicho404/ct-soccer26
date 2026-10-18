@@ -138,7 +138,6 @@ export default function CapitanoPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/altro')}>‹</button>
         <h1>Capitano</h1>
       </div>
 

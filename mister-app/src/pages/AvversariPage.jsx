@@ -17,7 +17,6 @@ export default function AvversariPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/altro')}>‹</button>
         <h1>Avversari</h1>
         <span className="muted small">{opponents.length}</span>
       </div>

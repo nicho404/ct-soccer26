@@ -23,7 +23,6 @@ import ManualeFormPage from './ManualeFormPage'
 import CapitanoPage from './CapitanoPage'
 import ObservationPage from './ObservationPage'
 import IntesePage from './IntesePage'
-import AltroPage from './AltroPage'
 import ImpostazioniPage from './ImpostazioniPage'
 import GironePage from './GironePage'
 import GironePartitaFormPage from './GironePartitaFormPage'
@@ -31,6 +30,8 @@ import AnalisiPage from './AnalisiPage'
 import AnalisiDettaglioPage from './AnalisiDettaglioPage'
 import AnalisiFormPage from './AnalisiFormPage'
 import QuadernoPage from './QuadernoPage'
+import Layout from '../components/Layout'
+import { sezioneDi, sottobarraDi } from '../lib/sezioni'
 
 // Una schermata nera è un errore di render non intercettato: qui lo si
 // trasforma in un test che fallisce, montando ogni pagina per davvero.
@@ -52,7 +53,6 @@ const PAGINE = [
   ['Capitano', CapitanoPage],
   ['Osservazione', ObservationPage],
   ['Intese', IntesePage],
-  ['Altro', AltroPage],
   ['Impostazioni', ImpostazioniPage],
   ['Girone', GironePage],
   ['Partita del girone', GironePartitaFormPage],
@@ -863,5 +863,74 @@ describe('osservazione: domanda sul ruolo', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Ruolo: Sì' }))
     fireEvent.click(screen.getByRole('button', { name: 'Salva' }))
     await waitFor(async () => expect(await db.observations.count()).toBe(2))
+  })
+})
+
+describe('navigazione a quattro sezioni', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+  })
+
+  afterEach(cleanup)
+
+  it('la sezione accesa viene dal primo segmento del percorso', () => {
+    expect(sezioneDi('/home').id).toBe('home')
+    expect(sezioneDi('/rosa/12').id).toBe('rosa')
+    expect(sezioneDi('/intese/nuova').id).toBe('rosa')
+    expect(sezioneDi('/partite/3/referto').id).toBe('calendario')
+    expect(sezioneDi('/presenze/piani').id).toBe('calendario')
+    expect(sezioneDi('/manuale/4').id).toBe('tattica')
+    expect(sezioneDi('/girone')).toBeNull()
+    expect(sezioneDi('/impostazioni')).toBeNull()
+  })
+
+  it('la sottobarra sta solo sulle pagine principali', () => {
+    expect(sottobarraDi('/rosa').attiva.label).toBe('Giocatori')
+    expect(sottobarraDi('/storico').attiva.label).toBe('Statistiche')
+    expect(sottobarraDi('/manuale').attiva.label).toBe('Quaderno')
+    expect(sottobarraDi('/analisi').attiva.label).toBe('Quaderno')
+    expect(sottobarraDi('/home')).toBeNull()
+    expect(sottobarraDi('/rosa/12')).toBeNull()
+    expect(sottobarraDi('/partite/nuova')).toBeNull()
+    expect(sottobarraDi('/girone')).toBeNull()
+  })
+
+  const montaLayout = (url) => render(
+    <MemoryRouter initialEntries={[url]}>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="*" element={<div className="page">contenuto</div>} />
+        </Route>
+      </Routes>
+    </MemoryRouter>
+  )
+
+  it('quattro tab, Girone e Impostazioni nell\'header, niente Altro', () => {
+    montaLayout('/rosa/12')
+    const tab = [...document.querySelectorAll('.bottom-nav a')]
+    expect(tab.map((a) => a.textContent)).toEqual(['Home', 'Rosa', 'Calendario', 'Tattica'])
+    expect(document.querySelector('.bottom-nav a.active').textContent).toBe('Rosa')
+    expect(screen.getByRole('link', { name: 'Girone' }).getAttribute('href')).toBe('/girone')
+    expect(screen.getByRole('link', { name: 'Impostazioni' }).getAttribute('href')).toBe('/impostazioni')
+    expect(screen.queryByText('Altro')).toBeNull()
+    // dettaglio: niente sottobarra
+    expect(document.querySelector('.sottobarra')).toBeNull()
+  })
+
+  it('sul Quaderno (anche /manuale) la sottobarra di Tattica accende Quaderno', () => {
+    montaLayout('/manuale')
+    const pill = [...document.querySelectorAll('.sottobarra-pill')]
+    expect(pill.map((a) => a.textContent)).toEqual(['Modulo', 'Avversari', 'Quaderno'])
+    expect(document.querySelector('.sottobarra-pill.attiva').textContent).toBe('Quaderno')
+    expect(document.querySelector('.bottom-nav a.active').textContent).toBe('Tattica')
+  })
+
+  it('cambiare scheda dalla sottobarra porta alla pagina', async () => {
+    montaLayout('/partite')
+    fireEvent.click(screen.getByRole('link', { name: 'Sedute' }))
+    await waitFor(() => expect(document.querySelector('.sottobarra-pill.attiva').textContent).toBe('Sedute'))
+    expect(document.querySelector('.bottom-nav a.active').textContent).toBe('Calendario')
   })
 })

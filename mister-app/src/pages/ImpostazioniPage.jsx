@@ -139,7 +139,7 @@ export default function ImpostazioniPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/altro')}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
         <h1>Impostazioni</h1>
       </div>
 

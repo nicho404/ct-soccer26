@@ -27,7 +27,6 @@ export default function StoricoPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/altro')}>‹</button>
         <h1>Storico</h1>
         <span className="muted small">{conReferto.length}/{giocate.length}</span>
       </div>
