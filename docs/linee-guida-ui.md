@@ -81,6 +81,15 @@ tocco. Prima di ridisegnare un'altra sezione, verificare questi punti.
   accesa); restano le azioni della page-header.
 - **Riquadri in cima**: classe `stat-grid compatto`, etichette di una parola.
 
+## Colori
+
+Ogni colore è un token CSS (`--bg`, `--surface`, `--surface-2`, `--border`, `--text`, `--muted`,
+`--accent`, `--accent-strong`, `--accent-soft`, `--on-accent`, `--ok`, `--warn`, `--danger`,
+`--ruolo-por/dif/cen/att`, `--campo…`). Le tinte tenui si ottengono con
+`color-mix(in srgb, var(--token) N%, transparent)`. Colori letterali solo in `src/theme/`
+(un test lo controlla). `--accent` è il riempimento (con `--on-accent` sopra),
+`--accent-strong` il colore per testo e icone sullo sfondo.
+
 ## Componenti
 
 | Componente | Uso |
