@@ -1,25 +1,9 @@
+
+/* Misure (i colori sono in src/theme) */
 :root {
-  /* Tema: nero con dettagli viola */
-  --bg: #0a0a0e;
-  --surface: #14141c;
-  --surface-2: #1e1e2a;
-  --border: #2b2b3c;
-  --text: #ececf1;
-  --muted: #9a9aad;
-  --accent: #a78bfa;
-  --accent-dark: #7c3aed;
-  --danger: #f87171;
-  --warn: #fbbf24;
-  --ok: #34d399;
-  /* Colori ruolo: giallo portiere, verde difesa, blu centrocampo, rosso attacco */
-  --ruolo-por: #facc15;
-  --ruolo-dif: #4ade80;
-  --ruolo-cen: #60a5fa;
-  --ruolo-att: #f87171;
   --radius: 10px;
   --radius-sm: 8px;
   --nav-h: 60px;
-  color-scheme: dark;
 }
 
 * {
@@ -61,7 +45,7 @@ h1, h2, h3 {
   position: sticky;
   top: 0;
   z-index: 45;
-  background: rgba(10, 10, 14, 0.92);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
 }
@@ -96,8 +80,8 @@ h1, h2, h3 {
 }
 
 .header-azione.active {
-  color: var(--accent);
-  background: rgba(167, 139, 250, 0.12);
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent-strong) 12%, transparent);
 }
 
 /* Sottobarra: le schede della sezione, pill scorrevoli in orizzontale */
@@ -131,9 +115,9 @@ h1, h2, h3 {
 }
 
 .sottobarra-pill.attiva {
-  background: var(--accent-dark);
-  border-color: var(--accent-dark);
-  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
 }
 
 .app-header .app-logo {
@@ -143,9 +127,9 @@ h1, h2, h3 {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent);
-  background: rgba(167, 139, 250, 0.12);
-  border: 1px solid rgba(167, 139, 250, 0.35);
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent-strong) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 35%, transparent);
 }
 
 .app-header .app-logo svg {
@@ -183,7 +167,7 @@ h1, h2, h3 {
 }
 
 .app-header .title span {
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 
 .page {
@@ -244,7 +228,7 @@ h1, h2, h3 {
 }
 
 .bottom-nav a.active {
-  color: var(--accent);
+  color: var(--accent-strong);
   font-weight: 600;
 }
 
@@ -258,7 +242,7 @@ h1, h2, h3 {
   width: 36px;
   height: 3px;
   border-radius: 0 0 3px 3px;
-  background: var(--accent);
+  background: var(--accent-strong);
 }
 
 /* ---------- Componenti ---------- */
@@ -300,14 +284,14 @@ a.card {
 }
 
 .btn:active {
-  border-color: var(--accent-dark);
+  border-color: var(--accent);
   background: var(--surface);
 }
 
 .btn-primary {
-  background: var(--accent-dark);
-  border-color: var(--accent-dark);
-  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
 }
 
 .btn-danger {
@@ -334,13 +318,13 @@ a.card {
   width: 56px;
   height: 56px;
   border-radius: 16px;
-  background: var(--accent-dark);
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   border: none;
   font-size: 1.9rem;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 0 3px 12px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--accent) 35%, transparent);
   z-index: 40;
   display: flex;
   align-items: center;
@@ -360,7 +344,7 @@ a.card {
   white-space: nowrap;
 }
 
-.badge-ok { background: rgba(52, 211, 153, 0.15); color: var(--ok); }
+.badge-ok { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
 
 /* Emoji umore: è un bottone (apre la legenda) ma non deve sembrarlo */
 .emoji-umore {
@@ -371,14 +355,14 @@ a.card {
 
 .popup-overlay {
   position: fixed; inset: 0; z-index: 1000;
-  background: rgba(0, 0, 0, 0.6);
+  background: color-mix(in srgb, var(--ombra) 60%, transparent);
   display: flex; align-items: center; justify-content: center;
   padding: 16px;
 }
 .popup-sheet {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 14px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 12px 40px color-mix(in srgb, var(--ombra) 50%, transparent);
 }
 .popup-header {
   display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
@@ -401,7 +385,7 @@ a.card {
   border: 1px solid var(--border); border-radius: var(--radius); background: transparent; color: var(--text);
   cursor: pointer;
 }
-.scelta-opzione.selected { border-color: var(--accent); background: rgba(167, 139, 250, 0.15); font-weight: 700; }
+.scelta-opzione.selected { border-color: var(--accent-strong); background: var(--accent-soft); font-weight: 700; }
 
 /* Fascia: capitano pieno, vice solo bordato */
 .fascia { font-weight: 800; }
@@ -409,31 +393,31 @@ a.card {
   display: inline-block; min-width: 18px; padding: 0 3px; border-radius: 4px;
   font-size: 0.7rem; text-align: center; margin-right: 2px;
 }
-.fascia-capitano { background: rgba(251, 191, 36, 0.18); color: #fbbf24; }
-.fascia-capitano .fascia-sigla { background: #fbbf24; color: #14141c; }
-.fascia-vice { background: rgba(251, 191, 36, 0.08); color: #fcd34d; }
-.fascia-vice .fascia-sigla { border: 1px solid #fcd34d; color: #fcd34d; }
+.fascia-capitano { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.fascia-capitano .fascia-sigla { background: var(--warn); color: var(--bg); }
+.fascia-vice { background: color-mix(in srgb, var(--warn) 8%, transparent); color: var(--warn); }
+.fascia-vice .fascia-sigla { border: 1px solid var(--warn); color: var(--warn); }
 
 /* Capitano: tessere delle due fasce e righe compatte */
 .fasce-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 .fascia-tessera {
-  background: var(--surface); border: 1px solid rgba(251, 191, 36, 0.35);
+  background: var(--surface); border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
   border-radius: var(--radius); padding: 10px; min-width: 0;
 }
 .fascia-tessera.tappable { cursor: pointer; }
 .stat-bar-sostituto { flex: 1; display: flex; justify-content: flex-end; }
 .fascia-allarme {
   margin-top: 8px; padding: 4px 8px; border-radius: 8px; font-size: 0.78rem; font-weight: 700;
-  background: rgba(248, 113, 113, 0.14); color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger);
 }
 .capitano-riga { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; }
 .fascia-btn {
   min-width: 38px; height: 34px; padding: 0 8px; border-radius: 8px; flex-shrink: 0;
-  border: 1px solid rgba(251, 191, 36, 0.45); background: transparent; color: #fcd34d;
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent); background: transparent; color: var(--warn);
   font-weight: 800; font-family: inherit; font-size: 0.8rem; cursor: pointer;
 }
-.fascia-btn.on.capitano { background: #fbbf24; color: #14141c; border-color: #fbbf24; }
-.fascia-btn.on.vice { background: rgba(252, 211, 77, 0.2); border-color: #fcd34d; }
+.fascia-btn.on.capitano { background: var(--warn); color: var(--bg); border-color: var(--warn); }
+.fascia-btn.on.vice { background: color-mix(in srgb, var(--warn) 20%, transparent); border-color: var(--warn); }
 .fascia-btn.grande { flex: 1; height: 44px; font-size: 0.9rem; }
 
 /* Rosa: una riga per giocatore */
@@ -457,10 +441,10 @@ a.card {
 .rosa-fascia {
   margin-left: 5px; padding: 0 4px; border-radius: 4px; font-size: 0.66rem; font-weight: 800; line-height: 16px;
 }
-.rosa-fascia.fascia-capitano { background: #fbbf24; color: #14141c; }
-.rosa-fascia.fascia-vice { border: 1px solid #fcd34d; color: #fcd34d; background: transparent; }
+.rosa-fascia.fascia-capitano { background: var(--warn); color: var(--bg); }
+.rosa-fascia.fascia-vice { border: 1px solid var(--warn); color: var(--warn); background: transparent; }
 .rosa-presenze { width: 32px; flex-shrink: 0; display: flex; justify-content: flex-end; }
-.stat-tile-allarme { border-color: rgba(248, 113, 113, 0.5); }
+.stat-tile-allarme { border-color: color-mix(in srgb, var(--danger) 50%, transparent); }
 .stat-tile-allarme .value { color: var(--danger); }
 
 /* Riquadri compatti: stessa altezza, etichetta su una riga */
@@ -494,7 +478,7 @@ a.card {
 /* Referto */
 .referto-nota {
   margin-top: 10px; padding: 8px 10px; border-radius: 8px; font-size: 0.82rem;
-  background: rgba(251, 191, 36, 0.1); color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 10%, transparent); color: var(--warn);
   display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
 }
 .select.select-compatta { min-height: 38px; padding: 6px 10px; font-size: 0.9rem; }
@@ -518,7 +502,7 @@ a.card {
   position: sticky; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);
   z-index: 30; margin-top: 14px;
 }
-.salva-fisso .btn { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); }
+.salva-fisso .btn { box-shadow: 0 6px 20px color-mix(in srgb, var(--ombra) 50%, transparent); }
 
 /* Impostazioni: voci in sola lettura */
 .impostazioni-voci { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -534,12 +518,12 @@ a.card {
   flex: 1; text-align: center; padding: 9px 0; border-radius: 8px; font-weight: 700;
   text-decoration: none; color: var(--muted);
 }
-.scheda.attiva { background: var(--accent-dark, #7c3aed); color: #fff; }
+.scheda.attiva { background: var(--accent); color: var(--on-accent); }
 
 /* Voci di lista a tutta larghezza (Manuale, Intese): etichetta sopra,
    titolo su tutta la riga, anteprima su due righe */
 .card.voce-lista { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; }
-.voce-categoria { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--accent); }
+.voce-categoria { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--accent-strong); }
 .voce-anteprima {
   font-size: 0.85rem; color: var(--muted); line-height: 1.35;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
@@ -547,7 +531,7 @@ a.card {
 .voce-fonte { font-size: 0.72rem; color: var(--muted); opacity: 0.75; }
 
 button.scheda { border: 0; background: transparent; font: inherit; font-weight: 700; cursor: pointer; }
-button.scheda.attiva { background: var(--accent-dark); color: #fff; }
+button.scheda.attiva { background: var(--accent); color: var(--on-accent); }
 
 /* Osservazione da bordo campo */
 .oss-griglia { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -557,12 +541,12 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   color: inherit; font: inherit; cursor: pointer; min-width: 0;
 }
 .oss-tessera:active { transform: scale(0.96); }
-.oss-tessera.fatta { border-color: rgba(52, 211, 153, 0.55); }
+.oss-tessera.fatta { border-color: color-mix(in srgb, var(--ok) 55%, transparent); }
 .oss-tessera strong { font-size: 0.78rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .oss-avatar { position: relative; line-height: 0; }
 .oss-conta {
   position: absolute; right: -8px; top: -4px; padding: 0 4px; border-radius: 8px; line-height: 16px;
-  background: var(--ok); color: #053022; font-size: 0.66rem; font-weight: 900;
+  background: var(--ok); color: var(--bg); font-size: 0.66rem; font-weight: 900;
 }
 .oss-sigla { font-size: 0.62rem; padding: 0 5px; }
 .oss-sezione { display: flex; justify-content: space-between; align-items: baseline; margin: 14px 0 4px; font-weight: 800; font-size: 0.85rem; }
@@ -578,18 +562,18 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   opacity: 0.85; transition: opacity 120ms, transform 120ms;
 }
 /* colori sempre visibili, pieni sul pollice scelto */
-.oss-livello.sotto { background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.55); }
-.oss-livello.norma { background: rgba(250, 204, 21, 0.09); border-color: rgba(250, 204, 21, 0.55); }
-.oss-livello.sopra { background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.55); }
+.oss-livello.sotto { background: color-mix(in srgb, var(--danger) 10%, transparent); border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
+.oss-livello.norma { background: color-mix(in srgb, var(--ruolo-por) 9%, transparent); border-color: color-mix(in srgb, var(--ruolo-por) 55%, transparent); }
+.oss-livello.sopra { background: color-mix(in srgb, var(--ok) 10%, transparent); border-color: color-mix(in srgb, var(--ok) 55%, transparent); }
 .oss-livello.on { opacity: 1; transform: scale(1.06); }
-.oss-livello.on.sotto { background: rgba(248, 113, 113, 0.45); border: 2px solid var(--danger); }
-.oss-livello.on.norma { background: rgba(250, 204, 21, 0.4); border: 2px solid #facc15; }
-.oss-livello.on.sopra { background: rgba(52, 211, 153, 0.45); border: 2px solid var(--ok); }
+.oss-livello.on.sotto { background: color-mix(in srgb, var(--danger) 45%, transparent); border: 2px solid var(--danger); }
+.oss-livello.on.norma { background: color-mix(in srgb, var(--ruolo-por) 40%, transparent); border: 2px solid var(--ruolo-por); }
+.oss-livello.on.sopra { background: color-mix(in srgb, var(--ok) 45%, transparent); border: 2px solid var(--ok); }
 /* il pollice neutro è quello "su" girato di lato */
 .oss-livello.norma .pollice, .oss-badge.norma .pollice { display: inline-block; transform: rotate(-90deg); }
 .oss-riepilogo { display: flex; flex-direction: column; gap: 4px; padding-top: 6px; }
 .oss-badge.sotto { color: var(--danger); }
-.oss-badge.norma { color: #facc15; }
+.oss-badge.norma { color: var(--ruolo-por); }
 .oss-badge.sopra { color: var(--ok); }
 
 /* Modulo: assetto in una riga */
@@ -605,7 +589,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 
 .btn.pitch-vista {
   position: absolute; top: 10px; right: 10px; z-index: 2;
-  min-height: 30px; padding: 4px 10px; font-size: 0.8rem; background: rgba(20, 20, 28, 0.92);
+  min-height: 30px; padding: 4px 10px; font-size: 0.8rem; background: color-mix(in srgb, var(--surface) 92%, transparent);
 }
 
 /* Primo avvio: le due strade */
@@ -630,27 +614,19 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 
 /* Badge presenze: i metalli "brillanti" hanno un riflesso diagonale, ferro,
    legno e cartone restano opachi — la differenza si vede a colpo d'occhio. */
-.badge-medaglia { color: #14141c; font-weight: 800; border: 1px solid rgba(255, 255, 255, 0.25); }
 .badge-icona {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 30px; height: 24px; padding: 0 6px; font-size: 0.95rem; line-height: 1;
 }
-.medaglia-diamante { background: linear-gradient(135deg, #a5f3fc 0%, #e0f2fe 45%, #67e8f9 55%, #c4b5fd 100%); }
-.medaglia-oro { background: linear-gradient(135deg, #fde68a 0%, #fbbf24 45%, #fff7d1 55%, #d97706 100%); }
-.medaglia-argento { background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 45%, #ffffff 55%, #94a3b8 100%); }
-.medaglia-bronzo { background: linear-gradient(135deg, #f5c38b 0%, #cd7f32 45%, #f8d7b0 55%, #92400e 100%); }
-.medaglia-ferro { background: #6b7280; color: #f3f4f6; }
-.medaglia-legno { background: #8b5a2b; color: #fdf6ec; }
-.medaglia-cartone { background: #c8b89a; color: #3b3222; }
-.badge-warn { background: rgba(251, 191, 36, 0.15); color: var(--warn); }
-.badge-danger { background: rgba(248, 113, 113, 0.15); color: var(--danger); }
-.badge-accent { background: rgba(167, 139, 250, 0.15); color: var(--accent); }
+.badge-warn { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); }
+.badge-danger { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); }
+.badge-accent { background: var(--accent-soft); color: var(--accent-strong); }
 
 /* Badge ruolo con colori per famiglia (por/dif/cen/att) */
-.badge-role-por { background: rgba(250, 204, 21, 0.15); color: var(--ruolo-por); }
-.badge-role-dif { background: rgba(74, 222, 128, 0.15); color: var(--ruolo-dif); }
-.badge-role-cen { background: rgba(96, 165, 250, 0.15); color: var(--ruolo-cen); }
-.badge-role-att { background: rgba(248, 113, 113, 0.15); color: var(--ruolo-att); }
+.badge-role-por { background: color-mix(in srgb, var(--ruolo-por) 15%, transparent); color: var(--ruolo-por); }
+.badge-role-dif { background: color-mix(in srgb, var(--ruolo-dif) 15%, transparent); color: var(--ruolo-dif); }
+.badge-role-cen { background: color-mix(in srgb, var(--ruolo-cen) 15%, transparent); color: var(--ruolo-cen); }
+.badge-role-att { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--ruolo-att); }
 
 .role-dot {
   width: 10px;
@@ -671,10 +647,10 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 .chip.pos-cen { color: var(--ruolo-cen); }
 .chip.pos-att { color: var(--ruolo-att); }
 
-.chip.pos-por.selected { background: rgba(250, 204, 21, 0.18); border-color: var(--ruolo-por); }
-.chip.pos-dif.selected { background: rgba(74, 222, 128, 0.18); border-color: var(--ruolo-dif); }
-.chip.pos-cen.selected { background: rgba(96, 165, 250, 0.18); border-color: var(--ruolo-cen); }
-.chip.pos-att.selected { background: rgba(248, 113, 113, 0.18); border-color: var(--ruolo-att); }
+.chip.pos-por.selected { background: color-mix(in srgb, var(--ruolo-por) 18%, transparent); border-color: var(--ruolo-por); }
+.chip.pos-dif.selected { background: color-mix(in srgb, var(--ruolo-dif) 18%, transparent); border-color: var(--ruolo-dif); }
+.chip.pos-cen.selected { background: color-mix(in srgb, var(--ruolo-cen) 18%, transparent); border-color: var(--ruolo-cen); }
+.chip.pos-att.selected { background: color-mix(in srgb, var(--danger) 18%, transparent); border-color: var(--ruolo-att); }
 
 .chip.pos-sigla {
   font-weight: 800;
@@ -704,7 +680,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 /* Vignetta con la descrizione del ruolo tattico */
 .info-pop {
   background: var(--surface-2);
-  border: 1px solid var(--accent-dark);
+  border: 1px solid var(--accent);
   border-radius: var(--radius);
   padding: 10px 12px;
   margin-top: 8px;
@@ -713,7 +689,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 }
 
 .info-pop strong {
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 
 .info-pop .en {
@@ -755,7 +731,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  color: #62627a;
+  color: color-mix(in srgb, var(--muted) 55%, var(--surface));
 }
 
 .avatar-placeholder svg {
@@ -769,8 +745,8 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   display: flex;
   align-items: center;
   gap: 12px;
-  background: linear-gradient(120deg, rgba(124, 58, 237, 0.16), rgba(124, 58, 237, 0.04));
-  border: 1px solid rgba(167, 139, 250, 0.3);
+  background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 16%, transparent), color-mix(in srgb, var(--accent) 4%, transparent));
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 30%, transparent);
   border-radius: var(--radius);
   padding: 12px 14px;
   margin-bottom: 14px;
@@ -787,9 +763,9 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   width: 46px;
   height: 46px;
   border-radius: var(--radius-sm);
-  background: rgba(167, 139, 250, 0.12);
-  border: 1px solid rgba(167, 139, 250, 0.3);
-  color: var(--accent);
+  background: color-mix(in srgb, var(--accent-strong) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 30%, transparent);
+  color: var(--accent-strong);
   flex-shrink: 0;
   overflow: hidden;
 }
@@ -818,22 +794,15 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   gap: 12px;
   /* --tema: colore del riquadro (terna rgb). Di base il viola dell'app, con
      un badge presenze prende il colore del badge (tema-*, qui sotto). */
-  --tema: 124, 58, 237;
-  --tema-testo: var(--accent);
-  background: linear-gradient(120deg, rgba(var(--tema), 0.24), rgba(var(--tema), 0.05));
-  border: 1px solid rgba(var(--tema), 0.45);
+  --tema: var(--accent);
+  --tema-testo: var(--accent-strong);
+  background: linear-gradient(120deg, color-mix(in srgb, var(--tema) 24%, transparent), color-mix(in srgb, var(--tema) 5%, transparent));
+  border: 1px solid color-mix(in srgb, var(--tema) 45%, transparent);
   border-radius: var(--radius);
   padding: 14px;
   margin-bottom: 16px;
 }
 
-.player-card.tema-diamante { --tema: 103, 232, 249; --tema-testo: #a5f3fc; }
-.player-card.tema-oro { --tema: 251, 191, 36; --tema-testo: #fcd34d; }
-.player-card.tema-argento { --tema: 203, 213, 225; --tema-testo: #e2e8f0; }
-.player-card.tema-bronzo { --tema: 205, 127, 50; --tema-testo: #e9a66b; }
-.player-card.tema-ferro { --tema: 107, 114, 128; --tema-testo: #b6bcc7; }
-.player-card.tema-legno { --tema: 139, 90, 43; --tema-testo: #c69261; }
-.player-card.tema-cartone { --tema: 200, 184, 154; --tema-testo: #c8b89a; }
 
 .player-card-centro { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .player-card-umore { gap: 8px; flex-wrap: wrap; }
@@ -841,7 +810,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 .player-card-dettaglio {
   flex-basis: 100%;
   padding-top: 10px;
-  border-top: 1px solid rgba(var(--tema), 0.25);
+  border-top: 1px solid color-mix(in srgb, var(--tema) 25%, transparent);
   line-height: 1.5;
 }
 
@@ -854,9 +823,9 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   position: absolute;
   right: -4px;
   bottom: -4px;
-  background: var(--accent-dark);
-  border-color: var(--accent-dark);
-  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
   min-width: 26px;
   height: 26px;
   font-size: 0.8rem;
@@ -869,7 +838,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   gap: 2px;
   flex-shrink: 0;
   padding-left: 10px;
-  border-left: 1px solid rgba(var(--tema), 0.35);
+  border-left: 1px solid color-mix(in srgb, var(--tema) 35%, transparent);
 }
 
 .player-card-overall .ovr {
@@ -957,9 +926,9 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   width: 64px;
   height: 64px;
   border-radius: 18px;
-  color: var(--accent);
-  background: rgba(167, 139, 250, 0.12);
-  border: 1px solid rgba(167, 139, 250, 0.35);
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent-strong) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 35%, transparent);
 }
 
 /* Griglia tattica 2×2: le 4 scelte compatte, tutto in una schermata col campo */
@@ -1001,7 +970,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 /* Box condiviso con la descrizione dell'ultima scelta toccata */
 .tactics-desc {
   background: var(--surface-2);
-  border: 1px solid var(--accent-dark);
+  border: 1px solid var(--accent);
   border-radius: var(--radius-sm);
   padding: 8px 10px;
   margin-bottom: 6px;
@@ -1011,7 +980,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 }
 
 .tactics-desc strong {
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 
 /* Selettore a frecce stile FC26 (Modulo) */
@@ -1040,9 +1009,9 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   font-size: 0.8rem;
   border: 1px solid transparent;
 }
-.coerenza-banner-ok { background: rgba(52, 211, 153, 0.12); border-color: rgba(52, 211, 153, 0.35); color: var(--ok); }
-.coerenza-banner-warn { background: rgba(251, 191, 36, 0.12); border-color: rgba(251, 191, 36, 0.35); color: var(--warn); }
-.coerenza-banner-rotto { background: rgba(248, 113, 113, 0.12); border-color: rgba(248, 113, 113, 0.35); color: var(--danger); }
+.coerenza-banner-ok { background: color-mix(in srgb, var(--ok) 12%, transparent); border-color: color-mix(in srgb, var(--ok) 35%, transparent); color: var(--ok); }
+.coerenza-banner-warn { background: color-mix(in srgb, var(--warn) 12%, transparent); border-color: color-mix(in srgb, var(--warn) 35%, transparent); color: var(--warn); }
+.coerenza-banner-rotto { background: color-mix(in srgb, var(--danger) 12%, transparent); border-color: color-mix(in srgb, var(--danger) 35%, transparent); color: var(--danger); }
 
 .arrow-select-warn {
   display: flex;
@@ -1082,7 +1051,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--surface-2);
-  color: var(--accent);
+  color: var(--accent-strong);
   font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
@@ -1093,7 +1062,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 }
 
 .arrow-btn:active {
-  border-color: var(--accent-dark);
+  border-color: var(--accent);
 }
 
 .arrow-select-value {
@@ -1137,8 +1106,8 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 
 .star-toggle.on {
   color: var(--warn);
-  border-color: rgba(251, 191, 36, 0.5);
-  background: rgba(251, 191, 36, 0.12);
+  border-color: color-mix(in srgb, var(--warn) 50%, transparent);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
 }
 
 /* ---------- Form ---------- */
@@ -1177,7 +1146,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 .input:focus,
 .textarea:focus,
 .select:focus {
-  outline: 2px solid var(--accent-dark);
+  outline: 2px solid var(--accent);
   outline-offset: -1px;
 }
 
@@ -1200,9 +1169,9 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 }
 
 .chip.selected {
-  background: var(--accent-dark);
-  border-color: var(--accent-dark);
-  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
 }
 
 .chip-sm {
@@ -1248,13 +1217,13 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 }
 
 .toggle.on {
-  background: var(--accent-dark);
-  border-color: var(--accent-dark);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 .toggle.on::after {
   transform: translateX(22px);
-  background: #fff;
+  background: var(--on-accent);
 }
 
 /* ---------- Osservazione ---------- */
@@ -1305,9 +1274,9 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 }
 
 .vote-btn.on {
-  background: var(--accent-dark);
-  border-color: var(--accent-dark);
-  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
 }
 
 .note-btn {
@@ -1324,8 +1293,8 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 }
 
 .note-btn.on {
-  color: var(--accent);
-  border-color: var(--accent-dark);
+  color: var(--accent-strong);
+  border-color: var(--accent);
 }
 
 /* Tabella comparativa */
@@ -1360,7 +1329,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 }
 
 .obs-table th.sorted {
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 
 .obs-table th:first-child,
@@ -1378,8 +1347,8 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 
 /* Analisi del mister: card in Home e dettaglio */
 .analisi-card {
-  border-left: 3px solid var(--accent);
-  background: linear-gradient(180deg, rgba(167, 139, 250, 0.08), var(--surface) 60%);
+  border-left: 3px solid var(--accent-strong);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-strong) 8%, transparent), var(--surface) 60%);
 }
 .analisi-titolo { display: block; font-size: 1.1rem; margin-top: 2px; }
 .analisi-sintesi { margin: 8px 0 4px; line-height: 1.45; }
@@ -1389,7 +1358,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 .analisi-punti { list-style: none; margin: 8px 0 0; padding: 0; }
 .analisi-punto {
@@ -1404,7 +1373,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 }
 .analisi-punto.analisi-problema { border-left: 2px solid var(--warn); }
 .analisi-punto.analisi-forza { border-left: 2px solid var(--ok); }
-.analisi-punto.analisi-novita { border-left: 2px solid var(--accent); }
+.analisi-punto.analisi-novita { border-left: 2px solid var(--accent-strong); }
 .analisi-obiettivi { display: flex; flex-direction: column; gap: 4px; }
 .analisi-obiettivo {
   display: flex;
@@ -1426,7 +1395,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 .analisi-check {
   flex: 0 0 20px;
   height: 20px;
-  border: 2px solid var(--accent);
+  border: 2px solid var(--accent-strong);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -1435,13 +1404,13 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   font-weight: 800;
 }
 .analisi-obiettivo.fatto { color: var(--muted); text-decoration: line-through; }
-.analisi-obiettivo.fatto .analisi-check { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.analisi-obiettivo.fatto .analisi-check { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--bg); }
 .analisi-sezione ul { margin: 6px 0 0; padding-left: 18px; }
 .analisi-sezione li { margin-bottom: 4px; line-height: 1.4; font-size: 0.9rem; }
 
 /* Girone: la nostra squadra in classifica e nei risultati */
-.obs-table tr.riga-nostra td { color: var(--accent); font-weight: 700; }
-.nostra { color: var(--accent); font-weight: 700; }
+.obs-table tr.riga-nostra td { color: var(--accent-strong); font-weight: 700; }
+.nostra { color: var(--accent-strong); font-weight: 700; }
 
 .vote-cell-1, .vote-cell-2 { color: var(--danger); font-weight: 700; }
 .vote-cell-3 { color: var(--warn); font-weight: 700; }
@@ -1450,7 +1419,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 /* ---------- Campo (Modulo) ---------- */
 
 .pitch-wrap {
-  background: radial-gradient(ellipse at 50% 0%, #101623 0%, #07070b 70%);
+  background: var(--campo-fondo);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 6px 2px;
@@ -1485,7 +1454,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 .stat-tile .value {
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--accent);
+  color: var(--accent-strong);
   line-height: 1.1;
 }
 
@@ -1530,7 +1499,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
 .empty-state .icon {
   font-size: 3rem;
   margin-bottom: 12px;
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 
 .empty-state .icon svg {
@@ -1691,7 +1660,7 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   }
 
   .bottom-nav a.active {
-    background: rgba(167, 139, 250, 0.12);
+    background: color-mix(in srgb, var(--accent-strong) 12%, transparent);
   }
 
   /* la barretta passa da sopra a sinistra */
@@ -1743,8 +1712,8 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   }
 
   .colonna-elenco .card.active {
-    border-color: var(--accent);
-    background: rgba(167, 139, 250, 0.08);
+    border-color: var(--accent-strong);
+    background: color-mix(in srgb, var(--accent-strong) 8%, transparent);
   }
 
   /* il campo a tutta larghezza diventerebbe più alto dello schermo */
@@ -1803,18 +1772,18 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   .card.partita-voce:hover,
   .oss-tessera:hover {
     background: var(--surface-2);
-    border-color: rgba(167, 139, 250, 0.45);
+    border-color: color-mix(in srgb, var(--accent-strong) 45%, transparent);
   }
 
   .incarico-riga:hover,
   .capitano-riga:hover {
-    background: rgba(167, 139, 250, 0.06);
+    background: color-mix(in srgb, var(--accent-strong) 6%, transparent);
   }
 
   .scelta-opzione:hover,
   .chip:hover,
   .btn:hover {
-    border-color: var(--accent-dark);
+    border-color: var(--accent);
   }
 
   .bottom-nav a:hover:not(.active),

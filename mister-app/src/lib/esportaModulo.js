@@ -6,7 +6,8 @@
 // sotto il campo c'è anche la panchina: chi è convocato e non parte titolare.
 import { pt, poly, areaPoly, PITCH_W, PITCH_H } from './pitchGeometry'
 import { nomeBreve } from './nomi'
-import { COLORI_FAMIGLIA, famigliaRuolo, TIPI_INTESA, incaricoInfo } from '../db/constants'
+import { famigliaRuolo, incaricoInfo } from '../db/constants'
+import { ESPORTAZIONE as E } from '../theme/esportazione'
 import { compatibilitaGiocatore } from '../tactics/engine'
 import { fuoriRuolo } from './formazioni'
 
@@ -46,23 +47,23 @@ function segnoCompatibilita({ slot, player, ruolo }) {
   }
   const livello = ruolo ? compatibilitaGiocatore({ slotRuolo: ruolo.ruoloSuggerito, player }).livello : null
   const stile = {
-    naturale: { fondo: '#34d399', testo: '#053022', segno: '+' },
-    adattabile: { fondo: '#fbbf24', testo: '#3a2a00', segno: '~' },
+    naturale: { ...E.naturale, segno: '+' },
+    adattabile: { ...E.adattabile, segno: '~' },
   }[livello]
   if (!stile) return ''
-  return `<circle cx="13" cy="-14" r="6.5" fill="${stile.fondo}" stroke="#0a0a0e" stroke-width="1.5"/>
+  return `<circle cx="13" cy="-14" r="6.5" fill="${stile.fondo}" stroke="${E.bordoSegno}" stroke-width="1.5"/>
     <text x="13" y="-10.2" text-anchor="middle" fill="${stile.testo}" font-size="11" font-weight="900">${stile.segno}</text>`
 }
 
 function figura(slot, player, [x, y], { vedi = {}, ruolo = null, incarico = null, entrante = null, indice = 0 } = {}) {
-  const colore = COLORI_FAMIGLIA[famigliaRuolo(slot.sigla)] ?? '#9a9aad'
+  const colore = E.ruolo[famigliaRuolo(slot.sigla)] ?? E.ruolo.nessuno
   const numero = player && player.numero !== '' && player.numero != null ? player.numero : null
   const nomeRuolo = vedi.ruoli && ruolo?.nome ? ruolo.nome : ''
   if (!player) {
     return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)})">
-      <circle cx="0" cy="-4" r="16" fill="rgba(0,0,0,0.28)" stroke="${colore}" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <circle cx="0" cy="-4" r="16" fill="${E.vuoto}" stroke="${colore}" stroke-width="1.5" stroke-dasharray="4 3"/>
       <text x="0" y="0" text-anchor="middle" fill="${colore}" font-size="10" font-weight="800">${esc(slot.sigla)}</text>
-      ${nomeRuolo ? `<text x="0" y="26" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="7.5">${esc(nomeRuolo)}</text>` : ''}
+      ${nomeRuolo ? `<text x="0" y="26" text-anchor="middle" fill="${E.linee(0.6)}" font-size="7.5">${esc(nomeRuolo)}</text>` : ''}
     </g>`
   }
   // la foto entra solo se è incorporata (data URL): un'immagine rasterizzata
@@ -71,17 +72,17 @@ function figura(slot, player, [x, y], { vedi = {}, ruolo = null, incarico = null
   const volto = conFoto
     ? `<clipPath id="foto-slot-${indice}"><circle cx="0" cy="-4" r="14.8"/></clipPath>
     <image href="${esc(player.foto)}" x="-15" y="-19" width="30" height="30" clip-path="url(#foto-slot-${indice})" preserveAspectRatio="xMidYMid slice"/>`
-    : `<text x="0" y="1" text-anchor="middle" fill="#ececf1" font-size="13" font-weight="800">${esc(numero ?? slot.sigla)}</text>`
+    : `<text x="0" y="1" text-anchor="middle" fill="${E.testo}" font-size="13" font-weight="800">${esc(numero ?? slot.sigla)}</text>`
   const icona = vedi.incarichi ? incaricoInfo(incarico)?.icona : null
   return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)})">
-    <circle cx="0" cy="-4" r="16" fill="#14141c" stroke="${colore}" stroke-width="2.5"/>
+    <circle cx="0" cy="-4" r="16" fill="${E.pedina}" stroke="${colore}" stroke-width="2.5"/>
     ${volto}
     ${vedi.compatibilita ? segnoCompatibilita({ slot, player, ruolo }) : ''}
     ${icona ? `<text x="-22" y="-12" font-size="11">${icona}</text>` : ''}
-    <text x="0" y="26" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">${esc(nomeCorto(player))}</text>
+    <text x="0" y="26" text-anchor="middle" fill="${E.nome}" font-size="11" font-weight="700">${esc(nomeCorto(player))}</text>
     <text x="0" y="37" text-anchor="middle" fill="${colore}" font-size="10" font-weight="800">${esc(slot.sigla)}</text>
-    ${nomeRuolo ? `<text x="0" y="46" text-anchor="middle" fill="rgba(255,255,255,0.78)" font-size="7.5">${esc(nomeRuolo)}</text>` : ''}
-    ${vedi.cambi && entrante ? `<text x="0" y="${nomeRuolo ? 58 : 48}" text-anchor="middle" fill="#ef4444" font-size="8.5" font-weight="800">🔁 ${esc(nomeCorto(entrante))}</text>` : ''}
+    ${nomeRuolo ? `<text x="0" y="46" text-anchor="middle" fill="${E.linee(0.78)}" font-size="7.5">${esc(nomeRuolo)}</text>` : ''}
+    ${vedi.cambi && entrante ? `<text x="0" y="${nomeRuolo ? 58 : 48}" text-anchor="middle" fill="${E.cambio}" font-size="8.5" font-weight="800">🔁 ${esc(nomeCorto(entrante))}</text>` : ''}
   </g>`
 }
 
@@ -93,7 +94,7 @@ function lineeIntese(intese, slots, posizioni) {
         .map((pid) => slots.indexOf(pid))
         .filter((i) => i !== -1)
         .map((i) => posizioni[i])
-      const colore = TIPI_INTESA.find((t) => t.value === intesa.tipo)?.colore ?? '#fff'
+      const colore = E.intesa[intesa.tipo] ?? E.titolo
       return punti.slice(1).map(
         (b, k) =>
           `<line x1="${punti[k][0].toFixed(1)}" y1="${punti[k][1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="${colore}" stroke-width="2.5" stroke-dasharray="6 4" opacity="0.85"/>`
@@ -111,15 +112,15 @@ function svgPanchina(panchina, y0) {
     const riga = Math.floor(i / PANCHINA_COLONNE)
     const x = margine + col * larghezza
     const y = y0 + PANCHINA_TITOLO_H + riga * PANCHINA_RIGA_H
-    const colore = COLORI_FAMIGLIA[famigliaRuolo(p.ruoloNaturale)] ?? '#9a9aad'
+    const colore = E.ruolo[famigliaRuolo(p.ruoloNaturale)] ?? E.ruolo.nessuno
     const numero = p.numero !== '' && p.numero != null ? p.numero : ''
     return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)})">
-      <rect x="0" y="0" width="${(larghezza - 6).toFixed(1)}" height="24" rx="7" fill="#14141c" stroke="${colore}" stroke-opacity="0.6"/>
+      <rect x="0" y="0" width="${(larghezza - 6).toFixed(1)}" height="24" rx="7" fill="${E.pedina}" stroke="${colore}" stroke-opacity="0.6"/>
       <text x="16" y="16" text-anchor="middle" fill="${colore}" font-size="11" font-weight="800">${esc(numero)}</text>
-      <text x="30" y="16" fill="#ececf1" font-size="11" font-weight="700">${esc(nomeCorto(p))}</text>
+      <text x="30" y="16" fill="${E.testo}" font-size="11" font-weight="700">${esc(nomeCorto(p))}</text>
     </g>`
   })
-  return `<text x="${margine}" y="${y0 + 19}" fill="#a1a1b5" font-size="12" font-weight="800" letter-spacing="1">PANCHINA (${panchina.length})</text>
+  return `<text x="${margine}" y="${y0 + 19}" fill="${E.sottotitolo}" font-size="12" font-weight="800" letter-spacing="1">PANCHINA (${panchina.length})</text>
   ${voci.join('\n')}`
 }
 
@@ -148,7 +149,7 @@ export function svgModulo({
   const bande = [0, 1, 2, 3, 4]
     .map(
       (i) =>
-        `<polygon points="${areaPoly(i * 0.2, (i + 1) * 0.2, 0, 1)}" fill="${i % 2 === 0 ? '#0c3120' : '#0e3a26'}"/>`
+        `<polygon points="${areaPoly(i * 0.2, (i + 1) * 0.2, 0, 1)}" fill="${E.campo[i % 2]}"/>`
     )
     .join('')
 
@@ -165,18 +166,18 @@ export function svgModulo({
     .join(' · ')
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${OUT_W}" height="${altezza}" viewBox="0 0 ${OUT_W} ${altezza}" font-family="${FONT}">
-  <rect width="${OUT_W}" height="${altezza}" fill="#0a0a0e"/>
-  <text x="${OUT_W / 2}" y="30" text-anchor="middle" fill="#ffffff" font-size="19" font-weight="800">${esc(titolo)}</text>
-  <text x="${OUT_W / 2}" y="50" text-anchor="middle" fill="#a1a1b5" font-size="12" font-weight="600">${esc(sottotitolo)}</text>
+  <rect width="${OUT_W}" height="${altezza}" fill="${E.fondo}"/>
+  <text x="${OUT_W / 2}" y="30" text-anchor="middle" fill="${E.titolo}" font-size="19" font-weight="800">${esc(titolo)}</text>
+  <text x="${OUT_W / 2}" y="50" text-anchor="middle" fill="${E.sottotitolo}" font-size="12" font-weight="600">${esc(sottotitolo)}</text>
   <g transform="translate(0,${HEADER_H})">
     ${bande}
-    <polygon points="${poly([pt(0, 0), pt(1, 0), pt(1, 1), pt(0, 1)])}" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="2"/>
-    <line x1="${pt(0, 0.5)[0].toFixed(1)}" y1="${pt(0, 0.5)[1].toFixed(1)}" x2="${pt(1, 0.5)[0].toFixed(1)}" y2="${pt(1, 0.5)[1].toFixed(1)}" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
-    <ellipse cx="${ccx.toFixed(1)}" cy="${ccy.toFixed(1)}" rx="${crx.toFixed(1)}" ry="${cry.toFixed(1)}" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/>
-    <polygon points="${areaPoly(0, 0.16)}" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
-    <polygon points="${areaPoly(0.84, 1)}" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
-    <polygon points="${poly([pt(0.4, 0), [pt(0.4, 0)[0], pt(0.4, 0)[1] + 14], [pt(0.6, 0)[0], pt(0.6, 0)[1] + 14], pt(0.6, 0)])}" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-    <polygon points="${poly([pt(0.42, 1), [pt(0.42, 1)[0], pt(0.42, 1)[1] - 9], [pt(0.58, 1)[0], pt(0.58, 1)[1] - 9], pt(0.58, 1)])}" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+    <polygon points="${poly([pt(0, 0), pt(1, 0), pt(1, 1), pt(0, 1)])}" fill="none" stroke="${E.linee(0.65)}" stroke-width="2"/>
+    <line x1="${pt(0, 0.5)[0].toFixed(1)}" y1="${pt(0, 0.5)[1].toFixed(1)}" x2="${pt(1, 0.5)[0].toFixed(1)}" y2="${pt(1, 0.5)[1].toFixed(1)}" stroke="${E.linee(0.55)}" stroke-width="1.5"/>
+    <ellipse cx="${ccx.toFixed(1)}" cy="${ccy.toFixed(1)}" rx="${crx.toFixed(1)}" ry="${cry.toFixed(1)}" fill="none" stroke="${E.linee(0.45)}" stroke-width="1.5"/>
+    <polygon points="${areaPoly(0, 0.16)}" fill="none" stroke="${E.linee(0.55)}" stroke-width="1.5"/>
+    <polygon points="${areaPoly(0.84, 1)}" fill="none" stroke="${E.linee(0.55)}" stroke-width="1.5"/>
+    <polygon points="${poly([pt(0.4, 0), [pt(0.4, 0)[0], pt(0.4, 0)[1] + 14], [pt(0.6, 0)[0], pt(0.6, 0)[1] + 14], pt(0.6, 0)])}" fill="none" stroke="${E.linee(0.5)}" stroke-width="1.5"/>
+    <polygon points="${poly([pt(0.42, 1), [pt(0.42, 1)[0], pt(0.42, 1)[1] - 9], [pt(0.58, 1)[0], pt(0.58, 1)[1] - 9], pt(0.58, 1)])}" fill="none" stroke="${E.linee(0.5)}" stroke-width="1.5"/>
     ${vedi.intese ? lineeIntese(intese, slots, posizioni) : ''}
     ${figure}
   </g>

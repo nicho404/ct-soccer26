@@ -289,7 +289,7 @@ export default function PlayerFormPage() {
       </div>
 
       {form.ruoliTatticiDaRivedere && (
-        <div className="card" style={{ borderColor: 'rgba(251,191,36,0.5)', marginBottom: 12 }}>
+        <div className="card" style={{ borderColor: 'color-mix(in srgb, var(--warn) 50%, transparent)', marginBottom: 12 }}>
           <strong>⚠️ Ruoli tattici da rivedere</strong>
           <p className="muted small" style={{ margin: '6px 0' }}>
             Con l'aggiornamento del motore tattico alcuni ruoli osservati su questo giocatore

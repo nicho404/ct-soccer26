@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { coloreIntesa } from '../components/simboli'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -351,7 +352,7 @@ export default function PlayerDetailPage() {
               style={{ cursor: 'pointer' }}
             >
               <div className="row">
-                <span className="role-dot" style={{ background: tipo?.colore }} />
+                <span className="role-dot" style={{ background: coloreIntesa(i.tipo) }} />
                 <strong className="small">
                   {i.playerIds.map(nomeDi).join(' + ')}
                 </strong>

@@ -322,7 +322,7 @@ export default function ImpostazioniPage() {
           />
         </div>
         {backupMsg && (
-          <p className="small" style={{ marginBottom: 0, color: backupMsg.ok ? undefined : '#e05555' }}>
+          <p className="small" style={{ marginBottom: 0, color: backupMsg.ok ? undefined : 'var(--danger)' }}>
             {backupMsg.text}
           </p>
         )}
@@ -333,14 +333,14 @@ export default function ImpostazioniPage() {
         )}
         {persistito === false && (
           <>
-            <p className="small" style={{ marginBottom: 8, color: '#e05555' }}>
+            <p className="small" style={{ marginBottom: 8, color: 'var(--danger)' }}>
               Il browser può cancellare i dati: esporta un backup dopo ogni partita
             </p>
             <button className="btn btn-sm" onClick={chiediPersistenza}>Proteggi i dati</button>
           </>
         )}
         {persistito === 'na' && (
-          <p className="small" style={{ marginBottom: 0, color: '#e05555' }}>
+          <p className="small" style={{ marginBottom: 0, color: 'var(--danger)' }}>
             Questo browser non permette di proteggere i dati: esporta un backup dopo ogni partita
           </p>
         )}

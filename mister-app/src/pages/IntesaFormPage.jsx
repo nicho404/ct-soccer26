@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { coloreIntesa } from '../components/simboli'
 import useModificheNonSalvate, { useSporco } from '../hooks/useModificheNonSalvate'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -113,7 +114,7 @@ export default function IntesaFormPage() {
             >
               <span
                 className="role-dot"
-                style={{ background: t.colore, marginRight: 6 }}
+                style={{ background: coloreIntesa(t.value), marginRight: 6 }}
               />
               {t.label}
             </button>
