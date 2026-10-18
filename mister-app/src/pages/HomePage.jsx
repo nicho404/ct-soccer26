@@ -15,7 +15,7 @@ import { FASCE } from '../lib/fascia'
 
 // Home: solo dati, niente consigli. In ordine di urgenza: la prossima
 // partita, l'ultima giocata, poi la stagione in quattro numeri e la forma.
-// L'analisi del mister vive in Altro.
+// L'analisi del mister vive nel Quaderno (Tattica).
 export default function HomePage() {
   const navigate = useNavigate()
   const players = useLiveQuery(() => db.players.toArray(), [])

@@ -103,7 +103,6 @@ export default function ManualePage({ incorporata = false }) {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/altro')}>‹</button>
         <h1>Manuale</h1>
         <span className="muted small">{voci.length}</span>
       </div>

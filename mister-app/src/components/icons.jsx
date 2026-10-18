@@ -145,3 +145,11 @@ export const IconGear = (p) => (
     <circle cx="12" cy="12" r="3" />
   </Icon>
 )
+
+export const IconTrophy = (p) => (
+  <Icon {...p}>
+    <path d="M8 3.5h8v6a4 4 0 0 1-8 0Z" />
+    <path d="M8 5.5H4.5v1.5A3.5 3.5 0 0 0 8 10.5M16 5.5h3.5v1.5a3.5 3.5 0 0 1-3.5 3.5" />
+    <path d="M12 13.5v4M8.5 21h7M9.5 21v-3.5h5V21" />
+  </Icon>
+)

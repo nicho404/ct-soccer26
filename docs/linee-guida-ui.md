@@ -53,7 +53,9 @@ tocco. Prima di ridisegnare un'altra sezione, verificare questi punti.
   (minuto, icona, descrizione); incarichi una riga per giocatore (assegnato → svolto) con i
   dettagli in finestra; "Salva" fisso in basso. Le azioni che cambiano dati importanti (es.
   "Usa il conto degli eventi") compaiono solo quando hanno senso.
-- **Altro**: griglia di pulsanti per categoria (Squadra, Campionato, Mister), righe da tre.
+- **Navigazione**: quattro sezioni in basso (Home, Rosa, Calendario, Tattica); le schede di
+  ogni sezione in una sottobarra di pill sotto l'header, solo sulle pagine principali (mai su
+  form e dettagli, che hanno il ‹). Girone e Impostazioni sono due icone nell'header.
 - **Quaderno**: analisi e manuale nella stessa sezione, due schede (`/analisi`, `/manuale`).
 - **Liste di testo (Manuale, Intese)**: classe `voce-lista` — etichetta piccola sopra, titolo
   su tutta la larghezza, anteprima tagliata a due righe dal CSS. Mai un badge accanto al

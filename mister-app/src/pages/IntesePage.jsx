@@ -21,7 +21,6 @@ export default function IntesePage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/altro')}>‹</button>
         <h1>Intese</h1>
         <span className="muted small">{intese.length}</span>
       </div>

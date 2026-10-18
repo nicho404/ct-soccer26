@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import AnalisiPage from './AnalisiPage'
 import ManualePage from './ManualePage'
 
@@ -6,11 +6,9 @@ import ManualePage from './ManualePage'
 // Le rotte restano /analisi e /manuale, così ogni link già esistente (e il
 // ritorno dai form) porta alla scheda giusta.
 export default function QuadernoPage({ scheda }) {
-  const navigate = useNavigate()
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate('/altro')}>‹</button>
         <h1>Quaderno</h1>
       </div>
 
