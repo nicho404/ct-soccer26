@@ -31,7 +31,8 @@ import AnalisiDettaglioPage from './AnalisiDettaglioPage'
 import AnalisiFormPage from './AnalisiFormPage'
 import QuadernoPage from './QuadernoPage'
 import Layout from '../components/Layout'
-import { sezioneDi, sottobarraDi } from '../lib/sezioni'
+import { sezioneDi, sottobarraDi, elencoAccanto } from '../lib/sezioni'
+import DueColonne from '../components/DueColonne'
 
 // Una schermata nera è un errore di render non intercettato: qui lo si
 // trasforma in un test che fallisce, montando ogni pagina per davvero.
@@ -932,5 +933,52 @@ describe('navigazione a quattro sezioni', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Sedute' }))
     await waitFor(() => expect(document.querySelector('.sottobarra-pill.attiva').textContent).toBe('Sedute'))
     expect(document.querySelector('.bottom-nav a.active').textContent).toBe('Calendario')
+  })
+})
+
+describe('desktop: elenco e dettaglio affiancati', () => {
+  const simulaLarghezza = (desktop) => {
+    window.matchMedia = (q) => ({
+      matches: desktop, media: q, addEventListener: () => {}, removeEventListener: () => {},
+    })
+  }
+
+  afterEach(() => { cleanup(); delete window.matchMedia })
+
+  it('solo /rosa/:id e /partite/:id stanno accanto all\'elenco', () => {
+    expect(elencoAccanto('/rosa/12')).toBe('/rosa')
+    expect(elencoAccanto('/partite/3')).toBe('/partite')
+    expect(elencoAccanto('/rosa/nuovo')).toBeNull()
+    expect(elencoAccanto('/rosa/12/modifica')).toBeNull()
+    expect(elencoAccanto('/partite/3/referto')).toBeNull()
+    // su desktop il dettaglio affiancato tiene la sottobarra, su telefono no
+    expect(sottobarraDi('/rosa/12', { desktop: true }).attiva.label).toBe('Giocatori')
+    expect(sottobarraDi('/rosa/12')).toBeNull()
+  })
+
+  const monta = (url) => render(
+    <MemoryRouter initialEntries={[url]}>
+      <Routes>
+        <Route path="/rosa" element={<DueColonne elenco={<div className="page">elenco</div>} vuoto="scegli" />} />
+        <Route path="/rosa/:id" element={<DueColonne elenco={<div className="page">elenco</div>} dettaglio={<div className="page">dettaglio</div>} />} />
+      </Routes>
+    </MemoryRouter>
+  )
+
+  it('su telefono si vede solo la pagina della rotta', () => {
+    simulaLarghezza(false)
+    monta('/rosa/12')
+    expect(screen.getByText('dettaglio')).toBeTruthy()
+    expect(screen.queryByText('elenco')).toBeNull()
+  })
+
+  it('su desktop elenco a sinistra e dettaglio (o riquadro vuoto) a destra', () => {
+    simulaLarghezza(true)
+    monta('/rosa/12')
+    expect(document.querySelector('.colonna-elenco').textContent).toBe('elenco')
+    expect(document.querySelector('.colonna-dettaglio').textContent).toBe('dettaglio')
+    cleanup()
+    monta('/rosa')
+    expect(document.querySelector('.colonna-dettaglio').textContent).toBe('scegli')
   })
 })

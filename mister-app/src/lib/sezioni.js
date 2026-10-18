@@ -46,10 +46,19 @@ export function sezioneDi(pathname) {
   return SEZIONI.find((sez) => sez.to === seg || sez.schede.some((s) => percorsiScheda(s).includes(seg))) ?? null
 }
 
+// Su desktop /rosa/12 e /partite/3 stanno accanto al loro elenco
+// (components/DueColonne): restituisce il percorso dell'elenco, o null.
+export function elencoAccanto(pathname) {
+  const m = /^\/(rosa|partite)\/\d+\/?$/.exec(pathname ?? '')
+  return m ? `/${m[1]}` : null
+}
+
 // La sottobarra compare solo sulle pagine principali delle schede, mai su
-// form e dettagli: lì c'è il ‹ per tornare.
-export function sottobarraDi(pathname) {
-  const p = (pathname ?? '').replace(/\/+$/, '') || '/'
+// form e dettagli: lì c'è il ‹ per tornare. Su desktop un dettaglio
+// affiancato al suo elenco la tiene, con l'elenco come scheda attiva.
+export function sottobarraDi(pathname, { desktop = false } = {}) {
+  let p = (pathname ?? '').replace(/\/+$/, '') || '/'
+  if (desktop) p = elencoAccanto(p) ?? p
   const sez = sezioneDi(p)
   if (!sez) return null
   const attiva = sez.schede.find((s) => percorsiScheda(s).includes(p))

@@ -56,6 +56,10 @@ tocco. Prima di ridisegnare un'altra sezione, verificare questi punti.
 - **Navigazione**: quattro sezioni in basso (Home, Rosa, Calendario, Tattica); le schede di
   ogni sezione in una sottobarra di pill sotto l'header, solo sulle pagine principali (mai su
   form e dettagli, che hanno il ‹). Girone e Impostazioni sono due icone nell'header.
+- **Desktop (da 1024px)**: menu laterale fisso al posto della barra in basso, contenuto
+  centrato a 960px, finestre come pannello a destra. Rosa e Partite affiancano elenco e scheda
+  (`components/DueColonne`) senza cambiare le rotte. Sotto i 1024px resta tutto com'è: le
+  regole desktop stanno solo nella media query in fondo a `index.css`.
 - **Quaderno**: analisi e manuale nella stessa sezione, due schede (`/analisi`, `/manuale`).
 - **Liste di testo (Manuale, Intese)**: classe `voce-lista` — etichetta piccola sopra, titolo
   su tutta la larghezza, anteprima tagliata a due righe dal CSS. Mai un badge accanto al
