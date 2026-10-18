@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 // Chiede conferma prima di lasciare una pagina con modifiche non salvate.
 // Il router è un HashRouter dichiarativo (niente useBlocker): si intercettano
@@ -38,4 +38,14 @@ export default function useModificheNonSalvate(sporco, messaggio = 'Uscire senza
   }, [])
 
   return () => !stato.current.sporco || window.confirm(stato.current.messaggio)
+}
+
+// Vero se i valori in pagina sono diversi da come erano quando la pagina è
+// diventata `pronta` (dati caricati, o form nuovo al primo render). Tornando
+// ai valori di partenza la pagina non è più "sporca".
+export function useSporco(valori, pronto) {
+  const attuale = JSON.stringify(valori)
+  const [iniziale, setIniziale] = useState(null)
+  if (pronto && iniziale === null) setIniziale(attuale)
+  return iniziale !== null && attuale !== iniziale
 }

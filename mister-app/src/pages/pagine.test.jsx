@@ -31,6 +31,8 @@ import AnalisiDettaglioPage from './AnalisiDettaglioPage'
 import AnalisiFormPage from './AnalisiFormPage'
 import QuadernoPage from './QuadernoPage'
 import Layout from '../components/Layout'
+import PlayerFormPage from './PlayerFormPage'
+import IntesaFormPage from './IntesaFormPage'
 import { sezioneDi, sottobarraDi, elencoAccanto } from '../lib/sezioni'
 import DueColonne from '../components/DueColonne'
 
@@ -1120,4 +1122,45 @@ describe('scheda partita: modifiche non salvate', () => {
     fireEvent.click(screen.getByText('altra partita'))
     expect(conferma).toHaveBeenCalledTimes(1)
   })
+})
+
+describe('moduli: conferma prima di uscire con modifiche non salvate', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+    await db.players.add({ id: 5, nome: 'Mario Rossi', ruoloNaturale: 'CC', statoAttivita: 'sicuro' })
+  })
+
+  afterEach(() => { cleanup(); vi.restoreAllMocks() })
+
+  const MODULI = [
+    ['Giocatore', PlayerFormPage],
+    ['Seduta', SedutaFormPage],
+    ['Avversario', AvversarioFormPage],
+    ['Intesa', IntesaFormPage],
+    ['Voce del manuale', ManualeFormPage],
+    ['Analisi', AnalisiFormPage],
+    ['Partita del girone', GironePartitaFormPage],
+    ['Partita', PartitaFormPage],
+  ]
+
+  for (const [nome, Pagina] of MODULI) {
+    it(`${nome}: il ‹ chiede conferma solo dopo una modifica`, async () => {
+      const conferma = vi.spyOn(window, 'confirm').mockReturnValue(false)
+      render(
+        <MemoryRouter initialEntries={['/nuovo?player=5']}>
+          <Routes><Route path="/nuovo" element={<Pagina />} /></Routes>
+        </MemoryRouter>
+      )
+      expect(await attendiContenuto()).toBe(true)
+      fireEvent.click(screen.getByRole('button', { name: 'Indietro' }))
+      expect(conferma).not.toHaveBeenCalled()
+
+      const campo = document.querySelector('.page input.input:not([type]), .page input.input[type="text"], .page textarea')
+      fireEvent.change(campo, { target: { value: 'Prova modifica' } })
+      fireEvent.click(screen.getByRole('button', { name: 'Indietro' }))
+      expect(conferma).toHaveBeenCalledWith('Uscire senza salvare le modifiche' + (nome === 'Partita' ? ' alla partita?' : '?'))
+    })
+  }
 })

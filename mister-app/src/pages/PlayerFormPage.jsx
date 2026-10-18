@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import useModificheNonSalvate, { useSporco } from '../hooks/useModificheNonSalvate'
 import { useNavigate, useParams } from 'react-router-dom'
 import { db } from '../db/db'
 import { resizeToDataUrl } from '../lib/image'
@@ -53,6 +54,9 @@ export default function PlayerFormPage() {
     })
   }, [id, editing])
 
+  // uscire con modifiche non salvate chiede conferma (Salva ed Elimina no)
+  const puoiUscire = useModificheNonSalvate(useSporco(form, loaded))
+
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
 
   const toggleInList = (key, value) =>
@@ -106,7 +110,7 @@ export default function PlayerFormPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
         <h1>{editing ? 'Modifica giocatore' : 'Nuovo giocatore'}</h1>
       </div>
 

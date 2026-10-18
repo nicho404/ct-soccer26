@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import useModificheNonSalvate, { useSporco } from '../hooks/useModificheNonSalvate'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -74,6 +75,9 @@ export default function GironePartitaFormPage() {
     })
   }, [id, editing])
 
+  // uscire con modifiche non salvate chiede conferma (Salva ed Elimina no)
+  const puoiUscire = useModificheNonSalvate(useSporco({ form, nomeCasa, nomeOspite, eventi }, loaded))
+
   if (!competitions || !opponents || !giocatori || !loaded) return null
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }))
@@ -146,7 +150,7 @@ export default function GironePartitaFormPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}>‹</button>
+        <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}>‹</button>
         <h1>{editing ? 'Partita del girone' : 'Nuovo risultato'}</h1>
       </div>
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import useModificheNonSalvate from '../hooks/useModificheNonSalvate'
+import useModificheNonSalvate, { useSporco } from '../hooks/useModificheNonSalvate'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -45,9 +45,6 @@ const toGiornata = (raw) => {
   return raw !== '' && raw != null && Number.isInteger(n) && n > 0 ? n : null
 }
 
-// Tutto quello che la pagina salva, in una stringa confrontabile
-const fotografa = (f, nome, eventi, comp) => JSON.stringify({ f, nome, eventi, comp })
-
 export default function PartitaFormPage() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -64,11 +61,6 @@ export default function PartitaFormPage() {
   const [eventiAvv, setEventiAvv] = useState([])
   // finestra aperta: 'dati' | 'appello' | 'avversari' | null
   const [finestra, setFinestra] = useState(null)
-  // fotografia dei dati come caricati: se quelli in pagina sono diversi,
-  // uscire senza salvare chiede conferma
-  const [iniziale, setIniziale] = useState(() =>
-    editing ? null : fotografa({ ...EMPTY, data: oggiISO() }, '', [], null)
-  )
 
   const players = useLiveQuery(() => db.players.toArray(), [])
   const opponents = useLiveQuery(() => db.opponents.toArray(), [])
@@ -89,13 +81,13 @@ export default function PartitaFormPage() {
         setForm(f)
         setNomeAvversario(nome)
         setEventiAvv(eventi)
-        setIniziale(fotografa(f, nome, eventi, null))
       }
       setLoaded(true)
     })
   }, [id, editing])
 
-  const sporco = iniziale !== null && fotografa(form, nomeAvversario, eventiAvv, nuovaComp) !== iniziale
+  // uscire con modifiche non salvate chiede conferma (Salva ed Elimina no)
+  const sporco = useSporco({ form, nomeAvversario, eventiAvv, nuovaComp }, loaded)
   const puoiUscire = useModificheNonSalvate(sporco, 'Uscire senza salvare le modifiche alla partita?')
 
   if (
