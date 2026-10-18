@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { NavLink, useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { campoPartitaInfo } from '../db/constants'
@@ -28,7 +28,7 @@ function RigaPartita({ partita, nomeAvversario, nomeCompetizione, futura }) {
   const daFare = !futura && (!esito ? 'Risultato' : !refertoCompilato(partita) ? 'Referto' : null)
 
   return (
-    <Link to={`/partite/${partita.id}`} className="card tappable partita-riga">
+    <NavLink to={`/partite/${partita.id}`} className="card tappable partita-riga">
       <span className="partita-riga-esito">
         {esito ? (
           <span className={`badge ${ESITO_INFO[esito].badge}`}>{partita.golFatti}-{partita.golSubiti}</span>
@@ -53,7 +53,7 @@ function RigaPartita({ partita, nomeAvversario, nomeCompetizione, futura }) {
         </span>
       </span>
       {daFare && <span className="badge badge-warn">{daFare} da fare</span>}
-    </Link>
+    </NavLink>
   )
 }
 

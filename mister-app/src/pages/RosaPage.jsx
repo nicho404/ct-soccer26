@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import {
@@ -36,7 +36,7 @@ function RigaGiocatore({ player, umore, imp, fascia, onUmore }) {
   const titolo = player.soprannome || nomeBreve(player)
   const f = FASCE[fascia]
   return (
-    <Link to={`/rosa/${player.id}`} className="card tappable rosa-riga">
+    <NavLink to={`/rosa/${player.id}`} className="card tappable rosa-riga">
       <span className="rosa-umore">
         {umore ? <EmojiUmore umore={umore} onClick={onUmore} size={26} /> : <span className="rosa-umore-vuoto" />}
       </span>
@@ -73,7 +73,7 @@ function RigaGiocatore({ player, umore, imp, fascia, onUmore }) {
       <span className="rosa-presenze">
         {imp?.quota != null && <BadgePresenze badge={badgePresenze(imp.quota)} quota={imp.quota} />}
       </span>
-    </Link>
+    </NavLink>
   )
 }
 

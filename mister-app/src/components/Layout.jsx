@@ -3,7 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { IconHome, IconUsers, IconPitch, IconCalendar, IconBall, IconTrophy, IconGear } from './icons'
 import ErrorBoundary from './ErrorBoundary'
-import { SEZIONI, sezioneDi, sottobarraDi } from '../lib/sezioni'
+import { SEZIONI, sezioneDi, sottobarraDi, elencoAccanto } from '../lib/sezioni'
+import useDesktop from '../hooks/useDesktop'
 
 const ICONE = { home: IconHome, rosa: IconUsers, calendario: IconCalendar, tattica: IconPitch }
 
@@ -11,7 +12,11 @@ export default function Layout() {
   const team = useLiveQuery(() => db.meta.get('team'), [])
   const location = useLocation()
   const sezione = sezioneDi(location.pathname)
-  const sottobarra = sottobarraDi(location.pathname)
+  const desktop = useDesktop()
+  const sottobarra = sottobarraDi(location.pathname, { desktop })
+  // su desktop elenco e dettaglio affiancati sono una pagina sola: aprire un
+  // giocatore non deve rimontare l'elenco (filtri e scorrimento restano)
+  const chiavePagina = (desktop && elencoAccanto(location.pathname)) || location.pathname
 
   return (
     <>
@@ -56,7 +61,7 @@ export default function Layout() {
       </div>
       {/* key sul percorso: cambiando pagina l'errore si azzera da solo,
           altrimenti una schermata rotta resterebbe rotta per sempre */}
-      <ErrorBoundary key={location.pathname}>
+      <ErrorBoundary key={chiavePagina}>
         <Outlet />
       </ErrorBoundary>
       <nav className="bottom-nav">

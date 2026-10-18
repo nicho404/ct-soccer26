@@ -2,6 +2,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db/db'
 import Layout from './components/Layout'
+import DueColonne from './components/DueColonne'
 import OnboardingPage from './pages/OnboardingPage'
 import HomePage from './pages/HomePage'
 import RosaPage from './pages/RosaPage'
@@ -43,17 +44,17 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<HomePage />} />
-          <Route path="/rosa" element={<RosaPage />} />
+          <Route path="/rosa" element={<DueColonne elenco={<RosaPage />} vuoto="Tocca un giocatore per aprire la sua scheda." />} />
           <Route path="/rosa/nuovo" element={<PlayerFormPage />} />
-          <Route path="/rosa/:id" element={<PlayerDetailPage />} />
+          <Route path="/rosa/:id" element={<DueColonne elenco={<RosaPage />} dettaglio={<PlayerDetailPage />} />} />
           <Route path="/rosa/:id/modifica" element={<PlayerFormPage />} />
           <Route path="/osservazione" element={<ObservationPage />} />
           <Route path="/intese" element={<IntesePage />} />
           <Route path="/intese/nuova" element={<IntesaFormPage />} />
           <Route path="/intese/:id" element={<IntesaFormPage />} />
-          <Route path="/partite" element={<PartitePage />} />
+          <Route path="/partite" element={<DueColonne elenco={<PartitePage />} vuoto="Tocca una partita per aprire la sua scheda." />} />
           <Route path="/partite/nuova" element={<PartitaFormPage />} />
-          <Route path="/partite/:id" element={<PartitaFormPage />} />
+          <Route path="/partite/:id" element={<DueColonne elenco={<PartitePage />} dettaglio={<PartitaFormPage />} />} />
           <Route path="/partite/:id/referto" element={<PartitaRefertoPage />} />
           <Route path="/modulo" element={<ModuloPage />} />
           <Route path="/presenze" element={<PresenzePage />} />

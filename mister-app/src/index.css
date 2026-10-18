@@ -1571,3 +1571,208 @@ button.scheda.attiva { background: var(--accent-dark); color: #fff; }
   align-items: center;
   justify-content: center;
 }
+
+/* ---------- Desktop (da 1024px) ----------
+   Sotto questa soglia non cambia niente. Sopra: menu laterale fisso al
+   posto della barra in basso, contenuto centrato a 960px, finestre come
+   pannello a destra, elenco e dettaglio affiancati (components/DueColonne). */
+
+@media (min-width: 1024px) {
+  :root {
+    --sidebar-w: 220px;
+    --content-w: 960px;
+    /* altezza di header + sottobarra: il dettaglio affiancato resta sotto */
+    --top-h: 116px;
+  }
+
+  #root {
+    max-width: none;
+    padding-left: var(--sidebar-w);
+  }
+
+  .app-header {
+    max-width: var(--content-w);
+    margin: 0 auto;
+    height: 64px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .sottobarra-inner {
+    max-width: var(--content-w);
+    margin: 0 auto;
+  }
+
+  .sottobarra-pill {
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .page {
+    max-width: var(--content-w);
+    margin: 0 auto;
+    padding-bottom: 40px;
+  }
+
+  /* Menu laterale */
+  .bottom-nav {
+    top: 0;
+    left: 0;
+    transform: none;
+    width: var(--sidebar-w);
+    max-width: none;
+    height: 100dvh;
+    padding: 16px 12px;
+    flex-direction: column;
+    gap: 4px;
+    border-top: 0;
+    border-right: 1px solid var(--border);
+  }
+
+  .bottom-nav a {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    height: 44px;
+    padding: 0 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+  }
+
+  .bottom-nav a.active {
+    background: rgba(167, 139, 250, 0.12);
+  }
+
+  /* la barretta passa da sopra a sinistra */
+  .bottom-nav a.active::before {
+    top: 50%;
+    left: -12px;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 24px;
+    border-radius: 0 3px 3px 0;
+  }
+
+  /* FAB e Salva sul bordo del contenuto, non dello schermo */
+  .fab {
+    right: max(16px, calc(50% - var(--sidebar-w) / 2 - var(--content-w) / 2 + 16px));
+    bottom: 24px;
+  }
+
+  .salva-fisso {
+    bottom: 16px;
+  }
+
+  /* Elenco e dettaglio affiancati */
+  .due-colonne {
+    max-width: var(--content-w);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    align-items: start;
+  }
+
+  .due-colonne .page {
+    max-width: none;
+    margin: 0;
+  }
+
+  .colonna-dettaglio {
+    position: sticky;
+    top: var(--top-h);
+    max-height: calc(100dvh - var(--top-h));
+    overflow-y: auto;
+    border-left: 1px solid var(--border);
+  }
+
+  .colonna-elenco .fab {
+    position: sticky;
+    bottom: 24px;
+    margin: 16px 0 0 auto;
+  }
+
+  .colonna-elenco .card.active {
+    border-color: var(--accent);
+    background: rgba(167, 139, 250, 0.08);
+  }
+
+  /* il campo a tutta larghezza diventerebbe più alto dello schermo */
+  .pitch-svg {
+    max-width: 620px;
+    margin: 0 auto;
+  }
+
+  .dettaglio-vuoto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    text-align: center;
+  }
+
+  /* Finestre: pannello laterale destro */
+  .popup-overlay {
+    justify-content: flex-end;
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .popup-sheet {
+    max-width: 440px;
+    max-height: none;
+    height: 100dvh;
+    padding: 16px 20px;
+    border-radius: 0;
+    border-width: 0 0 0 1px;
+    animation: pannello-entra 160ms ease-out;
+  }
+
+  .popup-header {
+    top: -16px;
+  }
+}
+
+@keyframes pannello-entra {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* Puntatore: stati hover su righe tappabili e voci di menu */
+@media (min-width: 1024px) and (hover: hover) {
+  .card.tappable,
+  .incarico-riga,
+  .capitano-riga,
+  .card.partita-voce,
+  .oss-tessera,
+  .scelta-opzione {
+    transition: background-color 120ms, border-color 120ms;
+  }
+
+  .card.tappable:hover,
+  .card.partita-voce:hover,
+  .oss-tessera:hover {
+    background: var(--surface-2);
+    border-color: rgba(167, 139, 250, 0.45);
+  }
+
+  .incarico-riga:hover,
+  .capitano-riga:hover {
+    background: rgba(167, 139, 250, 0.06);
+  }
+
+  .scelta-opzione:hover,
+  .chip:hover,
+  .btn:hover {
+    border-color: var(--accent-dark);
+  }
+
+  .bottom-nav a:hover:not(.active),
+  .header-azione:hover,
+  .sottobarra-pill:hover:not(.attiva),
+  .scheda:hover:not(.attiva) {
+    color: var(--text);
+    background: var(--surface-2);
+  }
+}
