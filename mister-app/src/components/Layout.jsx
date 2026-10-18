@@ -61,9 +61,13 @@ export default function Layout() {
       </div>
       {/* key sul percorso: cambiando pagina l'errore si azzera da solo,
           altrimenti una schermata rotta resterebbe rotta per sempre */}
-      <ErrorBoundary key={chiavePagina}>
-        <Outlet />
-      </ErrorBoundary>
+      {/* con la sottobarra il titolo della pagina ripete la scheda accesa:
+          index.css lo nasconde (resta per i lettori di schermo) */}
+      <main className={sottobarra ? 'con-sottobarra' : undefined}>
+        <ErrorBoundary key={chiavePagina}>
+          <Outlet />
+        </ErrorBoundary>
+      </main>
       <nav className="bottom-nav">
         {SEZIONI.map((sez) => {
           const Icon = ICONE[sez.id]

@@ -71,10 +71,14 @@ tocco. Prima di ridisegnare un'altra sezione, verificare questi punti.
   facoltativi, gli aspetti **rispetto al suo solito** (▼ ● ▲, salvati come 2/3/4) al posto dei
   voti 1-5, più i compiti del ruolo Sì/No in partita.
 - **Modulo**: partita in `Scelta`; assetto in una riga (modulo in `Scelta`, tattica riassunta su
-  due righe con il pallino di coerenza, ✎ apre la finestra con modulo, impostazione,
+  due righe con il pallino di coerenza, la matita apre la finestra con modulo, impostazione,
   costruzione e linea come pulsanti con descrizione); avviso di coerenza solo se qualcosa non
-  torna; fasi in schede; assetti salvati come righe (nome, modulo, 🔁 cambi), dettaglio in
-  finestra con "Carica in campo" ed "Elimina".
+  torna, scritto come problema ("Linea normale, meglio alta: …"); fasi in un solo livello di
+  schede con icona (Con palla / Senza palla / Cambi); assetti salvati come righe (nome, modulo,
+  icona cambi con il numero), dettaglio in finestra con "Carica in campo" ed "Elimina". I pezzi
+  stanno in `components/modulo/`. Nessuna emoji sui controlli: icone di `components/icons`.
+- **Titoli**: con la sottobarra visibile l'h1 della pagina non si vede (ripete la scheda
+  accesa); restano le azioni della page-header.
 - **Riquadri in cima**: classe `stat-grid compatto`, etichette di una parola.
 
 ## Componenti

@@ -25,7 +25,7 @@ export default class ErrorBoundary extends Component {
     const dettaglio = `${errore.message ?? errore}\n\n${errore.stack ?? ''}`.trim()
 
     return (
-      <div className="page">
+      <div className="page page-errore">
         <div className="page-header">
           <h1>Qualcosa si è rotto</h1>
         </div>

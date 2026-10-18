@@ -720,7 +720,7 @@ describe('modulo: tattica in finestra e assetti compatti', () => {
     fireEvent.click(screen.getByText('Fatto'))
 
     const riga = screen.getByRole('button', { name: 'Assetto Titolari' })
-    expect(riga.textContent).toContain('🔁 1')
+    expect(riga.querySelector('[title="Cambi previsti"]').textContent.trim()).toBe('1')
     fireEvent.click(riga)
     const finestra = screen.getByRole('dialog', { name: 'Titolari' })
     expect(finestra.textContent).toContain('ripresa')
@@ -980,5 +980,82 @@ describe('desktop: elenco e dettaglio affiancati', () => {
     cleanup()
     monta('/rosa')
     expect(document.querySelector('.colonna-dettaglio').textContent).toBe('scegli')
+  })
+})
+
+describe('modulo: avviso solo se c\'è un problema, icone al posto delle emoji', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 8, setupDone: true })
+    await db.players.bulkAdd([
+      { id: 1, nome: 'Mario Rossi', ruoloNaturale: 'CC', statoAttivita: 'sicuro' },
+      { id: 2, nome: 'Luca Bianchi', ruoloNaturale: 'DC', statoAttivita: 'sicuro' },
+    ])
+  })
+
+  afterEach(cleanup)
+
+  it('tattica coerente: nessun avviso; schede senza emoji', async () => {
+    await db.meta.put({ key: 'modulo', value: { impostazione: 'possesso', costruzione: 'corti', linea: 'alta', byFormato: { 8: { modulo: '3-3-1' } } } })
+    montaPagina(ModuloPage)
+    await screen.findByRole('button', { name: 'Tattica' })
+    expect(document.querySelector('.coerenza-banner')).toBeNull()
+    expect(screen.getAllByRole('tab').map((t) => t.textContent.trim())).toEqual(['Con palla', 'Senza palla', 'Cambi'])
+    expect(screen.getByRole('button', { name: 'Esporta immagine' }).textContent).toBe('')
+    expect(document.body.textContent).not.toMatch(/[🟢🟡🔴📷👥]/u)
+  })
+
+  it('linea non consigliata: l\'avviso dice cosa non va', async () => {
+    await db.meta.put({ key: 'modulo', value: { impostazione: 'possesso', costruzione: 'corti', linea: 'normale', byFormato: { 8: { modulo: '3-3-1' } } } })
+    montaPagina(ModuloPage)
+    const avviso = await screen.findByRole('alert')
+    expect(avviso.textContent).toBe('Linea normale, meglio alta: squadra corta, contropressing immediato.')
+  })
+
+  it('schierare e dare un ruolo manuale salva il record nella forma di sempre', async () => {
+    await db.meta.delete('modulo')
+    montaPagina(ModuloPage)
+    await screen.findByRole('button', { name: 'Tattica' })
+    // primo slot del campo, poi il giocatore
+    fireEvent.click(document.querySelector('.pitch-svg g[style*="cursor"]'))
+    fireEvent.click(await screen.findByRole('button', { name: /Bianchi/ }))
+    await waitFor(async () => expect((await db.meta.get('modulo'))?.value?.byFormato?.[8]?.slots).toContain(2))
+    const v = (await db.meta.get('modulo')).value
+    expect(Object.keys(v).sort()).toEqual(['byFormato', 'costruzione', 'impostazione', 'linea', 'matchId'])
+    expect(Object.keys(v.byFormato[8]).sort()).toEqual(['cambi', 'incarichi', 'modulo', 'slotRuoliOverride', 'slots'])
+    expect(v.byFormato[8].slotRuoliOverride).toEqual({ possesso: {}, nonPossesso: {} })
+
+    // ruolo manuale sulla stessa posizione: va in slotRuoliOverride.possesso[0]
+    fireEvent.click(document.querySelector('.pitch-svg g[style*="cursor"]'))
+    fireEvent.click(screen.getByRole('button', { name: 'Ruolo manuale' }))
+    const finestra = screen.getByRole('dialog', { name: /Ruolo manuale/ })
+    const scelta = [...finestra.querySelectorAll('.chip')].find((c) => !c.classList.contains('selected'))
+    fireEvent.click(scelta)
+    expect(screen.queryByRole('dialog')).toBeNull()
+    await waitFor(async () => expect((await db.meta.get('modulo')).value.byFormato[8].slotRuoliOverride.possesso[0]).toBeTruthy())
+    expect((await db.meta.get('modulo')).value.byFormato[8].slotRuoliOverride.nonPossesso).toEqual({})
+  })
+})
+
+describe('titolo nascosto quando la sottobarra lo ripete', () => {
+  afterEach(cleanup)
+
+  const monta = (url) => render(
+    <MemoryRouter initialEntries={[url]}>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="*" element={<div className="page"><div className="page-header"><h1>Titolo</h1></div></div>} />
+        </Route>
+      </Routes>
+    </MemoryRouter>
+  )
+
+  it('sulle pagine con sottobarra il contenuto sta in .con-sottobarra, sui dettagli no', () => {
+    monta('/storico')
+    expect(document.querySelector('main.con-sottobarra > .page h1')).toBeTruthy()
+    cleanup()
+    monta('/rosa/12')
+    expect(document.querySelector('main.con-sottobarra')).toBeNull()
   })
 })

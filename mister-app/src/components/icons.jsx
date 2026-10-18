@@ -153,3 +153,37 @@ export const IconTrophy = (p) => (
     <path d="M12 13.5v4M8.5 21h7M9.5 21v-3.5h5V21" />
   </Icon>
 )
+
+export const IconCamera = (p) => (
+  <Icon {...p}>
+    <path d="M4 7.5h3l1.8-2.5h6.4L17 7.5h3a1.5 1.5 0 0 1 1.5 1.5v9.5A1.5 1.5 0 0 1 20 20H4a1.5 1.5 0 0 1-1.5-1.5V9A1.5 1.5 0 0 1 4 7.5Z" />
+    <circle cx="12" cy="13.5" r="3.7" />
+  </Icon>
+)
+
+export const IconShield = (p) => (
+  <Icon {...p}>
+    <path d="M12 2.5 4.5 5.5v6c0 4.6 3.1 8.4 7.5 10 4.4-1.6 7.5-5.4 7.5-10v-6Z" />
+  </Icon>
+)
+
+export const IconSwap = (p) => (
+  <Icon {...p}>
+    <path d="M4 8h14M14.5 4.5 18 8l-3.5 3.5" />
+    <path d="M20 16H6M9.5 12.5 6 16l3.5 3.5" />
+  </Icon>
+)
+
+export const IconPencil = (p) => (
+  <Icon {...p}>
+    <path d="M15.5 4.5 19.5 8.5 8.5 19.5H4.5v-4Z" />
+    <path d="m13 7 4 4" />
+  </Icon>
+)
+
+export const IconAlert = (p) => (
+  <Icon {...p}>
+    <path d="M10.3 3.9 2.4 17.6A2 2 0 0 0 4.1 20.6h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+    <path d="M12 9.5v4.5M12 17.2h.01" />
+  </Icon>
+)
