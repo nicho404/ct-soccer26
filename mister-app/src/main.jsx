@@ -1,10 +1,14 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './theme/tokens.css'
 import './index.css'
 // dopo index.css: deve vincere sullo sfondo generico di .badge
 import './theme/medaglie.css'
 import App from './App.jsx'
+import { applicaTema, temaLocale } from './theme/tema'
+
+// Prima del primo render: i colori arrivano dalla scelta salvata in locale,
+// così l'app non lampeggia con la palette di default.
+applicaTema(temaLocale())
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

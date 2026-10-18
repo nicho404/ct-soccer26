@@ -90,6 +90,12 @@ Ogni colore è un token CSS (`--bg`, `--surface`, `--surface-2`, `--border`, `--
 (un test lo controlla). `--accent` è il riempimento (con `--on-accent` sopra),
 `--accent-strong` il colore per testo e icone sullo sfondo.
 
+**Temi.** Le palette stanno in `src/theme/palette.js` (versione chiara e scura per ognuna);
+aggiungerne una = aggiungere un oggetto. Il modo è Chiaro / Scuro / Come il sistema; la scelta
+sta in `db.meta` `tema` (va nel backup) e in localStorage per il primo frame. Ogni palette
+deve reggere il contrasto AA (test in `palette.test.js`). Il campo resta verde e scuro in ogni
+modo: sopra il verde si usano `--campo-linee` e i colori di stato schiariti.
+
 ## Componenti
 
 | Componente | Uso |

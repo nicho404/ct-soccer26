@@ -2,6 +2,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db/db'
 import Layout from './components/Layout'
+import useTema from './hooks/useTema'
 import DueColonne from './components/DueColonne'
 import OnboardingPage from './pages/OnboardingPage'
 import HomePage from './pages/HomePage'
@@ -31,6 +32,7 @@ import AnalisiDettaglioPage from './pages/AnalisiDettaglioPage'
 import AnalisiFormPage from './pages/AnalisiFormPage'
 
 export default function App() {
+  useTema()
   // ?? null: distingue "record assente" (null) da "query in corso" (undefined),
   // altrimenti senza record salvato l'app resterebbe su schermo nero
   const team = useLiveQuery(() => db.meta.get('team').then((t) => t ?? null), [])

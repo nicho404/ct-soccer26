@@ -14,3 +14,7 @@ export const coloreIntesa = (tipo) => COLORE_INTESA[tipo] ?? 'var(--text)'
 
 // Colore del reparto (por, dif, cen, att)
 export const coloreFamiglia = (famiglia) => (famiglia ? `var(--ruolo-${famiglia})` : 'var(--muted)')
+
+// Lo stesso colore usato come testo: mescolato con --text resta leggibile
+// anche sul fondo chiaro
+export const testoIntesa = (tipo) => `color-mix(in srgb, ${coloreIntesa(tipo)} 55%, var(--text))`

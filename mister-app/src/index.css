@@ -4,6 +4,12 @@
   --radius: 10px;
   --radius-sm: 8px;
   --nav-h: 60px;
+  /* reparti come testo: mescolati col colore del testo restano leggibili
+     anche sul fondo chiaro (da soli sono pensati per pallini e campo) */
+  --ruolo-por-testo: color-mix(in srgb, var(--ruolo-por) 55%, var(--text));
+  --ruolo-dif-testo: color-mix(in srgb, var(--ruolo-dif) 55%, var(--text));
+  --ruolo-cen-testo: color-mix(in srgb, var(--ruolo-cen) 55%, var(--text));
+  --ruolo-att-testo: color-mix(in srgb, var(--ruolo-att) 55%, var(--text));
 }
 
 * {
@@ -504,6 +510,28 @@ a.card {
 }
 .salva-fisso .btn { box-shadow: 0 6px 20px color-mix(in srgb, var(--ombra) 50%, transparent); }
 
+/* Impostazioni: palette come tessere con anteprima */
+.tema-griglia { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.tema-tessera {
+  display: flex; flex-direction: column; gap: 6px; padding: 6px; text-align: left;
+  border: 1px solid var(--border); border-radius: var(--radius); background: transparent;
+  color: var(--text); font: inherit; cursor: pointer;
+}
+.tema-tessera.tema-tessera-scelta { border-color: var(--accent-strong); box-shadow: 0 0 0 1px var(--accent-strong); }
+.tema-anteprima {
+  position: relative; display: block; height: 64px; border-radius: var(--radius-sm);
+  border: 1px solid; overflow: hidden;
+}
+.tema-anteprima-card {
+  position: absolute; left: 8px; right: 8px; top: 8px; height: 26px; border-radius: 6px; border: 1px solid;
+  display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 0 8px;
+}
+.tema-anteprima-riga { display: block; height: 4px; width: 70%; border-radius: 2px; }
+.tema-anteprima-riga.corta { width: 45%; }
+.tema-anteprima-pulsante { position: absolute; left: 8px; bottom: 8px; width: 46px; height: 14px; border-radius: 7px; }
+.tema-anteprima-punto { position: absolute; right: 10px; bottom: 9px; width: 12px; height: 12px; border-radius: 50%; }
+.tema-nome { font-weight: 700; font-size: 0.9rem; padding: 0 2px 2px; }
+
 /* Impostazioni: voci in sola lettura */
 .impostazioni-voci { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .impostazioni-voci > div {
@@ -573,7 +601,7 @@ button.scheda.attiva { background: var(--accent); color: var(--on-accent); }
 .oss-livello.norma .pollice, .oss-badge.norma .pollice { display: inline-block; transform: rotate(-90deg); }
 .oss-riepilogo { display: flex; flex-direction: column; gap: 4px; padding-top: 6px; }
 .oss-badge.sotto { color: var(--danger); }
-.oss-badge.norma { color: var(--ruolo-por); }
+.oss-badge.norma { color: var(--ruolo-por-testo); }
 .oss-badge.sopra { color: var(--ok); }
 
 /* Modulo: assetto in una riga */
@@ -623,10 +651,10 @@ button.scheda.attiva { background: var(--accent); color: var(--on-accent); }
 .badge-accent { background: var(--accent-soft); color: var(--accent-strong); }
 
 /* Badge ruolo con colori per famiglia (por/dif/cen/att) */
-.badge-role-por { background: color-mix(in srgb, var(--ruolo-por) 15%, transparent); color: var(--ruolo-por); }
-.badge-role-dif { background: color-mix(in srgb, var(--ruolo-dif) 15%, transparent); color: var(--ruolo-dif); }
-.badge-role-cen { background: color-mix(in srgb, var(--ruolo-cen) 15%, transparent); color: var(--ruolo-cen); }
-.badge-role-att { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--ruolo-att); }
+.badge-role-por { background: color-mix(in srgb, var(--ruolo-por) 15%, transparent); color: var(--ruolo-por-testo); }
+.badge-role-dif { background: color-mix(in srgb, var(--ruolo-dif) 15%, transparent); color: var(--ruolo-dif-testo); }
+.badge-role-cen { background: color-mix(in srgb, var(--ruolo-cen) 15%, transparent); color: var(--ruolo-cen-testo); }
+.badge-role-att { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--ruolo-att-testo); }
 
 .role-dot {
   width: 10px;
@@ -642,15 +670,15 @@ button.scheda.attiva { background: var(--accent); color: var(--on-accent); }
 .role-dot.att { background: var(--ruolo-att); }
 
 /* Chip posizione con sigla FC: colore famiglia sul bordo/testo */
-.chip.pos-por { color: var(--ruolo-por); }
-.chip.pos-dif { color: var(--ruolo-dif); }
-.chip.pos-cen { color: var(--ruolo-cen); }
-.chip.pos-att { color: var(--ruolo-att); }
+.chip.pos-por { color: var(--ruolo-por-testo); }
+.chip.pos-dif { color: var(--ruolo-dif-testo); }
+.chip.pos-cen { color: var(--ruolo-cen-testo); }
+.chip.pos-att { color: var(--ruolo-att-testo); }
 
-.chip.pos-por.selected { background: color-mix(in srgb, var(--ruolo-por) 18%, transparent); border-color: var(--ruolo-por); }
-.chip.pos-dif.selected { background: color-mix(in srgb, var(--ruolo-dif) 18%, transparent); border-color: var(--ruolo-dif); }
-.chip.pos-cen.selected { background: color-mix(in srgb, var(--ruolo-cen) 18%, transparent); border-color: var(--ruolo-cen); }
-.chip.pos-att.selected { background: color-mix(in srgb, var(--danger) 18%, transparent); border-color: var(--ruolo-att); }
+.chip.pos-por.selected { background: color-mix(in srgb, var(--ruolo-por) 18%, transparent); border-color: var(--ruolo-por-testo); }
+.chip.pos-dif.selected { background: color-mix(in srgb, var(--ruolo-dif) 18%, transparent); border-color: var(--ruolo-dif-testo); }
+.chip.pos-cen.selected { background: color-mix(in srgb, var(--ruolo-cen) 18%, transparent); border-color: var(--ruolo-cen-testo); }
+.chip.pos-att.selected { background: color-mix(in srgb, var(--danger) 18%, transparent); border-color: var(--ruolo-att-testo); }
 
 .chip.pos-sigla {
   font-weight: 800;
