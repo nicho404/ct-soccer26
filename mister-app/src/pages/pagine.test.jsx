@@ -2,7 +2,7 @@
 import 'fake-indexeddb/auto'
 import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
 import { render, cleanup, screen, fireEvent, waitFor } from '@testing-library/react'
-import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { MemoryRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
 import { db } from '../db/db'
 import { seedDemoData } from '../db/demo'
 
@@ -1057,5 +1057,67 @@ describe('titolo nascosto quando la sottobarra lo ripete', () => {
     cleanup()
     monta('/rosa/12')
     expect(document.querySelector('main.con-sottobarra')).toBeNull()
+  })
+})
+
+describe('scheda partita: modifiche non salvate', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+    await db.opponents.add({ id: 1, nome: 'Bisonti' })
+    await db.matches.bulkAdd([
+      { id: 1, data: '2026-09-07', campo: 'casa', opponentId: 1, presenze: {}, golFatti: 1, golSubiti: 0, note: '' },
+      { id: 2, data: '2026-09-14', campo: 'casa', opponentId: 1, presenze: {}, golFatti: null, golSubiti: null, note: '' },
+    ])
+  })
+
+  afterEach(() => { cleanup(); vi.restoreAllMocks() })
+
+  // come nell'elenco affiancato: un link verso un'altra partita accanto alla scheda
+  const monta = () => render(
+    <MemoryRouter initialEntries={['/partite/1']}>
+      <Routes>
+        <Route path="/partite/:id" element={<><Link to="/partite/2">altra partita</Link><PartitaFormPage /></>} />
+      </Routes>
+    </MemoryRouter>
+  )
+  const note = () => screen.getByPlaceholderText(/loro giocano a 3 dietro/)
+
+  it('senza modifiche si cambia partita senza domande', async () => {
+    const conferma = vi.spyOn(window, 'confirm')
+    monta()
+    await screen.findByText('Bisonti')
+    fireEvent.click(screen.getByText('altra partita'))
+    await waitFor(() => expect(note().value).toBe(''))
+    expect(conferma).not.toHaveBeenCalled()
+  })
+
+  it('con modifiche chiede conferma: Annulla resta sulla scheda, OK esce', async () => {
+    const conferma = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    monta()
+    await screen.findByText('Bisonti')
+    fireEvent.change(note(), { target: { value: 'Pressano alto' } })
+    fireEvent.click(screen.getByText('altra partita'))
+    expect(conferma).toHaveBeenCalledWith('Uscire senza salvare le modifiche alla partita?')
+    expect(note().value).toBe('Pressano alto')
+    expect(screen.getByPlaceholderText('Noi').value).toBe('1')
+
+    conferma.mockReturnValue(true)
+    fireEvent.click(screen.getByText('altra partita'))
+    await waitFor(() => expect(screen.getByPlaceholderText('Noi').value).toBe(''))
+    expect((await db.matches.get(1)).note).toBe('')
+  })
+
+  it('anche il ‹ chiede conferma; tornando com\'era non chiede più', async () => {
+    const conferma = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    monta()
+    await screen.findByText('Bisonti')
+    fireEvent.change(note(), { target: { value: 'x' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Indietro' }))
+    expect(conferma).toHaveBeenCalledTimes(1)
+    fireEvent.change(note(), { target: { value: '' } })
+    fireEvent.click(screen.getByText('altra partita'))
+    expect(conferma).toHaveBeenCalledTimes(1)
   })
 })
