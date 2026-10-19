@@ -515,6 +515,16 @@ a.card {
 }
 .salva-fisso .btn { box-shadow: 0 6px 20px color-mix(in srgb, var(--ombra) 50%, transparent); }
 
+/* Home: promemoria backup, una riga; il colore dice quanto è vecchio */
+.card.promemoria-backup { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+.promemoria-testo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.promemoria-testo strong { font-size: 0.92rem; }
+.promemoria-warn { border-color: color-mix(in srgb, var(--warn) 50%, transparent); }
+.promemoria-warn strong { color: var(--warn); }
+.promemoria-danger { border-color: color-mix(in srgb, var(--danger) 50%, transparent); }
+.promemoria-danger strong { color: var(--danger); }
+.promemoria-errore { color: var(--danger); }
+
 /* Cartellini: rettangoli pieni nel colore dello stato */
 .cartellino {
   display: inline-block; width: calc(var(--cartellino-h, 14px) * 0.72); height: var(--cartellino-h, 14px);

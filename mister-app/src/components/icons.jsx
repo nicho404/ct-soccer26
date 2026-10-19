@@ -321,3 +321,10 @@ export const IconChevronRight = (p) => (
     <path d="m9.5 6 6 6-6 6" />
   </Icon>
 )
+
+export const IconDownload = (p) => (
+  <Icon {...p}>
+    <path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5" />
+    <path d="M4 15.5v3A2 2 0 0 0 6 20.5h12a2 2 0 0 0 2-2v-3" />
+  </Icon>
+)
