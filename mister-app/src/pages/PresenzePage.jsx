@@ -7,14 +7,14 @@ import { IconBall, IconClipboardCheck } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
 import { formatDataPartita } from '../lib/partite'
 import { contaSeduta, pctSeduta } from '../lib/presenze'
-import { impegno, badgePresenze, calcolaUmore } from '../lib/umore'
-import { EmojiUmore, LegendaPopup, BadgePresenze } from '../components/UmoreLegenda'
+import { impegno, calcolaUmore } from '../lib/umore'
+import { EmojiUmore, LegendaPopup } from '../components/UmoreLegenda'
+import PercentualePresenze from '../components/PercentualePresenze'
 
 // Ordine di lettura: la seduta o partita più recente per prima.
 const perDataDecrescente = (a, b) =>
   `${b.data ?? ''} ${b.ora ?? ''}`.localeCompare(`${a.data ?? ''} ${a.ora ?? ''}`)
 
-const pct = (x) => `${Math.round(x * 100)}%`
 
 export default function PresenzePage() {
   const navigate = useNavigate()
@@ -110,12 +110,10 @@ export default function PresenzePage() {
                       <th title="Assente">A</th>
                       <th title="Assente giustificato">G</th>
                       <th>%</th>
-                      <th aria-label="Badge" />
                     </tr>
                   </thead>
                   <tbody>
                     {righe.map(({ p, imp, umore }) => {
-                      const badge = badgePresenze(imp.quota)
                       return (
                         <tr key={p.id}>
                           <td>{umore && <EmojiUmore umore={umore} size={22} onClick={() => setLegenda(true)} />}</td>
@@ -123,8 +121,7 @@ export default function PresenzePage() {
                           <td>{imp.presenti}</td>
                           <td>{imp.assenti || ''}</td>
                           <td>{imp.giustificati || ''}</td>
-                          <td>{imp.quota == null ? '—' : pct(imp.quota)}</td>
-                          <td><BadgePresenze badge={badge} quota={imp.quota} /></td>
+                          <td>{imp.quota == null ? '—' : <PercentualePresenze quota={imp.quota} />}</td>
                         </tr>
                       )
                     })}

@@ -11,7 +11,8 @@ import {
 import { famigliaRuoloTattico } from '../tactics/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
 import { aggregaGiocatori, incarichiGiocatore } from '../lib/storico'
-import { calcolaUmore, impegno, badgePresenze } from '../lib/umore'
+import { calcolaUmore, impegno } from '../lib/umore'
+import PercentualePresenze from '../components/PercentualePresenze'
 import { EmojiUmore, LegendaPopup } from '../components/UmoreLegenda'
 import Fascia from '../components/Fascia'
 import { fasciaDi } from '../lib/fascia'
@@ -87,7 +88,6 @@ export default function PlayerDetailPage() {
   const incarichiPartite = incarichiGiocatore(matches, playerId)
   const umore = calcolaUmore({ trainings, matches }, playerId)
   const presenze = impegno({ trainings, matches }, playerId)
-  const badge = badgePresenze(presenze?.quota)
   const minutaggioUmore = umore?.fattori.find((f) => f.nome === 'Minutaggio')
   const nomeDi = (pid) => {
     const p = allPlayers.find((x) => x.id === pid)
@@ -134,10 +134,10 @@ export default function PlayerDetailPage() {
         </button>
       </div>
 
-      {/* Card stile FC26: foto, badge stato, overall dai voti reali. Il badge
-          presenze dà il colore a tutto il riquadro; sotto gli stati, umore, badge
-          e minutaggio; in fondo al riquadro il dettaglio dei due numeri. */}
-      <div className={`player-card ${badge ? `tema-${badge.value}` : ''}`}>
+      {/* Card stile FC26: foto, badge stato, overall dai voti reali; sotto gli
+          stati, umore, presenze e minutaggio; in fondo al riquadro il dettaglio
+          dei due numeri. */}
+      <div className="player-card">
         <div className="player-card-photo">
           <Avatar src={player.foto} size={76} />
           {player.numero !== '' && player.numero != null && (
@@ -162,13 +162,11 @@ export default function PlayerDetailPage() {
             <span className="badge badge-warn"><IconGlove size={13} /> {portaInfo(player.porta).label}</span>
           )}
         </div>
-        {(umore || badge) && (
+        {(umore || presenze?.quota != null) && (
           <div className="row player-card-umore">
             {umore && <EmojiUmore umore={umore} size={30} onClick={() => setLegendaUmore(true)} />}
-            {badge && (
-              <span className={`badge badge-medaglia medaglia-${badge.value}`} title={`Presenze: ${badge.label}`}>
-                <Simbolo gruppo="medaglia" valore={badge.value} size={13} /> {badge.label} · {Math.round(presenze.quota * 100)}%
-              </span>
+            {presenze?.quota != null && (
+              <span className="badge"><PercentualePresenze quota={presenze.quota} etichetta /></span>
             )}
             {minutaggioUmore && <span className="badge"><IconClock size={13} /> {minutaggioUmore.valore} minuti</span>}
           </div>

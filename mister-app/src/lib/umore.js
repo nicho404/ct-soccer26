@@ -43,20 +43,11 @@ export const IMPEGNO_MINIMO = 0.5
 
 const pct = (x) => `${Math.round(x * 100)}%`
 
-// Badge presenze per l'allenatore: solo presenze complessive (allenamenti +
-// partite), il minutaggio non c'entra. Dall'alto: la prima soglia raggiunta.
-export const BADGE_PRESENZE = [
-  { min: 0.9, value: 'diamante', label: 'Diamante' },
-  { min: 0.8, value: 'oro', label: 'Oro' },
-  { min: 0.7, value: 'argento', label: 'Argento' },
-  { min: 0.6, value: 'bronzo', label: 'Bronzo' },
-  { min: 0.5, value: 'ferro', label: 'Ferro' },
-  { min: 0.4, value: 'legno', label: 'Legno' },
-  { min: 0, value: 'cartone', label: 'Cartone' },
-]
-
-export const badgePresenze = (quota) =>
-  quota == null ? null : BADGE_PRESENZE.find((b) => quota >= b.min)
+// Presenze su tre fasce, con le stesse soglie che pesano lo scontento:
+// piena da IMPEGNO_PIENO, media da IMPEGNO_MINIMO, bassa sotto. Solo
+// presenze (allenamenti + partite), il minutaggio non c'entra.
+export const fasciaPresenze = (quota) =>
+  quota == null ? null : quota >= IMPEGNO_PIENO ? 'piena' : quota >= IMPEGNO_MINIMO ? 'media' : 'bassa'
 
 // Il cuore del calcolo, in una riga: il minutaggio dà l'umore, le presenze
 // decidono quanto conta lo scontento. Chi c'è poco e gioca poco resta neutro.

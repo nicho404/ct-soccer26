@@ -3,7 +3,7 @@
 /* oxlint-disable react/only-export-components */
 import {
   IconBall, IconGoal, IconSwap, IconMove, IconSword, IconShield, IconCycle, IconWing, IconLongBall,
-  IconBolt, IconAlert, IconCheck, IconBulb, IconMedal,
+  IconBolt, IconAlert, IconCheck, IconBulb,
 } from './icons'
 
 // Dal valore di dominio alla sua resa grafica: colori (sempre token CSS) e,
@@ -54,8 +54,6 @@ const MAPPE = {
   impostazione: { possesso: IconBall, ali: IconWing, lunga: IconLongBall, contropiede: IconBolt, oltranza: IconShield },
   // punti chiave dell'analisi (lib/analisi TIPI_PUNTO)
   analisi: { problema: IconAlert, forza: IconCheck, novita: IconBulb },
-  // badge presenze a metalli: tutti la stessa medaglia, il colore è il metallo
-  medaglia: { diamante: IconMedal, oro: IconMedal, argento: IconMedal, bronzo: IconMedal, ferro: IconMedal, legno: IconMedal, cartone: IconMedal },
 }
 
 // Icona di un valore di dominio, o niente se il valore non ne ha una
@@ -72,6 +70,7 @@ export const TRACCIATO_INCARICO = { offensivo: 'spada', difensivo: 'scudo', entr
 export const TONO_STATO_ATTIVITA = { sicuro: 'ok', condizionale: 'accent', tiepido: 'warn', infortunato: 'danger', inattivo: '' }
 export const TONO_TESSERAMENTO = { ok: 'ok', da_verificare: 'warn', non_tesserabile: 'danger' }
 export const TONO_ESITO = { V: 'ok', N: 'warn', P: 'danger' }
+export const TONO_PRESENZE = { piena: 'ok', media: 'warn', bassa: 'danger' }
 
 // Classe del badge per un tono ('' → badge neutro)
 export const badgeTono = (tono) => (tono ? `badge-${tono}` : '')

@@ -11,8 +11,8 @@ import { classificaCapitani, COPERTURA_MINIMA } from '../lib/capitano'
 import Fascia from '../components/Fascia'
 import Modal from '../components/Modal'
 import { fasciaDi } from '../lib/fascia'
-import { calcolaUmore, badgePresenze } from '../lib/umore'
-import { BadgePresenze } from '../components/UmoreLegenda'
+import { calcolaUmore } from '../lib/umore'
+import PercentualePresenze from '../components/PercentualePresenze'
 import FacciaUmore from '../components/FacciaUmore'
 
 // Umori che su chi porta la fascia meritano un avviso: un capitano scontento
@@ -245,7 +245,7 @@ export default function CapitanoPage() {
               voce={v}
               key={v.key}
               extra={v.key === 'allenamenti' && v.valore != null
-                ? <BadgePresenze badge={badgePresenze(v.valore / 100)} />
+                ? <PercentualePresenze quota={v.valore / 100} />
                 : null}
             />
           ))}

@@ -105,5 +105,5 @@ modo: sopra il verde si usano `--campo-linee` e i colori di stato schiariti.
 | `Modal` | Finestra a schermo con titolo e ✕; si chiude anche toccando fuori o con Esc |
 | `Scelta` | Al posto di `<select>`: stesso uso (figli `<option>`), la scelta avviene in un `Modal` |
 | `FacciaUmore` | Faccina dell'umore disegnata, colore dal verde scuro al rosso scuro |
-| `BadgePresenze` | Badge presenze: solo icona nel riquadro colorato, dettagli nel tooltip |
+| `PercentualePresenze` | Presenze come numero ("87%") verde da 75%, giallo da 50%, rosso sotto (soglie `IMPEGNO_PIENO`/`IMPEGNO_MINIMO`, calcolo `impegno()`) |
 | `Fascia` | Tag capitano (C) / vice (VC) |
