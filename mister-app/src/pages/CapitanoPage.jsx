@@ -11,13 +11,11 @@ import { classificaCapitani, COPERTURA_MINIMA } from '../lib/capitano'
 import Fascia from '../components/Fascia'
 import Modal from '../components/Modal'
 import { fasciaDi } from '../lib/fascia'
-import { calcolaUmore } from '../lib/umore'
+import { calcolaRischio } from '../lib/umore'
 import PercentualePresenze from '../components/PercentualePresenze'
-import FacciaUmore from '../components/FacciaUmore'
 
-// Umori che su chi porta la fascia meritano un avviso: un capitano scontento
-// del minutaggio è un problema di spogliatoio, gli altri stati non dicono niente.
-const UMORI_DI_ALLARME = ['triste', 'arrabbiato']
+// Su chi porta la fascia l'avviso compare solo col rischio scontento alto:
+// un capitano che gioca poco pur essendoci è un problema di spogliatoio.
 
 // Le voci senza dato restano in lista, in grigio: dicono cosa manca per
 // avere un confronto onesto, che è un'informazione utile quanto il punteggio.
@@ -173,11 +171,11 @@ export default function CapitanoPage() {
                         {overall(rigaDi(d.id))}
                       </div>
                       {(() => {
-                        const umore = calcolaUmore({ trainings, matches }, d.id)
-                        if (!umore || !UMORI_DI_ALLARME.includes(umore.livello)) return null
+                        const rischio = calcolaRischio({ trainings, matches }, d.id)
+                        if (rischio?.livello !== 'alto') return null
                         return (
-                          <div className="fascia-allarme">
-                            <FacciaUmore livello={umore.value} size={16} /> Scontento del minutaggio
+                          <div className="fascia-allarme" title={rischio.causa}>
+                            Rischio scontento alto: {rischio.causa.toLowerCase()}
                           </div>
                         )
                       })()}

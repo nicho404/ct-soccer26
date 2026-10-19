@@ -32,8 +32,8 @@ tocco. Prima di ridisegnare un'altra sezione, verificare questi punti.
 ## Pagine già allineate
 
 - **Capitano**: il modello.
-- **Rosa**: riepilogo in cima (disponibili, porta, scontenti), giocatori per reparto, una riga
-  ciascuno (faccina, foto con numero, soprannome + nome, fascia, ruolo, badge); gli avvisi
+- **Rosa**: riepilogo in cima (disponibili, porta, a rischio), giocatori per reparto, una riga
+  ciascuno (pallino del rischio scontento solo se c'è, foto con numero, soprannome + nome, fascia, ruolo, badge); gli avvisi
   (stato, acciaccato, tesseramento) compaiono sotto il nome solo se ci sono.
 - **Home**: prossima partita (con la posizione dell'avversario), ultima partita, stagione in
   quattro numeri (posizione, punti, V-N-P, gol) e forma dalla più vecchia alla più recente.
@@ -104,6 +104,6 @@ modo: sopra il verde si usano `--campo-linee` e i colori di stato schiariti.
 | `icons.jsx` | Icone outline 24×24 a `currentColor`; mai emoji nell'interfaccia (un test lo controlla) |
 | `Modal` | Finestra a schermo con titolo e ✕; si chiude anche toccando fuori o con Esc |
 | `Scelta` | Al posto di `<select>`: stesso uso (figli `<option>`), la scelta avviene in un `Modal` |
-| `FacciaUmore` | Faccina dell'umore disegnata, colore dal verde scuro al rosso scuro |
+| `PallinoRischio` | Rischio scontento (in `simboli.jsx`): pallino giallo da monitorare, rosso alto; niente se nessuno. La causa in testo ("Presente 90% · gioca 20% dei minuti") |
 | `PercentualePresenze` | Presenze come numero ("87%") verde da 75%, giallo da 50%, rosso sotto (soglie `IMPEGNO_PIENO`/`IMPEGNO_MINIMO`, calcolo `impegno()`) |
 | `Fascia` | Tag capitano (C) / vice (VC) |

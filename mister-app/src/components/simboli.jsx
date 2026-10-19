@@ -74,3 +74,12 @@ export const TONO_PRESENZE = { piena: 'ok', media: 'warn', bassa: 'danger' }
 
 // Classe del badge per un tono ('' → badge neutro)
 export const badgeTono = (tono) => (tono ? `badge-${tono}` : '')
+
+// Rischio scontento: il pallino compare solo se c'è qualcosa da tenere d'occhio
+export const TONO_RISCHIO = { nessuno: '', monitorare: 'warn', alto: 'danger' }
+
+export function PallinoRischio({ rischio }) {
+  if (!rischio || rischio.livello === 'nessuno') return null
+  const testo = `Rischio scontento: ${rischio.label.toLowerCase()} · ${rischio.causa}`
+  return <span className={`pallino-rischio pallino-${TONO_RISCHIO[rischio.livello]}`} role="img" aria-label={testo} title={testo} />
+}
