@@ -13,6 +13,7 @@ import { classifica, competizioneDefault } from '../lib/girone'
 import { refertoCompilato } from '../lib/storico'
 import { FASCE } from '../lib/fascia'
 import { badgeTono, TONO_ESITO } from '../components/simboli'
+import PromemoriaBackup from '../components/PromemoriaBackup'
 
 // Home: solo dati, niente consigli. In ordine di urgenza: la prossima
 // partita, l'ultima giocata, poi la stagione in quattro numeri e la forma.
@@ -83,6 +84,8 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      <PromemoriaBackup />
 
       {players.length === 0 ? (
         <EmptyState

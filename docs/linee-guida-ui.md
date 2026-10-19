@@ -35,6 +35,8 @@ tocco. Prima di ridisegnare un'altra sezione, verificare questi punti.
 - **Rosa**: riepilogo in cima (disponibili, porta, a rischio), giocatori per reparto, una riga
   ciascuno (pallino del rischio scontento solo se c'è, foto con numero, soprannome + nome, fascia, ruolo, badge); gli avvisi
   (stato, acciaccato, tesseramento) compaiono sotto il nome solo se ci sono.
+- **Promemoria backup** (Home, sotto la squadra): una riga "Ultimo backup N giorni fa", neutra
+  fino a 7 giorni, gialla oltre, rossa oltre 14 o se non c'è mai stato; accanto "Esporta".
 - **Home**: prossima partita (con la posizione dell'avversario), ultima partita, stagione in
   quattro numeri (posizione, punti, V-N-P, gol) e forma dalla più vecchia alla più recente.
 - **Partite**: due schede Precampionato / Campionato (solo se ci sono partite in entrambe; il

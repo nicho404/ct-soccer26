@@ -6,7 +6,12 @@ import { oggiISO } from '../lib/partite'
 
 const FORMAT = 'mister-app-backup'
 
+// Data dell'ultimo export riuscito (per il promemoria in Home)
+export const CHIAVE_ULTIMO_BACKUP = 'ultimoBackup'
+
 // Serializza tutte le tabelle in un oggetto JSON e avvia il download del file.
+// A download avviato segna la data in db.meta: il file appena scritto non la
+// contiene, ma è la sua esistenza che conta.
 export async function exportBackup() {
   const tables = {}
   await db.transaction('r', db.tables, async () => {
@@ -29,6 +34,7 @@ export async function exportBackup() {
   a.download = `mister-backup-${oggiISO()}.json`
   a.click()
   URL.revokeObjectURL(url)
+  await db.meta.put({ key: CHIAVE_ULTIMO_BACKUP, value: payload.exportedAt })
 }
 
 // Sostituisce l'intero database con il contenuto del file di backup.
@@ -76,6 +82,11 @@ export async function importBackup(file) {
     // payload direttamente, non da `db`.
     if (payload.dbVersion < 12) {
       await migrazioneV12ChecklistInObservations(db, payload.tables.letturePartita ?? [])
+    }
+    // i dati appena importati sono al sicuro nel file da cui vengono: il
+    // promemoria riparte dal giorno in cui quel file è stato esportato
+    if (payload.exportedAt) {
+      await db.meta.put({ key: CHIAVE_ULTIMO_BACKUP, value: payload.exportedAt })
     }
   })
 }

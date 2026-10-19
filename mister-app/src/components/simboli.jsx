@@ -71,6 +71,7 @@ export const TONO_STATO_ATTIVITA = { sicuro: 'ok', condizionale: 'accent', tiepi
 export const TONO_TESSERAMENTO = { ok: 'ok', da_verificare: 'warn', non_tesserabile: 'danger' }
 export const TONO_ESITO = { V: 'ok', N: 'warn', P: 'danger' }
 export const TONO_PRESENZE = { piena: 'ok', media: 'warn', bassa: 'danger' }
+export const TONO_BACKUP = { recente: '', vecchio: 'warn', scaduto: 'danger' }
 
 // Classe del badge per un tono ('' → badge neutro)
 export const badgeTono = (tono) => (tono ? `badge-${tono}` : '')

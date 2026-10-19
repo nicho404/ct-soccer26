@@ -130,6 +130,8 @@ describe('backup: girone (v13)', () => {
     expect(await db.giocatoriAvversari.where('opponentId').equals(1).count()).toBe(1)
     expect(await db.partiteGirone.where('competitionId').equals(1).count()).toBe(1)
     expect((await db.partiteGirone.get(1)).eventi).toHaveLength(3)
+    // il promemoria in Home riparte dal giorno in cui il file è stato esportato
+    expect((await db.meta.get('ultimoBackup')).value).toBe('2026-09-23T10:00:00.000Z')
   })
 })
 

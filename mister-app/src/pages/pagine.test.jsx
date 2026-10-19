@@ -1199,3 +1199,36 @@ describe('tema: palette e modo da Impostazioni', () => {
     expect(screen.getByRole('button', { name: 'Blu' }).getAttribute('aria-pressed')).toBe('true')
   })
 })
+
+describe('promemoria backup in Home', () => {
+  beforeAll(async () => {
+    if (!db.isOpen()) await db.open()
+    await Promise.all(db.tables.map((t) => t.clear()))
+    await db.meta.put({ key: 'team', nome: 'Test FC', formato: 7, setupDone: true })
+  })
+
+  afterEach(() => { cleanup(); vi.restoreAllMocks() })
+
+  it('senza backup è in rosso; l\'export con un tocco salva la data e la riga torna neutra', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:prova')
+    URL.revokeObjectURL = vi.fn()
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    montaPagina(HomePage)
+    const riga = (await screen.findByText('Nessun backup ancora')).closest('.promemoria-backup')
+    expect(riga.className).toContain('promemoria-danger')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Esporta' }))
+    await waitFor(async () => expect((await db.meta.get('ultimoBackup'))?.value).toBeTruthy())
+    const nuova = (await screen.findByText('Ultimo backup oggi')).closest('.promemoria-backup')
+    expect(nuova.className).not.toContain('promemoria-danger')
+    expect(nuova.className).not.toContain('promemoria-warn')
+  })
+
+  it('oltre 7 giorni è in giallo', async () => {
+    const dieci = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
+    await db.meta.put({ key: 'ultimoBackup', value: dieci })
+    montaPagina(HomePage)
+    const riga = (await screen.findByText('Ultimo backup 10 giorni fa')).closest('.promemoria-backup')
+    expect(riga.className).toContain('promemoria-warn')
+  })
+})
