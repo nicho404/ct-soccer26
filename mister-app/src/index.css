@@ -449,7 +449,13 @@ a.card {
 }
 .rosa-fascia.fascia-capitano { background: var(--warn); color: var(--bg); }
 .rosa-fascia.fascia-vice { border: 1px solid var(--warn); color: var(--warn); background: transparent; }
-.rosa-presenze { width: 32px; flex-shrink: 0; display: flex; justify-content: flex-end; }
+.rosa-presenze { width: 40px; flex-shrink: 0; display: flex; justify-content: flex-end; }
+/* Percentuale presenze: il numero nel colore della fascia */
+.presenze-pct { font-weight: 800; font-size: 0.85rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.presenze-etichetta { font-weight: 600; color: var(--muted); }
+.presenze-ok { color: var(--ok); }
+.presenze-warn { color: var(--warn); }
+.presenze-danger { color: var(--danger); }
 .stat-tile-allarme { border-color: color-mix(in srgb, var(--danger) 50%, transparent); }
 .stat-tile-allarme .value { color: var(--danger); }
 
@@ -651,12 +657,6 @@ button.scheda.attiva { background: var(--accent); color: var(--on-accent); }
 .forma .badge { min-width: 26px; text-align: center; text-decoration: none; }
 .risultato-grande { font-size: 1.35rem; font-weight: 900; padding: 4px 10px; }
 
-/* Badge presenze: i metalli "brillanti" hanno un riflesso diagonale, ferro,
-   legno e cartone restano opachi — la differenza si vede a colpo d'occhio. */
-.badge-icona {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 30px; height: 24px; padding: 0 6px; font-size: 0.95rem; line-height: 1;
-}
 .badge-warn { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); }
 .badge-danger { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); }
 .badge-accent { background: var(--accent-soft); color: var(--accent-strong); }
@@ -831,8 +831,7 @@ button.scheda.attiva { background: var(--accent); color: var(--on-accent); }
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  /* --tema: colore del riquadro (terna rgb). Di base il viola dell'app, con
-     un badge presenze prende il colore del badge (tema-*, qui sotto). */
+  /* --tema: colore del riquadro, l'accento della palette */
   --tema: var(--accent);
   --tema-testo: var(--accent-strong);
   background: linear-gradient(120deg, color-mix(in srgb, var(--tema) 24%, transparent), color-mix(in srgb, var(--tema) 5%, transparent));

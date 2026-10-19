@@ -1,8 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-// dopo index.css: deve vincere sullo sfondo generico di .badge
-import './theme/medaglie.css'
 import App from './App.jsx'
 import { applicaTema, temaLocale } from './theme/tema'
 

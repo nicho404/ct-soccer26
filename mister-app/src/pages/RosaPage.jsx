@@ -5,8 +5,9 @@ import { db } from '../db/db'
 import {
   ruoloLabel, ruoloOrdine, famigliaRuolo, tesseramentoInfo, statoAttivitaInfo, isAttivo, FAMIGLIE,
 } from '../db/constants'
-import { calcolaUmore, impegno, badgePresenze } from '../lib/umore'
-import { EmojiUmore, LegendaPopup, BadgePresenze } from '../components/UmoreLegenda'
+import { calcolaUmore, impegno } from '../lib/umore'
+import { EmojiUmore, LegendaPopup } from '../components/UmoreLegenda'
+import PercentualePresenze from '../components/PercentualePresenze'
 import { FASCE, fasciaDi } from '../lib/fascia'
 import { nomeBreve } from '../lib/nomi'
 import EmptyState from '../components/EmptyState'
@@ -72,7 +73,7 @@ function RigaGiocatore({ player, umore, imp, fascia, onUmore }) {
         {player.ruoloNaturale || '—'}
       </span>
       <span className="rosa-presenze">
-        {imp?.quota != null && <BadgePresenze badge={badgePresenze(imp.quota)} quota={imp.quota} />}
+        <PercentualePresenze quota={imp?.quota} />
       </span>
     </NavLink>
   )

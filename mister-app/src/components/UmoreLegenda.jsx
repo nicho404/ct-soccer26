@@ -1,9 +1,9 @@
 import Modal from './Modal'
 import FacciaUmore from './FacciaUmore'
 import {
-  SOGLIE_MINUTAGGIO, IMPEGNO_PIENO, IMPEGNO_MINIMO, BADGE_PRESENZE, umoreInfo, umoreDa,
+  SOGLIE_MINUTAGGIO, IMPEGNO_PIENO, IMPEGNO_MINIMO, umoreInfo, umoreDa,
 } from '../lib/umore'
-import { Simbolo } from './simboli'
+import PercentualePresenze from './PercentualePresenze'
 
 const pct = (x) => `${Math.round(x * 100)}%`
 
@@ -12,20 +12,7 @@ const pct = (x) => `${Math.round(x * 100)}%`
 const fasce = (soglie) => soglie.map((s, i) => ({ ...s, a: i === 0 ? null : soglie[i - 1].min }))
 const etichetta = (f) => (f.a == null ? `da ${pct(f.min)}` : f.min === 0 ? `sotto ${pct(f.a)}` : `${pct(f.min)}–${pct(f.a)}`)
 
-// Solo l'icona nel riquadro del colore: il nome del livello (e la
-// percentuale, se passata) restano nel tooltip e per i lettori di schermo.
-// La legenda li spiega per esteso.
-export function BadgePresenze({ badge, quota }) {
-  if (!badge) return null
-  const descrizione = `Presenze: ${badge.label}${quota != null ? ` · ${pct(quota)}` : ''}`
-  return (
-    <span className={`badge badge-medaglia badge-icona medaglia-${badge.value}`} title={descrizione} aria-label={descrizione}>
-      <Simbolo gruppo="medaglia" valore={badge.value} size={13} />
-    </span>
-  )
-}
-
-// Legenda di umore e badge, costruita dalle stesse soglie e dalla stessa
+// Legenda di umore e presenze, costruita dalle stesse soglie e dalla stessa
 // funzione del calcolo (umoreDa): se si ritoccano in lib/umore.js, la
 // spiegazione e la tabella seguono da sole.
 export function UmoreLegenda() {
@@ -74,13 +61,11 @@ export function UmoreLegenda() {
         non si aspetta di giocare. Le presenze non tolgono mai il buonumore a chi gioca.
       </p>
 
-      <div style={{ fontWeight: 800, marginBottom: 6 }}>Badge presenze (solo presenze, non minuti)</div>
-      <div className="chip-row" style={{ gap: 6 }}>
-        {fasce(BADGE_PRESENZE).map((b) => (
-          <span key={b.value} className={`badge badge-medaglia medaglia-${b.value}`}>
-            <Simbolo gruppo="medaglia" valore={b.value} size={12} /> {b.label} {etichetta(b)}
-          </span>
-        ))}
+      <div style={{ fontWeight: 800, marginBottom: 6 }}>Percentuale presenze (solo presenze, non minuti)</div>
+      <div className="chip-row" style={{ gap: 12 }}>
+        <span><PercentualePresenze quota={IMPEGNO_PIENO} /> e oltre</span>
+        <span><PercentualePresenze quota={IMPEGNO_MINIMO} />–{pct(IMPEGNO_PIENO - 0.01)}</span>
+        <span>sotto <PercentualePresenze quota={IMPEGNO_MINIMO - 0.01} /></span>
       </div>
     </div>
   )
@@ -109,7 +94,7 @@ export function EmojiUmore({ umore, onClick, size = 26 }) {
 // Popup con la legenda: si chiude col ✕, toccando fuori o con Esc.
 export function LegendaPopup({ onClose }) {
   return (
-    <Modal titolo="Umore e badge presenze" onClose={onClose}>
+    <Modal titolo="Umore e presenze" onClose={onClose}>
       <UmoreLegenda />
     </Modal>
   )

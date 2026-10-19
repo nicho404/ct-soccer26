@@ -413,18 +413,18 @@ describe('presenze e sedute', () => {
     return <div data-testid="pagina">{pathname}</div>
   }
 
-  it('tabella presenze sotto l\'elenco, con le stesse percentuali e badge della Rosa', async () => {
+  it('tabella presenze sotto l\'elenco, con le stesse percentuali colorate della Rosa', async () => {
     render(<MemoryRouter><PresenzePage /></MemoryRouter>)
     const titolo = await screen.findByText('Presenze giocatori')
     const elenco = screen.getByText('Sedute e partite')
     expect(elenco.compareDocumentPosition(titolo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    // Rossi 3/3 = 100% diamante; Bianchi 1 presente su 2 (giustificato escluso) = 50% ferro
+    // Rossi 3/3 = 100% in verde; Bianchi 1 presente su 2 (giustificato escluso) = 50% in giallo
     const tr = (nome) => screen.getByRole('link', { name: nome }).closest('tr')
     const riga = (nome) => tr(nome).textContent
     expect(riga('Rossi')).toContain('100%')
-    expect(tr('Rossi').querySelector('.medaglia-diamante')).toBeTruthy()
+    expect(tr('Rossi').querySelector('.presenze-ok').textContent).toBe('100%')
     expect(riga('Bianchi')).toContain('50%')
-    expect(tr('Bianchi').querySelector('.medaglia-ferro')).toBeTruthy()
+    expect(tr('Bianchi').querySelector('.presenze-warn').textContent).toBe('50%')
     expect(screen.queryByText('Campo e allenamento')).toBeNull()
   })
 

@@ -309,12 +309,6 @@ export const IconPlus = (p) => (
   </Icon>
 )
 
-export const IconMedal = (p) => (
-  <Icon {...p}>
-    <circle cx="12" cy="15" r="5.5" />
-    <path d="M8.5 10.5 6 3h4l2 4.5L14 3h4l-2.5 7.5" />
-  </Icon>
-)
 
 export const IconChevronLeft = (p) => (
   <Icon {...p}>
