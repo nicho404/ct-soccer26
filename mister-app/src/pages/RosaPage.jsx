@@ -5,18 +5,14 @@ import { db } from '../db/db'
 import {
   ruoloLabel, ruoloOrdine, famigliaRuolo, tesseramentoInfo, statoAttivitaInfo, isAttivo, FAMIGLIE,
 } from '../db/constants'
-import { calcolaUmore, impegno } from '../lib/umore'
-import { EmojiUmore, LegendaPopup } from '../components/UmoreLegenda'
+import { calcolaRischio, impegno } from '../lib/umore'
 import PercentualePresenze from '../components/PercentualePresenze'
 import { FASCE, fasciaDi } from '../lib/fascia'
 import { nomeBreve } from '../lib/nomi'
 import EmptyState from '../components/EmptyState'
 import Avatar from '../components/Avatar'
 import { IconBandage, IconGlove, IconStar, IconUsers } from '../components/icons'
-import { badgeTono, TONO_STATO_ATTIVITA, TONO_TESSERAMENTO } from '../components/simboli'
-
-// Umori che meritano di essere contati in cima: sono il segnale da gestire.
-const SCONTENTI = ['triste', 'arrabbiato']
+import { badgeTono, PallinoRischio, TONO_STATO_ATTIVITA, TONO_TESSERAMENTO } from '../components/simboli'
 
 // Segnali da mostrare sotto il nome solo quando c'è qualcosa da sapere:
 // un giocatore "in regola" ha una riga sola.
@@ -30,20 +26,19 @@ function avvisiDi(player) {
   return avvisi
 }
 
-// Una riga per giocatore: umore, foto con numero, nome (soprannome in
-// evidenza), fascia e ruolo, badge presenze. Tutto il resto è nella scheda.
-function RigaGiocatore({ player, umore, imp, fascia, onUmore }) {
+// Una riga per giocatore: pallino del rischio scontento (solo se c'è), foto
+// con numero, nome (soprannome in evidenza), fascia e ruolo, percentuale
+// presenze. Tutto il resto è nella scheda.
+function RigaGiocatore({ player, rischio, imp, fascia }) {
   const avvisi = avvisiDi(player)
   const nomeCompleto = player.nome
   const titolo = player.soprannome || nomeBreve(player)
   const f = FASCE[fascia]
   return (
     <NavLink to={`/rosa/${player.id}`} className="card tappable rosa-riga">
-      <span className="rosa-umore">
-        {umore ? <EmojiUmore umore={umore} onClick={onUmore} size={26} /> : <span className="rosa-umore-vuoto" />}
-      </span>
       <span className="rosa-avatar">
         <Avatar src={player.foto} size={38} />
+        <span className="rosa-rischio"><PallinoRischio rischio={rischio} /></span>
         {player.numero !== '' && player.numero != null && (
           <span className="rosa-numero">{player.numero}</span>
         )}
@@ -87,7 +82,6 @@ const ordina = (a, b) =>
 export default function RosaPage() {
   const navigate = useNavigate()
   const [filtro, setFiltro] = useState('attivi')
-  const [legendaUmore, setLegendaUmore] = useState(false)
   const players = useLiveQuery(() => db.players.toArray(), [])
   const trainings = useLiveQuery(() => db.trainings.toArray(), [])
   const matches = useLiveQuery(() => db.matches.toArray(), [])
@@ -104,12 +98,12 @@ export default function RosaPage() {
   const visibili =
     filtro === 'attivi' ? attivi : filtro === 'titolari' ? titolari : [...attivi, ...inattivi]
 
-  const info = new Map(players.map((p) => [p.id, { umore: calcolaUmore(dati, p.id), imp: impegno(dati, p.id) }]))
+  const info = new Map(players.map((p) => [p.id, { rischio: calcolaRischio(dati, p.id), imp: impegno(dati, p.id) }]))
 
   // Riepilogo: "chi ho a disposizione?" — i tre numeri che rispondono.
   const disponibili = attivi.filter((p) => p.statoAttivita !== 'infortunato' && !p.acciaccato)
   const inPorta = attivi.filter((p) => p.porta === 'si')
-  const scontenti = attivi.filter((p) => SCONTENTI.includes(info.get(p.id).umore?.livello))
+  const aRischio = attivi.filter((p) => info.get(p.id).rischio?.livello === 'alto')
 
   // Raggruppati per reparto, nell'ordine del campo (POR → ATT)
   const reparti = FAMIGLIE
@@ -148,9 +142,9 @@ export default function RosaPage() {
               <div className="value">{inPorta.length}</div>
               <div className="label">In porta</div>
             </div>
-            <div className={`stat-tile ${scontenti.length > 0 ? 'stat-tile-allarme' : ''}`}>
-              <div className="value">{scontenti.length}</div>
-              <div className="label">Scontenti</div>
+            <div className={`stat-tile ${aRischio.length > 0 ? 'stat-tile-allarme' : ''}`}>
+              <div className="value">{aRischio.length}</div>
+              <div className="label">A rischio</div>
             </div>
           </div>
 
@@ -174,9 +168,11 @@ export default function RosaPage() {
               Tutti ({players.length})
             </button>
           </div>
-          <p className="muted small" style={{ margin: '0 0 4px' }}>
-            Tocca la faccina per la legenda di umore e presenze.
-          </p>
+          {attivi.some((p) => (info.get(p.id).rischio?.livello ?? 'nessuno') !== 'nessuno') && (
+            <p className="muted small" style={{ margin: '0 0 4px' }}>
+              Pallino giallo: da monitorare, rosso: rischio alto di scontento (minuti rispetto alle presenze).
+            </p>
+          )}
 
           {reparti.map((r) => (
             <div key={r.value}>
@@ -185,17 +181,15 @@ export default function RosaPage() {
                 <div key={p.id} style={isAttivo(p) ? undefined : { opacity: 0.55 }}>
                   <RigaGiocatore
                     player={p}
-                    umore={info.get(p.id).umore}
+                    rischio={info.get(p.id).rischio}
                     imp={info.get(p.id).imp}
                     fascia={fasciaDi(p.id, fasce)}
-                    onUmore={() => setLegendaUmore(true)}
                   />
                 </div>
               ))}
             </div>
           ))}
 
-          {legendaUmore && <LegendaPopup onClose={() => setLegendaUmore(false)} />}
         </>
       )}
 

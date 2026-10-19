@@ -1,4 +1,5 @@
-// Umore del giocatore: quanto si sente ripagato di quello che dà.
+// Rischio scontento del giocatore: quanto rischia di sentirsi poco ripagato
+// di quello che dà. L'app non osserva l'umore, lo stima dai numeri.
 // Puro: le pagine passano le righe Dexie, qui non si legge il database.
 //
 // Per ora due fattori:
@@ -6,38 +7,48 @@
 // - minutaggio: quota dei minuti giocati su quelli disponibili nelle partite
 //   con referto in cui era presente (chi non c'era non si aspetta di giocare).
 //
-// Il minutaggio decide il livello di partenza, l'impegno decide quanto pesa
-// il giocare poco: chi c'è sempre e non gioca si arrabbia, chi si vede ogni
+// Il minutaggio decide il gradino di partenza, l'impegno decide quanto pesa
+// il giocare poco: chi c'è sempre e non gioca è a rischio, chi si vede ogni
 // tanto no. Altri fattori (gol, ruolo, incarichi...) si aggiungeranno come
-// voci in `fattori` e come ritocchi del livello, senza cambiare la forma.
+// voci in `fattori` e come ritocchi del gradino, senza cambiare la forma.
 
 import { refertoCompilato, DURATA_DEFAULT } from './storico'
 
-// Dal più felice al più scontento: l'indice è il "gradino".
-export const LIVELLI_UMORE = [
-// I colori della faccina disegnata
-// stanno in theme/faccine.js.
-  { value: 'sorridente', label: 'Sorridente' },
-  { value: 'contento', label: 'Contento' },
-  { value: 'neutro', label: 'Neutro' },
-  { value: 'triste', label: 'Triste' },
-  { value: 'arrabbiato', label: 'Arrabbiato' },
+// Il calcolo lavora su cinque gradini, dal più ripagato al meno: sono interni.
+// Al mister arrivano tre livelli di rischio (LIVELLI_RISCHIO):
+// - 1 e 2 (gioca praticamente sempre / gioca tanto) → nessuno: gioca quanto
+//   si aspetta;
+// - 3 (panchinaro con minutaggio equo, o gioca poco ma si vede poco) → da
+//   monitorare: oggi regge, basta poco per cambiare;
+// - 4 e 5 (gioca poco / quasi mai, pur essendoci) → alto.
+// Le soglie sono quelle di sempre: cambia solo come si chiama il risultato.
+export const GRADINI = ['pieno', 'buono', 'equo', 'scarso', 'minimo']
+
+export const LIVELLI_RISCHIO = [
+  { value: 'nessuno', label: 'Nessuno' },
+  { value: 'monitorare', label: 'Da monitorare' },
+  { value: 'alto', label: 'Alto' },
 ]
 
-export const umoreInfo = (value) => LIVELLI_UMORE.find((l) => l.value === value) ?? null
+const RISCHIO_DEL_GRADINO = {
+  pieno: 'nessuno', buono: 'nessuno', equo: 'monitorare', scarso: 'alto', minimo: 'alto',
+}
+
+export const rischioInfo = (value) => LIVELLI_RISCHIO.find((l) => l.value === value) ?? null
 
 // Soglie sulla quota di minuti (0–1). In un calcio a 8 con 11-12 presenti
 // la media è intorno a 2/3: sotto il 35% si è panchinari che giocano poco.
 export const SOGLIE_MINUTAGGIO = [
-  { min: 0.85, livello: 'sorridente' }, // gioca praticamente sempre
-  { min: 0.6, livello: 'contento' }, // gioca tanto
-  { min: 0.35, livello: 'neutro' }, // panchinaro con un minutaggio equo
-  { min: 0.15, livello: 'triste' }, // gioca poco
-  { min: 0, livello: 'arrabbiato' }, // quasi mai in campo
+  { min: 0.85, gradino: 'pieno' }, // gioca praticamente sempre
+  { min: 0.6, gradino: 'buono' }, // gioca tanto
+  { min: 0.35, gradino: 'equo' }, // panchinaro con un minutaggio equo
+  { min: 0.15, gradino: 'scarso' }, // gioca poco
+  { min: 0, gradino: 'minimo' }, // quasi mai in campo
 ]
 
 // Impegno (0–1) sopra cui lo scontento conta per intero; nella fascia di
-// mezzo si attenua di un gradino; sotto, chi gioca poco resta neutro.
+// mezzo si attenua di un gradino; sotto, chi gioca poco resta sul gradino
+// equo (da monitorare).
 export const IMPEGNO_PIENO = 0.75
 export const IMPEGNO_MINIMO = 0.5
 
@@ -49,26 +60,27 @@ const pct = (x) => `${Math.round(x * 100)}%`
 export const fasciaPresenze = (quota) =>
   quota == null ? null : quota >= IMPEGNO_PIENO ? 'piena' : quota >= IMPEGNO_MINIMO ? 'media' : 'bassa'
 
-// Il cuore del calcolo, in una riga: il minutaggio dà l'umore, le presenze
-// decidono quanto conta lo scontento. Chi c'è poco e gioca poco resta neutro.
-// `quotaPresenze` null (nessun appello): conta solo il minutaggio.
-export function umoreDa(quotaMinuti, quotaPresenze) {
-  const base = SOGLIE_MINUTAGGIO.find((s) => quotaMinuti >= s.min).livello
-  const neutro = LIVELLI_UMORE.findIndex((l) => l.value === 'neutro')
-  let gradino = LIVELLI_UMORE.findIndex((l) => l.value === base)
+// Il cuore del calcolo, in una riga: il minutaggio dà il gradino, le
+// presenze decidono quanto conta il giocare poco. Chi c'è poco e gioca poco
+// resta sul gradino equo. `quotaPresenze` null (nessun appello): conta solo
+// il minutaggio.
+export function gradinoDa(quotaMinuti, quotaPresenze) {
+  const base = SOGLIE_MINUTAGGIO.find((s) => quotaMinuti >= s.min).gradino
+  const equo = GRADINI.indexOf('equo')
+  let i = GRADINI.indexOf(base)
   let nota = null
-  if (gradino > neutro && quotaPresenze != null) {
+  if (i > equo && quotaPresenze != null) {
     if (quotaPresenze < IMPEGNO_MINIMO) {
-      gradino = neutro
+      i = equo
       nota = 'Gioca poco, ma si vede poco: non se lo aspetta.'
     } else if (quotaPresenze < IMPEGNO_PIENO) {
-      gradino -= 1
-      nota = 'Gioca poco, ma non è sempre presente: lo scontento si attenua.'
+      i -= 1
+      nota = 'Gioca poco, ma non è sempre presente: il rischio si attenua.'
     } else {
       nota = 'È sempre presente ma gioca poco.'
     }
   }
-  return { livello: LIVELLI_UMORE[gradino], nota }
+  return { gradino: GRADINI[i], nota }
 }
 
 // Presenze su sedute e partite. I giustificati non contano né a favore né
@@ -108,16 +120,22 @@ export function minutaggio(matches = [], playerId) {
 }
 
 // null se non c'è nemmeno una partita con referto in cui era presente: senza
-// minutaggio non c'è niente di cui essere contenti o scontenti.
-export function calcolaUmore({ trainings = [], matches = [] }, playerId) {
+// minutaggio non c'è niente da stimare. `causa` è la riga per il mister
+// ("Presente 90% · gioca 20% dei minuti").
+export function calcolaRischio({ trainings = [], matches = [] }, playerId) {
   const min = minutaggio(matches, playerId)
   if (!min) return null
   const imp = impegno({ trainings, matches }, playerId)
 
-  const { livello, nota } = umoreDa(min.quota, imp?.quota ?? null)
+  const { gradino, nota } = gradinoDa(min.quota, imp?.quota ?? null)
+  const livello = RISCHIO_DEL_GRADINO[gradino]
   return {
-    ...livello,
-    livello: livello.value,
+    livello,
+    label: rischioInfo(livello).label,
+    gradino,
+    causa: imp?.quota != null
+      ? `Presente ${pct(imp.quota)} · gioca ${pct(min.quota)} dei minuti`
+      : `Gioca ${pct(min.quota)} dei minuti`,
     nota,
     fattori: [
       {

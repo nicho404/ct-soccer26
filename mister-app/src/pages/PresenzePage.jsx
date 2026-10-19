@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -7,8 +6,8 @@ import { IconBall, IconClipboardCheck } from '../components/icons'
 import { nomeBreve } from '../lib/nomi'
 import { formatDataPartita } from '../lib/partite'
 import { contaSeduta, pctSeduta } from '../lib/presenze'
-import { impegno, calcolaUmore } from '../lib/umore'
-import { EmojiUmore, LegendaPopup } from '../components/UmoreLegenda'
+import { impegno, calcolaRischio } from '../lib/umore'
+import { PallinoRischio } from '../components/simboli'
 import PercentualePresenze from '../components/PercentualePresenze'
 
 // Ordine di lettura: la seduta o partita più recente per prima.
@@ -18,7 +17,6 @@ const perDataDecrescente = (a, b) =>
 
 export default function PresenzePage() {
   const navigate = useNavigate()
-  const [legenda, setLegenda] = useState(false)
   const trainings = useLiveQuery(() => db.trainings.toArray(), [])
   const players = useLiveQuery(() => db.players.toArray(), [])
   const matches = useLiveQuery(() => db.matches.toArray(), [])
@@ -38,11 +36,11 @@ export default function PresenzePage() {
     ...matches.map((m) => ({ tipo: 'partita', id: m.id, data: m.data, ora: m.ora, presenze: m.presenze, titolo: nomeAvversario(m.opponentId) || 'Avversario da definire' })),
   ].sort(perDataDecrescente)
 
-  // Stessi numeri della Rosa: presenze su allenamenti + partite, badge e
-  // umore calcolati da lib/umore. Una sola fonte, nessuna percentuale diversa.
+  // Stessi numeri della Rosa: presenze su allenamenti + partite e rischio
+  // scontento calcolati da lib/umore. Una sola fonte, nessuna percentuale diversa.
   const dati = { trainings, matches }
   const righe = players
-    .map((p) => ({ p, imp: impegno(dati, p.id), umore: calcolaUmore(dati, p.id) }))
+    .map((p) => ({ p, imp: impegno(dati, p.id), rischio: calcolaRischio(dati, p.id) }))
     .filter((r) => r.imp)
     .sort((a, b) =>
       (b.imp.quota ?? -1) - (a.imp.quota ?? -1) ||
@@ -104,7 +102,7 @@ export default function PresenzePage() {
                 <table className="obs-table">
                   <thead>
                     <tr>
-                      <th aria-label="Umore" />
+                      <th aria-label="Rischio scontento" />
                       <th>Giocatore</th>
                       <th title="Presente">P</th>
                       <th title="Assente">A</th>
@@ -113,10 +111,10 @@ export default function PresenzePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {righe.map(({ p, imp, umore }) => {
+                    {righe.map(({ p, imp, rischio }) => {
                       return (
                         <tr key={p.id}>
-                          <td>{umore && <EmojiUmore umore={umore} size={22} onClick={() => setLegenda(true)} />}</td>
+                          <td><PallinoRischio rischio={rischio} /></td>
                           <td><Link to={`/rosa/${p.id}`}>{nomeBreve(p)}</Link></td>
                           <td>{imp.presenti}</td>
                           <td>{imp.assenti || ''}</td>
@@ -130,7 +128,7 @@ export default function PresenzePage() {
               </div>
               <p className="muted small">
                 % = presenze ÷ appelli, allenamenti e partite insieme (i giustificati non contano):
-                la stessa della Rosa. Tocca un'emoji per la legenda di umore e badge.
+                la stessa della Rosa. Il pallino è il rischio scontento: giallo da monitorare, rosso alto.
               </p>
             </>
           )}
@@ -151,7 +149,6 @@ export default function PresenzePage() {
         </>
       )}
 
-      {legenda && <LegendaPopup onClose={() => setLegenda(false)} />}
     </div>
   )
 }

@@ -509,9 +509,9 @@ describe('capitano scontento', () => {
 
   afterEach(cleanup)
 
-  it("avvisa solo sul capitano scontento, non sul vice che gioca", async () => {
+  it("avvisa solo sul capitano a rischio scontento alto, non sul vice che gioca", async () => {
     montaPagina(CapitanoPage)
-    const avvisi = await screen.findAllByText(/Scontento del minutaggio/)
+    const avvisi = await screen.findAllByText(/Rischio scontento alto/)
     expect(avvisi).toHaveLength(1)
     expect(avvisi[0].closest('.fascia-tessera').textContent).toContain('Rossi')
   })

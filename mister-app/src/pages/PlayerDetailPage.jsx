@@ -11,9 +11,8 @@ import {
 import { famigliaRuoloTattico } from '../tactics/constants'
 import { presenzaPct, minutiTotali, minutiPerCompetizione, statPorta } from '../lib/stats'
 import { aggregaGiocatori, incarichiGiocatore } from '../lib/storico'
-import { calcolaUmore, impegno } from '../lib/umore'
+import { calcolaRischio, impegno } from '../lib/umore'
 import PercentualePresenze from '../components/PercentualePresenze'
-import { EmojiUmore, LegendaPopup } from '../components/UmoreLegenda'
 import Fascia from '../components/Fascia'
 import { fasciaDi } from '../lib/fascia'
 import { formatDataPartita } from '../lib/partite'
@@ -21,7 +20,7 @@ import { DOMANDE_PER_SLOT } from '../lib/domandeRuolo'
 import Avatar from '../components/Avatar'
 import Modal from '../components/Modal'
 import { nomeBreve } from '../lib/nomi'
-import { Simbolo, Cartellino, badgeTono, coloreIntesa, TONO_STATO_ATTIVITA, TONO_TESSERAMENTO } from '../components/simboli'
+import { Simbolo, Cartellino, badgeTono, coloreIntesa, TONO_RISCHIO, TONO_STATO_ATTIVITA, TONO_TESSERAMENTO } from '../components/simboli'
 import { IconAlert, IconBandage, IconCheck, IconChevronLeft, IconClock, IconClose, IconGlove, IconStar } from '../components/icons'
 
 // Etichetta di ogni domanda di ruolo per id, per mostrare le risposte sì/no
@@ -45,7 +44,6 @@ export default function PlayerDetailPage() {
   const { id } = useParams()
   const playerId = Number(id)
 
-  const [legendaUmore, setLegendaUmore] = useState(false)
   const [rivedi, setRivedi] = useState(false)
   const player = useLiveQuery(() => db.players.get(playerId), [playerId])
   const observations = useLiveQuery(
@@ -86,9 +84,9 @@ export default function PlayerDetailPage() {
   const porta = statPorta(matches, playerId)
   const stagione = aggregaGiocatori(matches).find((r) => r.playerId === playerId)
   const incarichiPartite = incarichiGiocatore(matches, playerId)
-  const umore = calcolaUmore({ trainings, matches }, playerId)
+  const rischio = calcolaRischio({ trainings, matches }, playerId)
   const presenze = impegno({ trainings, matches }, playerId)
-  const minutaggioUmore = umore?.fattori.find((f) => f.nome === 'Minutaggio')
+  const minutaggio = rischio?.fattori.find((f) => f.nome === 'Minutaggio')
   const nomeDi = (pid) => {
     const p = allPlayers.find((x) => x.id === pid)
     return nomeBreve(p)
@@ -135,8 +133,8 @@ export default function PlayerDetailPage() {
       </div>
 
       {/* Card stile FC26: foto, badge stato, overall dai voti reali; sotto gli
-          stati, umore, presenze e minutaggio; in fondo al riquadro il dettaglio
-          dei due numeri. */}
+          stati, presenze, minutaggio e rischio scontento con la sua causa; in
+          fondo al riquadro il dettaglio dei due numeri. */}
       <div className="player-card">
         <div className="player-card-photo">
           <Avatar src={player.foto} size={76} />
@@ -162,13 +160,12 @@ export default function PlayerDetailPage() {
             <span className="badge badge-warn"><IconGlove size={13} /> {portaInfo(player.porta).label}</span>
           )}
         </div>
-        {(umore || presenze?.quota != null) && (
-          <div className="row player-card-umore">
-            {umore && <EmojiUmore umore={umore} size={30} onClick={() => setLegendaUmore(true)} />}
+        {(rischio || presenze?.quota != null) && (
+          <div className="row player-card-stato">
             {presenze?.quota != null && (
               <span className="badge"><PercentualePresenze quota={presenze.quota} etichetta /></span>
             )}
-            {minutaggioUmore && <span className="badge"><IconClock size={13} /> {minutaggioUmore.valore} minuti</span>}
+            {minutaggio && <span className="badge"><IconClock size={13} /> {minutaggio.valore} minuti</span>}
           </div>
         )}
         </div>
@@ -179,13 +176,21 @@ export default function PlayerDetailPage() {
             {player.ruoloNaturale || '—'}
           </span>
         </div>
-        {(presenze?.totale > 0 || umore) && (
+        {rischio && (
+          <div className="player-card-rischio">
+            <span className={`badge ${badgeTono(TONO_RISCHIO[rischio.livello])}`}>
+              Rischio scontento: {rischio.label.toLowerCase()}
+            </span>
+            <span className="small">{rischio.causa}</span>
+          </div>
+        )}
+        {(presenze?.totale > 0 || rischio) && (
           <div className="player-card-dettaglio muted small">
             {presenze && presenze.totale > 0 && (
               <div>Presenze: {presenze.presenti} su {presenze.totale} tra allenamenti e partite</div>
             )}
-            {minutaggioUmore && <div>Minuti: {minutaggioUmore.dettaglio}</div>}
-            {umore?.nota && <div>{umore.nota}</div>}
+            {minutaggio && <div>Minuti: {minutaggio.dettaglio}</div>}
+            {rischio?.nota && <div>{rischio.nota}</div>}
           </div>
         )}
       </div>
@@ -468,7 +473,6 @@ export default function PlayerDetailPage() {
         Elimina giocatore
       </button>
 
-      {legendaUmore && <LegendaPopup onClose={() => setLegendaUmore(false)} />}
       {rivedi && (
         <Modal titolo="Ruoli tattici da rivedere" onClose={() => setRivedi(false)}>
           <p className="small" style={{ marginTop: 0 }}>
