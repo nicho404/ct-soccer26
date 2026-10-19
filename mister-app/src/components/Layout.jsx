@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
@@ -65,7 +66,10 @@ export default function Layout() {
           index.css lo nasconde (resta per i lettori di schermo) */}
       <main className={sottobarra ? 'con-sottobarra' : undefined}>
         <ErrorBoundary key={chiavePagina}>
-          <Outlet />
+          {/* pagine caricate a richiesta: header e menu restano al loro posto */}
+          <Suspense fallback={<div className="page" aria-busy="true" />}>
+            <Outlet />
+          </Suspense>
         </ErrorBoundary>
       </main>
       <nav className="bottom-nav">

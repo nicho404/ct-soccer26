@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { useLocation } from 'react-router-dom'
 import useDesktop from '../hooks/useDesktop'
 
@@ -14,7 +15,10 @@ export default function DueColonne({ elenco, dettaglio, vuoto }) {
       {/* key sul percorso: passando da un elemento all'altro la scheda
           riparte da zero, come aprendola dall'elenco su telefono */}
       <div className="colonna-dettaglio" key={pathname}>
-        {dettaglio ?? <div className="page dettaglio-vuoto muted">{vuoto}</div>}
+        {/* la scheda si scarica a richiesta: l'elenco intanto resta lì */}
+        <Suspense fallback={<div className="page" aria-busy="true" />}>
+          {dettaglio ?? <div className="page dettaglio-vuoto muted">{vuoto}</div>}
+        </Suspense>
       </div>
     </div>
   )
