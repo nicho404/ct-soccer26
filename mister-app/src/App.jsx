@@ -1,3 +1,4 @@
+import { lazy } from 'react'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db/db'
@@ -7,29 +8,33 @@ import DueColonne from './components/DueColonne'
 import OnboardingPage from './pages/OnboardingPage'
 import HomePage from './pages/HomePage'
 import RosaPage from './pages/RosaPage'
-import PlayerFormPage from './pages/PlayerFormPage'
-import PlayerDetailPage from './pages/PlayerDetailPage'
-import ImpostazioniPage from './pages/ImpostazioniPage'
-import ObservationPage from './pages/ObservationPage'
 import ModuloPage from './pages/ModuloPage'
-import IntesePage from './pages/IntesePage'
-import IntesaFormPage from './pages/IntesaFormPage'
 import PartitePage from './pages/PartitePage'
-import PartitaFormPage from './pages/PartitaFormPage'
-import PartitaRefertoPage from './pages/PartitaRefertoPage'
-import StoricoPage from './pages/StoricoPage'
-import PresenzePage from './pages/PresenzePage'
-import SedutaFormPage from './pages/SedutaFormPage'
-import PianiPage from './pages/PianiPage'
-import AvversariPage from './pages/AvversariPage'
-import AvversarioFormPage from './pages/AvversarioFormPage'
-import QuadernoPage from './pages/QuadernoPage'
-import ManualeFormPage from './pages/ManualeFormPage'
-import CapitanoPage from './pages/CapitanoPage'
-import GironePage from './pages/GironePage'
-import GironePartitaFormPage from './pages/GironePartitaFormPage'
-import AnalisiDettaglioPage from './pages/AnalisiDettaglioPage'
-import AnalisiFormPage from './pages/AnalisiFormPage'
+
+// Home, Rosa, Partite e Modulo sono le pagine d'ingresso e arrivano subito;
+// le altre si scaricano la prima volta che servono (il service worker le
+// tiene comunque tutte in cache per l'uso offline).
+const PlayerFormPage = lazy(() => import('./pages/PlayerFormPage'))
+const PlayerDetailPage = lazy(() => import('./pages/PlayerDetailPage'))
+const ImpostazioniPage = lazy(() => import('./pages/ImpostazioniPage'))
+const ObservationPage = lazy(() => import('./pages/ObservationPage'))
+const IntesePage = lazy(() => import('./pages/IntesePage'))
+const IntesaFormPage = lazy(() => import('./pages/IntesaFormPage'))
+const PartitaFormPage = lazy(() => import('./pages/PartitaFormPage'))
+const PartitaRefertoPage = lazy(() => import('./pages/PartitaRefertoPage'))
+const StoricoPage = lazy(() => import('./pages/StoricoPage'))
+const PresenzePage = lazy(() => import('./pages/PresenzePage'))
+const SedutaFormPage = lazy(() => import('./pages/SedutaFormPage'))
+const PianiPage = lazy(() => import('./pages/PianiPage'))
+const AvversariPage = lazy(() => import('./pages/AvversariPage'))
+const AvversarioFormPage = lazy(() => import('./pages/AvversarioFormPage'))
+const QuadernoPage = lazy(() => import('./pages/QuadernoPage'))
+const ManualeFormPage = lazy(() => import('./pages/ManualeFormPage'))
+const CapitanoPage = lazy(() => import('./pages/CapitanoPage'))
+const GironePage = lazy(() => import('./pages/GironePage'))
+const GironePartitaFormPage = lazy(() => import('./pages/GironePartitaFormPage'))
+const AnalisiDettaglioPage = lazy(() => import('./pages/AnalisiDettaglioPage'))
+const AnalisiFormPage = lazy(() => import('./pages/AnalisiFormPage'))
 
 export default function App() {
   useTema()

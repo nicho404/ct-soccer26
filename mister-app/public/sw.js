@@ -10,10 +10,21 @@
 //
 // - gli ASSET con hash nel nome (JS, CSS, immagini) sono immutabili: lì la
 //   cache è sempre giusta e si risponde subito, aggiornando in background.
-const CACHE = 'mister-app-v4' // v4: nuova icona (la M come schema tattico)
+//
+// All'installazione si scaricano subito TUTTI i file della build, compresi i
+// chunk delle pagine caricate a richiesta: una pagina mai aperta online si
+// apre lo stesso offline. L'elenco e la versione li scrive la build
+// (build/precache.js) al posto dei segnaposto qui sotto.
+const PRECACHE = /*__PRECACHE_FILE__*/[]
+const CACHE = 'mister-app-__PRECACHE_VERSIONE__'
 
-self.addEventListener('install', () => {
-  self.skipWaiting()
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches
+      .open(CACHE)
+      .then((cache) => cache.addAll(PRECACHE.map((f) => new URL(f, self.registration.scope).href)))
+      .then(() => self.skipWaiting())
+  )
 })
 
 self.addEventListener('activate', (event) => {
