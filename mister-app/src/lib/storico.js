@@ -28,6 +28,19 @@ export function portiereIniziale(formazione, sigle) {
   return formazione?.slots?.[i] ?? null
 }
 
+// Evento segnato solo come "1° tempo" / "2° tempo", quando il minuto non è
+// stato preso: `tempo` dice cosa mostrare, `minuto` resta un numero (la metà di
+// quel tempo) così ordine e minuti giocati funzionano come per tutti gli altri.
+export const minutoDiTempo = (tempo, durata) => Math.round((durata * (tempo === 2 ? 3 : 1)) / 4)
+
+// Se cambia la durata, i minuti stimati vanno ricalcolati; quelli esatti no.
+export const riallineaTempi = (eventi, durata) =>
+  eventi.map((ev) => (ev.tempo ? { ...ev, minuto: minutoDiTempo(ev.tempo, durata) } : ev))
+
+export const etichettaMinuto = (ev) => (ev.tempo ? `${ev.tempo}T` : `${ev.minuto ?? 0}′`)
+
+export const momentoEvento = (ev) => (ev.tempo ? `nel ${ev.tempo}° tempo` : `al ${ev.minuto ?? 0}′`)
+
 // Ordine cronologico degli eventi: a parità di minuto vale l'ordine di
 // inserimento (sort stabile), che è l'ordine in cui il mister li ha visti.
 const perMinuto = (eventi) => [...eventi].sort((a, b) => (a.minuto ?? 0) - (b.minuto ?? 0))
@@ -184,7 +197,7 @@ export function eventiIncoerenti(slotsIniziali = [], eventi = [], nomeDi = Strin
   const espulsi = new Set()
   const problemi = new Map()
   for (const ev of perMinuto(eventi)) {
-    const al = `al ${ev.minuto ?? 0}′`
+    const al = momentoEvento(ev)
     const motivi = []
     if (ev.tipo === 'cambio') {
       if (ev.outId != null && !slots.includes(ev.outId)) motivi.push(`${nomeDi(ev.outId)} non è in campo ${al}`)

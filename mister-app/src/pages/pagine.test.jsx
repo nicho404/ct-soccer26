@@ -385,6 +385,48 @@ describe('referto: cambi volanti, posizioni e incarichi', () => {
     expect(await screen.findByText(/Un evento non torna/)).toBeTruthy()
     expect(screen.getByText(/Sette non è in campo al 15′; Otto è già in campo al 15′/)).toBeTruthy()
   })
+
+  it('il minuto parte vuoto, si può cancellare e si può indicare solo il tempo', async () => {
+    await db.matches.update(1, {
+      formazione: { formato: 7, modulo: '2-3-1', slots: [1, 2, 3, 4, 5, 6, 7] },
+      eventi: [],
+    })
+    const avviso = vi.spyOn(window, 'alert').mockImplementation(() => {})
+    render(
+      <MemoryRouter initialEntries={['/partite/1/referto']}>
+        <Routes><Route path="/partite/:id/referto" element={<PartitaRefertoPage />} /></Routes>
+      </MemoryRouter>
+    )
+    fireEvent.click(await screen.findByText('+ Aggiungi evento'))
+    fireEvent.click(screen.getByRole('button', { name: '🔁 Cambio' }))
+    const minuto = screen.getByText('Minuto').parentElement.querySelector('input')
+    expect(minuto.value).toBe('')
+    fireEvent.change(minuto, { target: { value: '26' } })
+    fireEvent.change(minuto, { target: { value: '' } })
+    expect(minuto.value).toBe('')
+
+    // senza minuto né tempo l'evento non entra: niente 0′ inventati
+    fireEvent.click(screen.getByText('Aggiungi'))
+    expect(avviso).toHaveBeenCalledWith('Indica il minuto oppure il tempo')
+    avviso.mockRestore()
+
+    fireEvent.click(screen.getByRole('button', { name: '2° tempo' }))
+    fireEvent.click(screen.getByText('Esce').parentElement.querySelector('button.scelta'))
+    fireEvent.click([...screen.getByRole('dialog', { name: 'Chi esce' }).querySelectorAll('.scelta-opzione')]
+      .find((o) => o.textContent.startsWith('Sette')))
+    fireEvent.click(screen.getByText('Entra').parentElement.querySelector('button.scelta'))
+    fireEvent.click([...screen.getByRole('dialog', { name: 'Chi entra' }).querySelectorAll('.scelta-opzione')]
+      .find((o) => o.textContent.startsWith('Otto')))
+    fireEvent.click(screen.getByText('Aggiungi'))
+    expect(screen.getByText('2T')).toBeTruthy()
+    fireEvent.click(screen.getByText('Salva referto'))
+
+    await waitFor(async () => expect((await db.matches.get(1)).eventi).toHaveLength(1))
+    const m = await db.matches.get(1)
+    expect(m.eventi[0]).toMatchObject({ tempo: 2, minuto: 45 })
+    expect(m.minuti[7]).toBe(45)
+    expect(m.minuti[8]).toBe(15)
+  })
 })
 
 describe('presenze e sedute', () => {

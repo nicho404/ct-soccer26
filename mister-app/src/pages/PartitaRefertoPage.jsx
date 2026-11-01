@@ -11,6 +11,7 @@ import { formatDataPartita, esitoPartita } from '../lib/partite'
 import {
   DURATA_DEFAULT, durataSquadra, calcolaMinuti, portiereIniziale, golDaEventi, disallineamentoRisultato,
   occupantiPerSlot, campoAlMinuto, espulsiAlMinuto, eventiIncoerenti,
+  minutoDiTempo, riallineaTempi, etichettaMinuto, momentoEvento,
 } from '../lib/storico'
 import { presentiIds } from '../lib/presenze'
 import PitchView from '../components/PitchView'
@@ -201,9 +202,11 @@ export default function PartitaRefertoPage() {
   // eventi già registrati fino a quel minuto: "esce" si sceglie tra loro,
   // "entra" tra tutti gli altri presenti — compreso chi era uscito prima
   // (cambi volanti), escluso chi è stato espulso.
-  const campoBozza = bozza ? campoAlMinuto(slots, eventi, bozza.minuto) : slots
+  // Finché il momento non è indicato si guarda al campo dopo l'ultimo evento.
+  const minutoBozza = bozza?.minuto === '' ? Infinity : Number(bozza?.minuto)
+  const campoBozza = bozza ? campoAlMinuto(slots, eventi, minutoBozza) : slots
   const inCampoBozza = campoBozza.filter(Boolean)
-  const espulsiBozza = bozza ? espulsiAlMinuto(eventi, bozza.minuto) : new Set()
+  const espulsiBozza = bozza ? espulsiAlMinuto(eventi, minutoBozza) : new Set()
   const disponibiliBozza = presenti.filter(
     (p) => !inCampoBozza.includes(p.id) && !espulsiBozza.has(p.id)
   )
@@ -212,6 +215,11 @@ export default function PartitaRefertoPage() {
   const aggiungiEvento = () => {
     if (!bozza) return
     const info = tipoEventoInfo(bozza.tipo)
+    if (bozza.minuto === '') {
+      alert('Indica il minuto oppure il tempo')
+      return
+    }
+    const quando = momentoEvento(bozza)
     if (info.conGiocatore && bozza.playerId == null) {
       alert('Scegli il giocatore')
       return
@@ -221,15 +229,15 @@ export default function PartitaRefertoPage() {
       return
     }
     if (info.conCambio && bozza.outId != null && !inCampoBozza.includes(bozza.outId)) {
-      alert(`${nomeDi(bozza.outId)} non è in campo al ${bozza.minuto}′`)
+      alert(`${nomeDi(bozza.outId)} non è in campo ${quando}`)
       return
     }
     if (info.conCambio && bozza.inId != null && inCampoBozza.includes(bozza.inId)) {
-      alert(`${nomeDi(bozza.inId)} è già in campo al ${bozza.minuto}′`)
+      alert(`${nomeDi(bozza.inId)} è già in campo ${quando}`)
       return
     }
     if (info.conCambio && bozza.inId != null && espulsiBozza.has(bozza.inId)) {
-      alert(`${nomeDi(bozza.inId)} è stato espulso prima del ${bozza.minuto}′`)
+      alert(`${nomeDi(bozza.inId)} è già stato espulso ${quando}`)
       return
     }
     if (info.conSpostamento && (bozza.playerId == null || bozza.slotIndex == null)) {
@@ -237,12 +245,12 @@ export default function PartitaRefertoPage() {
       return
     }
     if (info.conSpostamento && !inCampoBozza.includes(bozza.playerId)) {
-      alert(`${nomeDi(bozza.playerId)} non è in campo al ${bozza.minuto}′`)
+      alert(`${nomeDi(bozza.playerId)} non è in campo ${quando}`)
       return
     }
-    const { incarico, ...ev } = bozza
+    const { incarico, tempo, ...ev } = bozza
     if (info.conCambio && ev.inId != null && incarico !== undefined) setIncarico(ev.inId, incarico)
-    setEventi((e) => [...e, { ...ev, id: Date.now() }])
+    setEventi((e) => [...e, { ...ev, minuto: Number(ev.minuto), ...(tempo ? { tempo } : {}), id: Date.now() }])
     setBozza(null)
   }
 
@@ -282,9 +290,10 @@ export default function PartitaRefertoPage() {
       alert('Schiera almeno un giocatore: senza formazione non ci sono minuti da calcolare')
       return
     }
+    const eventiDaSalvare = riallineaTempi(eventi, durata)
     const { minuti, portaMinuti } = calcolaMinuti({
       titolari,
-      eventi,
+      eventi: eventiDaSalvare,
       durata,
       portiereIniziale: portiereIniziale({ slots }, sigle),
       slots,
@@ -302,7 +311,7 @@ export default function PartitaRefertoPage() {
         incarichiSvolti: soloGiocato(svolti),
       },
       durata,
-      eventi,
+      eventi: eventiDaSalvare,
       minuti,
       portaMinuti,
     })
@@ -470,7 +479,7 @@ export default function PartitaRefertoPage() {
             const info = tipoEventoInfo(ev.tipo)
             return (
               <div className="evento-riga" key={ev.id}>
-                <span className="evento-minuto">{ev.minuto ?? 0}′</span>
+                <span className="evento-minuto">{etichettaMinuto(ev)}</span>
                 <span className="evento-icona" title={info.label}><Simbolo gruppo="evento" valore={ev.tipo} /></span>
                 <span className="evento-testo">
                   {descriviEvento(ev)}
@@ -496,7 +505,7 @@ export default function PartitaRefertoPage() {
       <button
         className="btn btn-block"
         onClick={() => setBozza({
-          tipo: 'gol', minuto: 0, playerId: null, assistId: null, outId: null, inId: null, slotIndex: null,
+          tipo: 'gol', minuto: '', tempo: null, playerId: null, assistId: null, outId: null, inId: null, slotIndex: null,
         })}
       >
         + Aggiungi evento
@@ -524,15 +533,32 @@ export default function PartitaRefertoPage() {
 
           <div className="field">
             <label>Minuto</label>
-            <input
-              className="input"
-              type="number"
-              min="0"
-              max={durata}
-              inputMode="numeric"
-              value={bozza.minuto}
-              onChange={(e) => setBozza((b) => ({ ...b, minuto: Number(e.target.value) || 0 }))}
-            />
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <input
+                className="input"
+                style={{ width: 90 }}
+                type="number"
+                min="0"
+                max={durata}
+                inputMode="numeric"
+                value={bozza.tempo ? '' : bozza.minuto}
+                onChange={(e) => setBozza((b) => ({ ...b, minuto: e.target.value, tempo: null }))}
+              />
+              {[1, 2].map((t) => (
+                <button
+                  key={t}
+                  className={`chip chip-sm ${bozza.tempo === t ? 'selected' : ''}`}
+                  onClick={() => setBozza((b) => ({ ...b, tempo: t, minuto: minutoDiTempo(t, durata) }))}
+                >
+                  {t}° tempo
+                </button>
+              ))}
+            </div>
+            {bozza.tempo && (tipoEventoInfo(bozza.tipo).conCambio || bozza.tipo === 'rosso') && (
+              <p className="muted small" style={{ margin: '6px 0 0' }}>
+                Per i minuti giocati vale il {bozza.minuto}′, a metà del tempo.
+              </p>
+            )}
           </div>
 
           {(tipoEventoInfo(bozza.tipo).conGiocatore || tipoEventoInfo(bozza.tipo).conSpostamento) && (
