@@ -6,6 +6,7 @@ import { IconHome, IconUsers, IconPitch, IconCalendar, IconBall, IconTrophy, Ico
 import ErrorBoundary from './ErrorBoundary'
 import { SEZIONI, sezioneDi, sottobarraDi, elencoAccanto } from '../lib/sezioni'
 import useDesktop from '../hooks/useDesktop'
+import { SyncAvviso } from './SyncDrive'
 
 const ICONE = { home: IconHome, rosa: IconUsers, calendario: IconCalendar, tattica: IconPitch }
 
@@ -65,6 +66,7 @@ export default function Layout() {
       {/* con la sottobarra il titolo della pagina ripete la scheda accesa:
           index.css lo nasconde (resta per i lettori di schermo) */}
       <main className={sottobarra ? 'con-sottobarra' : undefined}>
+        <SyncAvviso />
         <ErrorBoundary key={chiavePagina}>
           {/* pagine caricate a richiesta: header e menu restano al loro posto */}
           <Suspense fallback={<div className="page" aria-busy="true" />}>

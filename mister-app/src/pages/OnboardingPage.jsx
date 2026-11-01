@@ -2,7 +2,10 @@ import { useRef, useState } from 'react'
 import { db } from '../db/db'
 import { importBackup } from '../db/backup'
 import { FORMATI } from '../lib/formazioni'
-import { IconBall, IconFolder, IconPlus } from '../components/icons'
+import { IconBall, IconDownload, IconFolder, IconPlus } from '../components/icons'
+import { useStatoSync } from '../components/useStatoSync'
+import { collega } from '../db/sync'
+import { driveConfigurato } from '../lib/drive'
 
 // Primo accesso: si sceglie se partire da zero (form squadra) o da un
 // backup esportato su un altro dispositivo. In entrambi i casi è setupDone
@@ -13,6 +16,7 @@ export default function OnboardingPage({ team }) {
   const [errore, setErrore] = useState(null)
   const [caricando, setCaricando] = useState(false)
   const fileRef = useRef(null)
+  const sync = useStatoSync()
   const [mister, setMister] = useState(team?.mister ?? '')
   const [nome, setNome] = useState(team?.nome ?? '')
   const [formato, setFormato] = useState(FORMATI.includes(team?.formato) ? team.formato : 8)
@@ -76,6 +80,31 @@ export default function OnboardingPage({ team }) {
             <span className="muted small">Parti da zero: due domande veloci e sei in campo.</span>
           </span>
         </button>
+
+        {driveConfigurato && (
+          <button
+            type="button"
+            className="card tappable onboarding-scelta"
+            disabled={sync.fase === 'lavoro'}
+            onClick={collega}
+          >
+            <span className="onboarding-scelta-icona"><IconDownload size={22} /></span>
+            <span>
+              <strong>{sync.fase === 'lavoro' ? 'Sincronizzazione…' : 'Accedi con Google'}</strong>
+              <span className="muted small">
+                Usi già l'app su un altro dispositivo? Ritrovi tutto dal tuo Drive.
+              </span>
+            </span>
+          </button>
+        )}
+        {sync.nessunFile && (
+          <p className="small muted">
+            Su questo Drive non c'è ancora nessun dato: crea la squadra e verrà salvata lì.
+          </p>
+        )}
+        {sync.fase === 'errore' && (
+          <p className="small" style={{ color: 'var(--danger)' }}>{sync.messaggio}</p>
+        )}
 
         <button
           type="button"

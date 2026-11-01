@@ -3,10 +3,12 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { applicaTema, temaLocale } from './theme/tema'
+import { avviaSync } from './db/sync'
 
 // Prima del primo render: i colori arrivano dalla scelta salvata in locale,
 // così l'app non lampeggia con la palette di default.
 applicaTema(temaLocale())
+avviaSync()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

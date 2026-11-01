@@ -9,10 +9,8 @@ const FORMAT = 'mister-app-backup'
 // Data dell'ultimo export riuscito (per il promemoria in Home)
 export const CHIAVE_ULTIMO_BACKUP = 'ultimoBackup'
 
-// Serializza tutte le tabelle in un oggetto JSON e avvia il download del file.
-// A download avviato segna la data in db.meta: il file appena scritto non la
-// contiene, ma è la sua esistenza che conta.
-export async function exportBackup() {
+// Fotografia di tutte le tabelle: è il contenuto del file di backup.
+export async function leggiBackup() {
   const tables = {}
   await db.transaction('r', db.tables, async () => {
     for (const table of db.tables) {
@@ -20,13 +18,19 @@ export async function exportBackup() {
     }
   })
 
-  const payload = {
+  return {
     format: FORMAT,
     dbVersion: db.verno,
     exportedAt: new Date().toISOString(),
     tables,
   }
+}
 
+// Serializza tutte le tabelle in un oggetto JSON e avvia il download del file.
+// A download avviato segna la data in db.meta: il file appena scritto non la
+// contiene, ma è la sua esistenza che conta.
+export async function exportBackup() {
+  const payload = await leggiBackup()
   const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

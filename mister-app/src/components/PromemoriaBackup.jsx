@@ -5,6 +5,7 @@ import { exportBackup, CHIAVE_ULTIMO_BACKUP } from '../db/backup'
 import { statoBackup, testoBackup } from '../lib/promemoriaBackup'
 import { TONO_BACKUP } from './simboli'
 import { IconDownload } from './icons'
+import { useStatoSync } from './useStatoSync'
 
 // Una riga in Home: da quanto non si fa un backup, neutra fino a 7 giorni,
 // gialla oltre, rossa oltre 14 o se non c'è mai stato. Il pulsante esporta
@@ -12,7 +13,9 @@ import { IconDownload } from './icons'
 export default function PromemoriaBackup() {
   const riga = useLiveQuery(() => db.meta.get(CHIAVE_ULTIMO_BACKUP).then((r) => r ?? null), [])
   const [errore, setErrore] = useState(null)
-  if (riga === undefined) return null
+  const sync = useStatoSync()
+  // con Drive collegato il backup si fa da solo: i problemi li segnala SyncAvviso
+  if (riga === undefined || sync.fase !== 'spento') return null
 
   const stato = statoBackup(riga?.value)
   const tono = TONO_BACKUP[stato.livello]

@@ -398,7 +398,7 @@ describe('referto: cambi volanti, posizioni e incarichi', () => {
       </MemoryRouter>
     )
     fireEvent.click(await screen.findByText('+ Aggiungi evento'))
-    fireEvent.click(screen.getByRole('button', { name: '🔁 Cambio' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cambio' }))
     const minuto = screen.getByText('Minuto').parentElement.querySelector('input')
     expect(minuto.value).toBe('')
     fireEvent.change(minuto, { target: { value: '26' } })

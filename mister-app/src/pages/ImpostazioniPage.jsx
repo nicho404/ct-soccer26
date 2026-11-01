@@ -9,6 +9,7 @@ import { resizeToDataUrl } from '../lib/image'
 import Modal from '../components/Modal'
 import SceltaTema from '../components/SceltaTema'
 import { IconChevronLeft, IconPencil } from '../components/icons'
+import { SyncImpostazioni } from '../components/SyncDrive'
 
 const DURATE_RAPIDE = [40, 50, 60, 70]
 
@@ -310,10 +311,13 @@ export default function ImpostazioniPage() {
         </div>
       </div>
 
+      <div className="section-title">Sincronizzazione</div>
+      <SyncImpostazioni />
+
       <div className="section-title">Backup</div>
       <div className="card">
         <p className="muted small" style={{ marginTop: 0 }}>
-          Esporta e importa tutti i dati in un file JSON: è l'unico ponte tra telefono e PC.
+          Esporta e importa tutti i dati in un file JSON, da conservare come copia a parte.
         </p>
         <div className="row">
           <button className="btn btn-sm" onClick={onExport}>Esporta backup</button>
@@ -357,7 +361,7 @@ export default function ImpostazioniPage() {
       <div className="card muted small">
         Mister App — gestione squadra e scouting personale del mister.
         <br />
-        I dati vivono solo su questo dispositivo.
+        I dati vivono su questo dispositivo e, se accedi con Google, nel tuo Drive.
       </div>
     </div>
   )
