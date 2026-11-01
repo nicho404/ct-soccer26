@@ -90,7 +90,7 @@ function accumula(righe, lista) {
   }
 }
 
-// Classifica con tie-break Serie C LC8:
+// Classifica con tie-break del regolamento:
 // punti → punti negli scontri diretti (mini-classifica sulle sole gare già
 // giocate tra le squadre a pari punti) → differenza reti → gol fatti → gol
 // subiti. Oltre non si va: ranking e sorteggio non sono dati che abbiamo,

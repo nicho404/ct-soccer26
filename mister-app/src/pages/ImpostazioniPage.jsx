@@ -192,7 +192,7 @@ export default function ImpostazioniPage() {
               className="input"
               value={bozza.torneo}
               onChange={(e) => setB({ torneo: e.target.value })}
-              placeholder="Es. LC8 Milano – Serie C"
+              placeholder="Es. Coppa dei Quartieri"
             />
           </div>
           <div className="field">

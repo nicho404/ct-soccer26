@@ -58,7 +58,7 @@ const DEMO_OBSERVATIONS = [
 ]
 
 const DEMO_COMPETITIONS = [
-  { nome: 'LC8 Milano Serie C 2026/27', tipo: 'campionato', inizio: '2026-10-01', fine: '2027-03-31' },
+  { nome: 'Coppa dei Quartieri 2026/27', tipo: 'campionato', inizio: '2026-10-01', fine: '2027-03-31' },
   { nome: 'Amichevoli estive 2026', tipo: 'amichevoli', inizio: '2026-07-01', fine: '2026-09-15' },
 ]
 

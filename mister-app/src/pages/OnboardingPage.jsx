@@ -192,7 +192,7 @@ export default function OnboardingPage({ team }) {
           className="input"
           value={torneo}
           onChange={(e) => setTorneo(e.target.value)}
-          placeholder="Es. LC8 Milano – Serie C"
+          placeholder="Es. Coppa dei Quartieri"
         />
       </div>
 
