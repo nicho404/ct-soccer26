@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Mister App — Norme sulla privacy</title>
+    <style>
+      body { max-width: 680px; margin: 0 auto; padding: 24px 16px 48px; font: 16px/1.55 system-ui, sans-serif; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.1rem; margin-top: 1.8em; }
+    </style>
+  </head>
+  <body>
+    <h1>Norme sulla privacy</h1>
+    <p>Ultimo aggiornamento: 1 novembre 2026</p>
+
+    <p>
+      Mister App aiuta un allenatore a gestire la propria squadra. L'app funziona nel browser e non
+      ha un server proprio: chi la sviluppa non riceve e non può leggere i dati inseriti.
+    </p>
+
+    <h2>Dove restano i dati</h2>
+    <p>
+      I dati della squadra, come rosa, partite e osservazioni, sono salvati sul dispositivo, nel
+      browser. L'app non usa strumenti di analisi o pubblicità.
+    </p>
+
+    <h2>Accesso con Google e Google Drive</h2>
+    <p>
+      La sincronizzazione è facoltativa. Se accedi con Google, l'app chiede solo il permesso
+      <code>drive.file</code>, che dà accesso ai file creati o aperti con l'app, non al resto del
+      tuo Drive. L'app crea nel tuo Drive il file <code>mister-app-sync.json</code> con una copia dei
+      dati, e lo legge e aggiorna per tenere allineati i tuoi dispositivi.
+    </p>
+    <p>
+      Il browser comunica direttamente con Google. Il codice di accesso temporaneo fornito da Google
+      resta sul dispositivo. I dati ottenuti da Google non vengono trasferiti a terzi, venduti o usati
+      per pubblicità o per addestrare modelli di intelligenza artificiale. L'uso delle informazioni
+      ricevute dalle API Google rispetta le
+      <a href="https://developers.google.com/terms/api-services-user-data-policy">norme sui dati utente dei servizi API di Google</a>,
+      compresi i requisiti di uso limitato.
+    </p>
+
+    <h2>Dati di altre persone</h2>
+    <p>
+      L'allenatore che inserisce dati di giocatori o altre persone è responsabile del loro trattamento
+      e di avere il diritto di farlo.
+    </p>
+
+    <h2>Come cancellare i dati</h2>
+    <p>
+      Da Impostazioni puoi scollegare Drive: il collegamento si interrompe e i dati restano al loro
+      posto. Per cancellarli, elimina <code>mister-app-sync.json</code> dal tuo Drive e rimuovi i dati
+      del sito dal browser. Puoi revocare il permesso dell'app nelle impostazioni del tuo account Google.
+    </p>
+
+    <h2>Hosting</h2>
+    <p>
+      L'app è ospitata su GitHub Pages. Come per ogni sito, GitHub può trattare dati tecnici di
+      connessione, come l'indirizzo IP, secondo le proprie norme.
+    </p>
+
+    <h2>Contatti</h2>
+    <p>Per domande, usa l'email di assistenza mostrata nella schermata di consenso di Google.</p>
+  </body>
+</html>
