@@ -16,7 +16,7 @@ export default function AvversariPage() {
   const ordinati = [...opponents].sort((a, b) => (a.nome ?? '').localeCompare(b.nome ?? ''))
 
   return (
-    <div className="page">
+    <div className="page griglia-auto">
       <div className="page-header">
         <h1>Avversari</h1>
         <span className="muted small">{opponents.length}</span>

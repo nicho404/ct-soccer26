@@ -134,7 +134,7 @@ export default function CapitanoPage() {
   const giocatoreAperto = aperto != null ? giocatoreDi(aperto) : null
 
   return (
-    <div className="page">
+    <div className="page griglia-auto">
       <div className="page-header">
         <h1>Capitano</h1>
       </div>

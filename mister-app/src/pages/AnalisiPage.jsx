@@ -53,7 +53,7 @@ export default function AnalisiPage({ incorporata = false }) {
   if (incorporata) return corpo
 
   return (
-    <div className="page">
+    <div className="page griglia-auto">
       <div className="page-header">
         <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>Analisi</h1>

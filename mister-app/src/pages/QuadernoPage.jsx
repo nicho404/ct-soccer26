@@ -7,7 +7,7 @@ import ManualePage from './ManualePage'
 // ritorno dai form) porta alla scheda giusta.
 export default function QuadernoPage({ scheda }) {
   return (
-    <div className="page">
+    <div className="page griglia-auto">
       <div className="page-header">
         <h1>Quaderno</h1>
       </div>

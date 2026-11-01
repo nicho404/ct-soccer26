@@ -149,7 +149,7 @@ export default function GironePartitaFormPage() {
   )
 
   return (
-    <div className="page">
+    <div className="page page-stretta">
       <div className="page-header">
         <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>{editing ? 'Partita del girone' : 'Nuovo risultato'}</h1>

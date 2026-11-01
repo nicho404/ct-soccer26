@@ -22,8 +22,8 @@ export default function Layout() {
 
   return (
     <>
-      <div className="app-top">
-        <header className="app-header">
+      <div className={`app-top ${desktop && !sottobarra ? 'app-top-vuoto' : ''}`}>
+        {!desktop && <header className="app-header">
           <Link to="/home" className="app-header-squadra">
             <span className="app-logo" aria-hidden="true">
               {team?.logo ? <img src={team.logo} alt="" /> : <IconBall size={18} />}
@@ -42,7 +42,7 @@ export default function Layout() {
           <NavLink to="/impostazioni" className="header-azione" aria-label="Impostazioni" title="Impostazioni">
             <IconGear size={20} />
           </NavLink>
-        </header>
+        </header>}
         {sottobarra && (
           <nav className="sottobarra" aria-label={sottobarra.sezione.label}>
             <div className="sottobarra-inner">
@@ -75,6 +75,21 @@ export default function Layout() {
         </ErrorBoundary>
       </main>
       <nav className="bottom-nav">
+        {desktop && (
+          <div className="app-header sidebar-marca">
+            <Link to="/home" className="app-header-squadra">
+              <span className="app-logo" aria-hidden="true">
+                {team?.logo ? <img src={team.logo} alt="" /> : <IconBall size={18} />}
+              </span>
+              <span style={{ minWidth: 0 }}>
+                <span className="title">
+                  {team?.nome || <>Mister <span>App</span></>}
+                </span>
+                {team?.torneo && <span className="header-torneo">{team.torneo}</span>}
+              </span>
+            </Link>
+          </div>
+        )}
         {SEZIONI.map((sez) => {
           const Icon = ICONE[sez.id]
           const attiva = sezione?.id === sez.id
@@ -90,6 +105,18 @@ export default function Layout() {
             </Link>
           )
         })}
+        {desktop && (
+          <div className="sidebar-secondaria">
+            <NavLink to="/girone" className={({ isActive }) => (isActive ? 'active' : '')}>
+              <span className="icon"><IconTrophy /></span>
+              Girone
+            </NavLink>
+            <NavLink to="/impostazioni" className={({ isActive }) => (isActive ? 'active' : '')}>
+              <span className="icon"><IconGear /></span>
+              Impostazioni
+            </NavLink>
+          </div>
+        )}
       </nav>
     </>
   )

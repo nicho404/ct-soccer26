@@ -77,7 +77,7 @@ export default function AnalisiFormPage() {
   }
 
   return (
-    <div className="page">
+    <div className="page page-stretta">
       <div className="page-header">
         <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>{editing ? 'Modifica analisi' : 'Nuova analisi'}</h1>

@@ -48,7 +48,7 @@ export default function PresenzePage() {
       nomeBreve(a.p).localeCompare(nomeBreve(b.p)))
 
   return (
-    <div className="page">
+    <div className="page griglia-auto">
       <div className="page-header">
         <h1>Presenze e sedute</h1>
         <span className="muted small">{eventi.length}</span>

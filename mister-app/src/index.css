@@ -1639,46 +1639,99 @@ button.scheda.attiva { background: var(--accent); color: var(--on-accent); }
 .scheda-icona svg { flex-shrink: 0; }
 
 /* ---------- Desktop (da 1024px) ----------
-   Sotto questa soglia non cambia niente. Sopra: menu laterale fisso al
-   posto della barra in basso, contenuto centrato a 960px, finestre come
-   pannello a destra, elenco e dettaglio affiancati (components/DueColonne). */
+   Non è il telefono ingrandito: menu laterale con squadra e voci di servizio,
+   testi più grandi, pagine che usano la larghezza. Sotto questa soglia non
+   cambia niente: i contenitori colonna-*, gruppo e griglia-gruppi lì sono
+   display: contents e le classi griglia-auto, page-* non hanno effetto. */
+
+.colonna-campo,
+.colonna-lato,
+.griglia-gruppi,
+.gruppo {
+  display: contents;
+}
 
 @media (min-width: 1024px) {
   :root {
-    --sidebar-w: 220px;
-    --content-w: 960px;
-    /* altezza di header + sottobarra: il dettaglio affiancato resta sotto */
-    --top-h: 116px;
+    --sidebar-w: 260px;
+    --page-w: 1120px;
+    --page-larga-w: 1560px;
+    --page-stretta-w: 860px;
+    /* altezza della sottobarra: il dettaglio affiancato resta sotto */
+    --top-h: 62px;
+  }
+
+  /* I testi sono in rem: da qui crescono tutti insieme */
+  html {
+    font-size: 112.5%;
+  }
+
+  body {
+    font-size: 1rem;
   }
 
   #root {
     max-width: none;
-    padding-left: var(--sidebar-w);
   }
 
-  .app-header {
-    max-width: var(--content-w);
-    margin: 0 auto;
-    height: 64px;
-    padding-top: 0;
-    padding-bottom: 0;
+  .app-top,
+  main {
+    margin-left: var(--sidebar-w);
+  }
+
+  .app-top-vuoto {
+    display: none;
+  }
+
+  .sottobarra {
+    border-top: 0;
   }
 
   .sottobarra-inner {
-    max-width: var(--content-w);
-    margin: 0 auto;
+    gap: 8px;
+    padding: 12px 32px;
   }
 
   .sottobarra-pill {
-    height: 34px;
+    height: 38px;
     display: inline-flex;
     align-items: center;
+    padding: 0 18px;
   }
 
   .page {
-    max-width: var(--content-w);
+    width: 100%;
+    max-width: var(--page-w);
     margin: 0 auto;
-    padding-bottom: 40px;
+    padding: 28px 32px 96px;
+  }
+
+  .page-larga {
+    max-width: var(--page-larga-w);
+  }
+
+  .page-stretta {
+    max-width: var(--page-stretta-w);
+  }
+
+  .page-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .section-title {
+    font-size: 0.78rem;
+    margin: 28px 0 12px;
+  }
+
+  .card {
+    padding: 18px 20px;
+    margin-bottom: 12px;
+  }
+
+  /* Soglia minima di leggibilità per badge ed etichette pensati per il telefono */
+  .badge,
+  .rosa-avvisi .badge {
+    font-size: 0.74rem;
   }
 
   /* Menu laterale */
@@ -1689,11 +1742,34 @@ button.scheda.attiva { background: var(--accent); color: var(--on-accent); }
     width: var(--sidebar-w);
     max-width: none;
     height: 100dvh;
-    padding: 16px 12px;
+    padding: 16px 14px;
     flex-direction: column;
     gap: 4px;
     border-top: 0;
     border-right: 1px solid var(--border);
+  }
+
+  .sidebar-marca {
+    padding: 4px 8px 20px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-marca .app-header-squadra {
+    color: var(--text);
+  }
+
+  .sidebar-marca .header-torneo {
+    white-space: normal;
+  }
+
+  .sidebar-secondaria {
+    margin-top: auto;
+    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-top: 1px solid var(--border);
   }
 
   .bottom-nav a {
@@ -1701,7 +1777,7 @@ button.scheda.attiva { background: var(--accent); color: var(--on-accent); }
     flex-direction: row;
     justify-content: flex-start;
     gap: 12px;
-    height: 44px;
+    height: 46px;
     padding: 0 12px;
     border-radius: var(--radius-sm);
     font-size: 0.95rem;
@@ -1714,29 +1790,110 @@ button.scheda.attiva { background: var(--accent); color: var(--on-accent); }
   /* la barretta passa da sopra a sinistra */
   .bottom-nav a.active::before {
     top: 50%;
-    left: -12px;
+    left: -14px;
     transform: translateY(-50%);
     width: 3px;
     height: 24px;
     border-radius: 0 3px 3px 0;
   }
 
-  /* FAB e Salva sul bordo del contenuto, non dello schermo */
   .fab {
-    right: max(16px, calc(50% - var(--sidebar-w) / 2 - var(--content-w) / 2 + 16px));
-    bottom: 24px;
+    right: 32px;
+    bottom: 28px;
   }
 
-  .salva-fisso {
+  /* Elenchi di schede: tante colonne quante ne stanno, senza righe infinite */
+  .griglia-auto {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr));
+    column-gap: 14px;
+    align-content: start;
+  }
+
+  .griglia-auto > * {
+    grid-column: 1 / -1;
+  }
+
+  .griglia-auto > .card.tappable {
+    grid-column: auto;
+  }
+
+  /* Gruppi di sezioni su due colonne (Home, Impostazioni) */
+  .griglia-gruppi {
+    display: block;
+    columns: 2;
+    column-gap: 28px;
+  }
+
+  .gruppo {
+    display: block;
+    break-inside: avoid;
+    padding-bottom: 12px;
+  }
+
+  /* il margine in cima sfalserebbe le due colonne */
+  .gruppo > .section-title:first-child {
+    margin-top: 0;
+  }
+
+  /* Campo e pannelli affiancati (Modulo, Referto): il campo resta in vista */
+  .page-campo {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(380px, 2fr);
+    grid-auto-flow: dense;
+    column-gap: 28px;
+    align-content: start;
+  }
+
+  .page-campo > * {
+    grid-column: 1 / -1;
+  }
+
+  .page-campo > .colonna-campo {
+    display: block;
+    grid-column: 1;
+    /* tante righe vuote: l'altezza del campo non apre buchi tra i blocchi a lato */
+    grid-row: span 99;
+    position: sticky;
+    top: calc(var(--top-h) + 12px);
+    align-self: start;
+  }
+
+  .page-campo > .colonna-lato {
+    display: block;
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  .page-campo > .colonna-lato ~ .colonna-lato,
+  .page-campo > .salva-fisso {
+    grid-row: span 98;
+    align-self: start;
+  }
+
+  .page-campo > .salva-fisso {
+    grid-column: 2;
     bottom: 16px;
+  }
+
+  /* il campo sta tutto nello schermo, qualunque sia l'altezza della finestra */
+  .pitch-svg {
+    max-height: calc(100dvh - 230px);
+  }
+
+  /* nel referto sopra il campo ci sono anche titolo e scelta del modulo */
+  .colonna-campo > .section-title ~ .pitch-wrap .pitch-svg {
+    max-height: calc(100dvh - 320px);
+  }
+
+  .risultato-input {
+    flex: 0 0 110px;
   }
 
   /* Elenco e dettaglio affiancati */
   .due-colonne {
-    max-width: var(--content-w);
-    margin: 0 auto;
     display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    grid-template-columns: minmax(400px, 34%) minmax(0, 1fr);
     align-items: start;
   }
 
@@ -1753,6 +1910,11 @@ button.scheda.attiva { background: var(--accent); color: var(--on-accent); }
     border-left: 1px solid var(--border);
   }
 
+  .colonna-dettaglio .page {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
   .colonna-elenco .fab {
     position: sticky;
     bottom: 24px;
@@ -1762,12 +1924,6 @@ button.scheda.attiva { background: var(--accent); color: var(--on-accent); }
   .colonna-elenco .card.active {
     border-color: var(--accent-strong);
     background: color-mix(in srgb, var(--accent-strong) 8%, transparent);
-  }
-
-  /* il campo a tutta larghezza diventerebbe più alto dello schermo */
-  .pitch-svg {
-    max-width: 620px;
-    margin: 0 auto;
   }
 
   .dettaglio-vuoto {
@@ -1786,17 +1942,21 @@ button.scheda.attiva { background: var(--accent); color: var(--on-accent); }
   }
 
   .popup-sheet {
-    max-width: 440px;
+    max-width: 560px;
     max-height: none;
     height: 100dvh;
-    padding: 16px 20px;
+    padding: 20px 28px;
     border-radius: 0;
     border-width: 0 0 0 1px;
     animation: pannello-entra 160ms ease-out;
   }
 
   .popup-header {
-    top: -16px;
+    top: -20px;
+  }
+
+  .onboarding {
+    max-width: 560px;
   }
 }
 

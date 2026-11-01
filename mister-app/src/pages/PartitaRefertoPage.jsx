@@ -332,7 +332,7 @@ export default function PartitaRefertoPage() {
   const golEventi = daEventi.fatti + daEventi.subiti
 
   return (
-    <div className="page">
+    <div className="page page-larga page-campo">
       <div className="page-header">
         <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>Referto</h1>
@@ -384,6 +384,7 @@ export default function PartitaRefertoPage() {
         </div>
       )}
 
+      <div className="colonna-campo">
       <div className="section-title">Formazione ({inCampo.length}/{formato})</div>
 
       <div className="row" style={{ gap: 8, marginBottom: 8 }}>
@@ -460,6 +461,9 @@ export default function PartitaRefertoPage() {
         </div>
       )}
 
+      </div>
+
+      <div className="colonna-lato">
       <div className="section-title">Eventi ({eventi.length})</div>
 
       {incoerenti.size > 0 && (
@@ -802,6 +806,8 @@ export default function PartitaRefertoPage() {
           </p>
         </Modal>
       )}
+
+      </div>
 
       {/* Salva sempre a portata di pollice: il referto è lungo */}
       <div className="salva-fisso">

@@ -54,7 +54,7 @@ export default function HomePage() {
     .filter((f) => f.p)
 
   return (
-    <div className="page">
+    <div className="page page-larga">
       <div className="page-header">
         <h1>Home</h1>
       </div>
@@ -100,6 +100,8 @@ export default function HomePage() {
         />
       ) : (
         <>
+          <div className="griglia-gruppi">
+          <div className="gruppo">
           <div className="section-title">Prossima partita</div>
           {prossima ? (
             <Link to={`/partite/${prossima.id}`} className="card tappable">
@@ -158,6 +160,9 @@ export default function HomePage() {
             </>
           )}
 
+          </div>
+
+          <div className="gruppo">
           {b.giocate > 0 && (
             <>
               <div className="section-title">Stagione</div>
@@ -207,6 +212,8 @@ export default function HomePage() {
               </div>
             </>
           )}
+          </div>
+          </div>
         </>
       )}
     </div>

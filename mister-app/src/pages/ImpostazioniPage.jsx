@@ -140,12 +140,14 @@ export default function ImpostazioniPage() {
   }
 
   return (
-    <div className="page">
+    <div className="page page-larga">
       <div className="page-header">
         <button className="back-btn" aria-label="Indietro" onClick={() => navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>Impostazioni</h1>
       </div>
 
+      <div className="griglia-gruppi">
+      <div className="gruppo">
       <div className="section-title">Squadra</div>
       {/* In lettura: si cambia solo dalla matita, e si salva con "Salva" */}
       <div className="card">
@@ -290,11 +292,17 @@ export default function ImpostazioniPage() {
         </Modal>
       )}
 
+      </div>
+
+      <div className="gruppo">
       <div className="section-title">Aspetto</div>
       <div className="card">
         <SceltaTema />
       </div>
 
+      </div>
+
+      <div className="gruppo">
       <div className="section-title">Dati di prova</div>
       <div className="card">
         <div className="switch-row">
@@ -311,9 +319,15 @@ export default function ImpostazioniPage() {
         </div>
       </div>
 
+      </div>
+
+      <div className="gruppo">
       <div className="section-title">Sincronizzazione</div>
       <SyncImpostazioni />
 
+      </div>
+
+      <div className="gruppo">
       <div className="section-title">Backup</div>
       <div className="card">
         <p className="muted small" style={{ marginTop: 0 }}>
@@ -357,11 +371,16 @@ export default function ImpostazioniPage() {
         )}
       </div>
 
+      </div>
+
+      <div className="gruppo">
       <div className="section-title">Info</div>
       <div className="card muted small">
         Mister App — gestione squadra e scouting personale del mister.
         <br />
         I dati vivono su questo dispositivo e, se accedi con Google, nel tuo Drive.
+      </div>
+      </div>
       </div>
     </div>
   )

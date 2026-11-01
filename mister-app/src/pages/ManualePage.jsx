@@ -101,7 +101,7 @@ export default function ManualePage({ incorporata = false }) {
   if (incorporata) return corpo
 
   return (
-    <div className="page">
+    <div className="page griglia-auto">
       <div className="page-header">
         <h1>Manuale</h1>
         <span className="muted small">{voci.length}</span>

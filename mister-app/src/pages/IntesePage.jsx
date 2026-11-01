@@ -20,7 +20,7 @@ export default function IntesePage() {
   }
 
   return (
-    <div className="page">
+    <div className="page griglia-auto">
       <div className="page-header">
         <h1>Intese</h1>
         <span className="muted small">{intese.length}</span>

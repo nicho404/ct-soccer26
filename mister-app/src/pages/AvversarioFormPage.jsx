@@ -148,7 +148,7 @@ export default function AvversarioFormPage() {
   const b = bilancio(scontri)
 
   return (
-    <div className="page">
+    <div className="page page-stretta">
       <div className="page-header">
         <button className="back-btn" aria-label="Indietro" onClick={() => puoiUscire() && navigate(-1)}><IconChevronLeft size={22} /></button>
         <h1>{editing ? form.nome || 'Squadra' : 'Nuova squadra'}</h1>

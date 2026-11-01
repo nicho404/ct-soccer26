@@ -224,7 +224,7 @@ export default function ModuloPage() {
   const vista = vistaCompleta(vistaRiga?.value)
 
   return (
-    <div className="page">
+    <div className="page page-larga page-campo">
       <div className="page-header">
         <h1>Modulo</h1>
         <button className="btn btn-sm" onClick={svuota}>Svuota</button>
@@ -266,6 +266,7 @@ export default function ModuloPage() {
         />
       ) : (
         <>
+          <div className="colonna-lato">
           <AssettoRiga
             formato={formato}
             moduli={Object.keys(MODULI)}
@@ -312,6 +313,9 @@ export default function ModuloPage() {
             ))}
           </div>
 
+          </div>
+
+          <div className="colonna-campo">
           <div className="pitch-wrap" style={{ position: 'relative' }}>
             <VistaCampo vista={vista} />
             <PitchView
@@ -337,6 +341,9 @@ export default function ModuloPage() {
             />
           </div>
 
+          </div>
+
+          <div className="colonna-lato">
           {esitoExport && (
             <p className="muted small" style={{ margin: '0 0 10px' }} onClick={() => setEsitoExport(null)}>
               {esitoExport} L’immagine riporta gli indicatori accesi sul campo: spegnili tutti per avere solo posizioni e nomi.
@@ -409,6 +416,7 @@ export default function ModuloPage() {
               onClose={() => setSalvaRighe(null)}
             />
           )}
+          </div>
         </>
       )}
     </div>
